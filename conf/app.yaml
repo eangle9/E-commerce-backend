@@ -1,0 +1,9 @@
+# Application configuration
+
+database:
+    driver: mysql
+    url: root:engdawork9397@/eccomerce?charset=utf8mb4&parseTime=True
+
+
+http_server:
+   port: 9000
