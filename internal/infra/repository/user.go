@@ -6,6 +6,9 @@ import (
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -142,4 +145,115 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 	// }
 
 	return users, nil
+}
+
+func (u userRepository) GetUserById(id int) (utils.User, error) {
+	var user utils.User
+	DB := u.db.GetDB()
+	query := `SELECT id, username, email, password, first_name,
+	last_name, phone_number, address, profile_picture, email_verified, 
+	role, created_at, updated_at FROM users WHERE id = ? `
+
+	if err := DB.QueryRow(query, id).Scan(
+		&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
+		&user.LastName, &user.PhoneNumber, &user.Address, &user.ProfilePicture,
+		&user.EmailVerified, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+	); err != nil {
+		err = fmt.Errorf("user with id %d not found", id)
+		return utils.User{}, err
+	}
+
+	return user, nil
+}
+
+func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User, error) {
+	var updateFields []string
+	var values []interface{}
+	DB := u.db.GetDB()
+
+	if user.Username != "" {
+		updateFields = append(updateFields, "username = ?")
+		values = append(values, user.Username)
+	}
+	if user.Email != "" {
+		updateFields = append(updateFields, "email = ?")
+		values = append(values, user.Email)
+	}
+	if user.Password != "" {
+		updateFields = append(updateFields, "password = ?")
+		values = append(values, user.Password)
+	}
+	if user.FirstName != "" {
+		updateFields = append(updateFields, "first_name = ?")
+		values = append(values, user.FirstName)
+	}
+	if user.LastName != "" {
+		updateFields = append(updateFields, "last_name = ?")
+		values = append(values, user.LastName)
+	}
+	if user.PhoneNumber != "" {
+		updateFields = append(updateFields, "phone_number = ?")
+		values = append(values, user.PhoneNumber)
+	}
+	if user.Address != "" {
+		updateFields = append(updateFields, "address = ?")
+		values = append(values, user.Address)
+	}
+	if user.ProfilePicture != "" {
+		updateFields = append(updateFields, "profile_picture = ?")
+		values = append(values, user.ProfilePicture)
+	}
+	if user.Role != "" {
+		updateFields = append(updateFields, "role = ?")
+		values = append(values, user.Role)
+	}
+
+	if len(updateFields) == 0 {
+		err := errors.New("failed to update user:No fields provided for update.Please provide at least one field to update")
+		return utils.User{}, err
+	}
+
+	if len(values) > 0 {
+		updateFields = append(updateFields, "updated_at = ?")
+		values = append(values, time.Now())
+	}
+
+	query := fmt.Sprintf("UPDATE users SET %s WHERE id = ?", strings.Join(updateFields, ", "))
+	values = append(values, id)
+
+	if _, err := DB.Exec(query, values...); err != nil {
+		return utils.User{}, err
+	}
+
+	updateUser, err := u.GetUserById(id)
+	if err != nil {
+		return utils.User{}, err
+	}
+
+	return updateUser, err
+}
+
+func (u userRepository) DeleteUserById(id int) (string, int, error) {
+	DB := u.db.GetDB()
+
+	query := `DELETE FROM users WHERE id = ?`
+
+	result, err := DB.Exec(query, id)
+	if err != nil {
+		return "", http.StatusInternalServerError, err
+	}
+
+	rowAffected, err := result.RowsAffected()
+	if err != nil {
+		return "", http.StatusInternalServerError, err
+	}
+
+	if rowAffected > 0 {
+		resp := fmt.Sprintln("entity deleted successfully")
+		return resp, http.StatusOK, nil
+
+	} else {
+		err := errors.New("entity not found")
+		return "", http.StatusNotFound, err
+	}
 }

@@ -10,4 +10,7 @@ type UserRepository interface {
 	InsertUser(user dto.User) (int, error)
 	Authentication(email string, password string) (utils.User, error)
 	ListUsers() ([]utils.User, error)
+	GetUserById(id int) (utils.User, error)
+	EditUserById(id int, user utils.UpdateUser) (utils.User, error)
+	DeleteUserById(id int) (string, int, error)
 }
