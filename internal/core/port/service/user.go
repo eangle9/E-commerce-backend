@@ -13,4 +13,5 @@ type UserService interface {
 	GetUser(id int) response.Response
 	UpdateUser(id int, user utils.UpdateUser) response.Response
 	DeleteUser(id int) response.Response
+	RefreshToken(refreshToken request.RefreshRequest) response.Response
 }

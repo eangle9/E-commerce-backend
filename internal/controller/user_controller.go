@@ -49,6 +49,7 @@ func (u *UserController) InitRouter() {
 	api.GET("/:id", u.getUserHandler)
 	api.PUT("/update/:id", u.updateUserHandler)
 	api.DELETE("/delete/:id", u.deleteUserHandler)
+	api.POST("/token", u.refreshTokenHandler)
 }
 
 func (u UserController) registerHandler(c *gin.Context) {
@@ -173,5 +174,22 @@ func (u UserController) deleteUserHandler(c *gin.Context) {
 	}
 
 	resp := u.userService.DeleteUser(id)
+	c.JSON(resp.Status, resp)
+}
+
+func (u UserController) refreshTokenHandler(c *gin.Context) {
+	var rfToken request.RefreshRequest
+
+	if err := c.ShouldBindJSON(&rfToken); err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "failed to decode json request body",
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		return
+	}
+
+	resp := u.userService.RefreshToken(rfToken)
 	c.JSON(resp.Status, resp)
 }
