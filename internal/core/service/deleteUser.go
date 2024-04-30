@@ -6,11 +6,11 @@ import (
 )
 
 func (u userService) DeleteUser(id int) response.Response {
-	resp, status, err := u.userRepo.DeleteUserById(id)
+	resp, status, errType, err := u.userRepo.DeleteUserById(id)
 	if err != nil {
 		response := response.Response{
 			Status:       status,
-			ErrorType:    errorcode.InvalidRequest,
+			ErrorType:    errType,
 			ErrorMessage: err.Error(),
 		}
 		return response

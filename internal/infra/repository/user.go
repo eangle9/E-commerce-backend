@@ -3,6 +3,7 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
+	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
@@ -233,27 +234,31 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 	return updateUser, err
 }
 
-func (u userRepository) DeleteUserById(id int) (string, int, error) {
+func (u userRepository) DeleteUserById(id int) (string, int, string, error) {
 	DB := u.db.GetDB()
 
 	query := `DELETE FROM users WHERE user_id = ?`
 
 	result, err := DB.Exec(query, id)
 	if err != nil {
-		return "", http.StatusInternalServerError, err
+		errType := errorcode.InternalError
+		return "", http.StatusInternalServerError, errType, err
 	}
 
 	rowAffected, err := result.RowsAffected()
 	if err != nil {
-		return "", http.StatusInternalServerError, err
+		errType := errorcode.InternalError
+		return "", http.StatusInternalServerError, errType, err
 	}
 
 	if rowAffected > 0 {
+		// errType := errorcode.Success
 		resp := fmt.Sprintln("entity deleted successfully")
-		return resp, http.StatusOK, nil
+		return resp, http.StatusOK, "", nil
 
 	} else {
+		errType := errorcode.NotFoundError
 		err := errors.New("entity not found")
-		return "", http.StatusNotFound, err
+		return "", http.StatusNotFound, errType, err
 	}
 }

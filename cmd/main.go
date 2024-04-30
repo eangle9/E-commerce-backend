@@ -9,10 +9,10 @@ import (
 
 	// "Eccomerce-website/internal/core/port/service"
 	"Eccomerce-website/internal/core/server"
-	"os"
 
 	// "Eccomerce-website/internal/core/service"
 	"Eccomerce-website/internal/infra/config"
+	"Eccomerce-website/internal/infra/middleware"
 	"Eccomerce-website/internal/infra/repository"
 
 	// "Eccomerce-website/schema"
@@ -26,11 +26,13 @@ import (
 )
 
 func main() {
-	cwd, _ := os.Getwd()
-	fmt.Println("cwd :", cwd)
+	// cwd, _ := os.Getwd()
+	// fmt.Println("cwd :", cwd)
+	errorMiddleware := middleware.ErrorMiddleware
 	instance := gin.New()
 	instance.Use(gin.Recovery())
 	instance.Use(gin.Logger())
+	instance.Use(errorMiddleware())
 	v := validator.New()
 	instance.Use(func(c *gin.Context) {
 		c.Set("validator", v)
@@ -51,7 +53,7 @@ func main() {
 	}
 	defer db.GetDB().Close()
 
-	fmt.Println("db: ", db)
+	// fmt.Println("db: ", db)
 
 	// if err := schema.Migrate(db); err != nil {
 	// 	log.Fatal(err)

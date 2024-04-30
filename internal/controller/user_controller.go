@@ -24,6 +24,7 @@ var (
 	})
 	customizer1 = g.Validator(request.SignUpRequest{})
 	customizer2 = g.Validator(request.LoginRequest{})
+	customizer3 = g.Validator(request.RefreshRequest{})
 )
 
 type UserController struct {
@@ -61,7 +62,8 @@ func (u UserController) registerHandler(c *gin.Context) {
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "failed to decode json request body",
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
@@ -72,12 +74,18 @@ func (u UserController) registerHandler(c *gin.Context) {
 			ErrorType:    errorcode.ValidationError,
 			ErrorMessage: customizer1.DecryptErrors(err),
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
 	signUpRequest := request
 	resp := u.userService.SignUp(signUpRequest)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
 	c.JSON(resp.Status, resp)
 }
 
@@ -89,7 +97,8 @@ func (u UserController) LoginHandler(c *gin.Context) {
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "failed to decode json request body",
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
@@ -100,16 +109,25 @@ func (u UserController) LoginHandler(c *gin.Context) {
 			ErrorType:    errorcode.ValidationError,
 			ErrorMessage: customizer2.DecryptErrors(err),
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
 	resp := u.userService.LoginUser(request)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
 	c.JSON(resp.Status, resp)
 }
 
 func (u UserController) listUserHandler(c *gin.Context) {
 	resp := u.userService.GetUsers()
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
 	c.JSON(resp.Status, resp)
 }
 
@@ -122,11 +140,16 @@ func (u UserController) getUserHandler(c *gin.Context) {
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "invalid id.Please enter a valid integer id",
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
 	resp := u.userService.GetUser(id)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
 	c.JSON(resp.Status, resp)
 
 }
@@ -142,7 +165,8 @@ func (u UserController) updateUserHandler(c *gin.Context) {
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "invalid id.Please enter a valid integer id",
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
@@ -152,11 +176,16 @@ func (u UserController) updateUserHandler(c *gin.Context) {
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "failed to decode json request body",
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
 	resp := u.userService.UpdateUser(id, user)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -169,11 +198,16 @@ func (u UserController) deleteUserHandler(c *gin.Context) {
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "invalid id.Please enter a valid integer id",
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
 	resp := u.userService.DeleteUser(id)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
 	c.JSON(resp.Status, resp)
 }
 
@@ -186,10 +220,27 @@ func (u UserController) refreshTokenHandler(c *gin.Context) {
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "failed to decode json request body",
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
+		return
+	}
+
+	validate := c.MustGet("validator").(*validator.Validate)
+	if err := validate.Struct(rfToken); err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.ValidationError,
+			ErrorMessage: customizer3.DecryptErrors(err),
+		}
+		// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
+		c.Set("error", errorResponse)
 		return
 	}
 
 	resp := u.userService.RefreshToken(rfToken)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
 	c.JSON(resp.Status, resp)
 }

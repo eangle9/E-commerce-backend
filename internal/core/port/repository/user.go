@@ -12,5 +12,5 @@ type UserRepository interface {
 	ListUsers() ([]utils.User, error)
 	GetUserById(id int) (utils.User, error)
 	EditUserById(id int, user utils.UpdateUser) (utils.User, error)
-	DeleteUserById(id int) (string, int, error)
+	DeleteUserById(id int) (string, int, string, error)
 }
