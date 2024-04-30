@@ -78,7 +78,7 @@ func (u userRepository) Authentication(email string, password string) (utils.Use
 	DB := u.db.GetDB()
 
 	query := `
-	 SELECT id, username, email, password, first_name,
+	 SELECT user_id, username, email, password, first_name,
 	 last_name, phone_number, address, profile_picture, email_verified, 
 	 role, created_at, updated_at FROM users WHERE email = ?
 	 `
@@ -113,7 +113,7 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 	var users []utils.User
 	DB := u.db.GetDB()
 
-	query := `SELECT id, username, email, password, first_name,
+	query := `SELECT user_id, username, email, password, first_name,
 	last_name, phone_number, address, profile_picture, email_verified, 
 	role, created_at, updated_at FROM users`
 
@@ -150,9 +150,9 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 func (u userRepository) GetUserById(id int) (utils.User, error) {
 	var user utils.User
 	DB := u.db.GetDB()
-	query := `SELECT id, username, email, password, first_name,
+	query := `SELECT user_id, username, email, password, first_name,
 	last_name, phone_number, address, profile_picture, email_verified, 
-	role, created_at, updated_at FROM users WHERE id = ? `
+	role, created_at, updated_at FROM users WHERE user_id = ? `
 
 	if err := DB.QueryRow(query, id).Scan(
 		&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
@@ -218,7 +218,7 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		values = append(values, time.Now())
 	}
 
-	query := fmt.Sprintf("UPDATE users SET %s WHERE id = ?", strings.Join(updateFields, ", "))
+	query := fmt.Sprintf("UPDATE users SET %s WHERE user_id = ?", strings.Join(updateFields, ", "))
 	values = append(values, id)
 
 	if _, err := DB.Exec(query, values...); err != nil {
@@ -236,7 +236,7 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 func (u userRepository) DeleteUserById(id int) (string, int, error) {
 	DB := u.db.GetDB()
 
-	query := `DELETE FROM users WHERE id = ?`
+	query := `DELETE FROM users WHERE user_id = ?`
 
 	result, err := DB.Exec(query, id)
 	if err != nil {

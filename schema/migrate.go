@@ -2,7 +2,6 @@ package schema
 
 import (
 	"Eccomerce-website/internal/core/port/repository"
-	"errors"
 	"fmt"
 	"os"
 )
@@ -16,7 +15,7 @@ func Migrate(db repository.Database) error {
 	}
 
 	if _, err := DB.Exec(string(schema)); err != nil {
-		err = errors.New("error excuting schema sql")
+		// err = errors.New("error executing schema SQL")
 		return err
 	}
 

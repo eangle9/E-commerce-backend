@@ -9,7 +9,6 @@ import (
 
 	// "Eccomerce-website/internal/core/port/service"
 	"Eccomerce-website/internal/core/server"
-	"Eccomerce-website/schema"
 	"os"
 
 	// "Eccomerce-website/internal/core/service"
@@ -54,9 +53,9 @@ func main() {
 
 	fmt.Println("db: ", db)
 
-	if err := schema.Migrate(db); err != nil {
-		log.Fatal(err)
-	}
+	// if err := schema.Migrate(db); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
