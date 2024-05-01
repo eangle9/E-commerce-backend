@@ -5,7 +5,9 @@ import (
 	// "Eccomerce-website/internal/core/common/router"
 	"Eccomerce-website/internal/controller"
 	"Eccomerce-website/internal/core/common/router"
-	"Eccomerce-website/internal/core/service"
+	service "Eccomerce-website/internal/core/service/user_service"
+
+	// "Eccomerce-website/internal/core/service"
 
 	// "Eccomerce-website/internal/core/port/service"
 	"Eccomerce-website/internal/core/server"
@@ -60,6 +62,7 @@ func main() {
 	// }
 
 	userRepo := repository.NewUserRepository(db)
+	// userService := service.NewUserService(userRepo)
 	userService := service.NewUserService(userRepo)
 	userController := controller.NewUserController(engine, userService)
 	userController.InitRouter()
