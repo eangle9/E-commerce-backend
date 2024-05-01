@@ -7,7 +7,6 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -140,9 +139,8 @@ func (u userService) SignUp(request request.SignUpRequest) response.Response {
 		errorResponse := response.Response{
 			Status:       http.StatusConflict,
 			ErrorType:    "DUPLICATE_ENTRY",
-			ErrorMessage: "user already exists",
+			ErrorMessage: err.Error(),
 		}
-		fmt.Println("error: ", err.Error())
 		return errorResponse
 	}
 

@@ -15,3 +15,7 @@ type UserService interface {
 	DeleteUser(id int) response.Response
 	RefreshToken(refreshToken request.RefreshRequest) response.Response
 }
+
+type ProductCategorySevice interface {
+	CreateProductCategory(request request.ProductCategoryRequest) response.Response
+}

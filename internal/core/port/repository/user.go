@@ -14,3 +14,7 @@ type UserRepository interface {
 	EditUserById(id int, user utils.UpdateUser) (utils.User, error)
 	DeleteUserById(id int) (string, int, string, error)
 }
+
+type ProductCategoryRepository interface {
+	InsertProductCategory(category dto.ProductCategory) (int, error)
+}

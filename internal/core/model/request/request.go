@@ -19,3 +19,8 @@ type LoginRequest struct {
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
+
+type ProductCategoryRequest struct {
+	ParentID int    `json:"parent_id"`
+	Name     string `json:"name" validate:"required"`
+}
