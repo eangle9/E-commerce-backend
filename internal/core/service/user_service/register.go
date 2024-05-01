@@ -146,8 +146,7 @@ func (u userService) SignUp(request request.SignUpRequest) response.Response {
 		return errorResponse
 	}
 
-	fmt.Println("registeredId: ", id)
-
+	user.ID = id
 	data := data{
 		User: user,
 	}
