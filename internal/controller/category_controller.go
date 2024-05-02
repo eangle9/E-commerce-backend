@@ -7,6 +7,7 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -30,6 +31,7 @@ func (cat *categoryController) InitCategoryRouter() {
 
 	api.POST("/create", cat.createCategoryHandler)
 	api.GET("/list", cat.listCategoryHandler)
+	api.GET("/:id", cat.GetProductCategoryHandler)
 }
 
 func (cat categoryController) createCategoryHandler(c *gin.Context) {
@@ -67,6 +69,29 @@ func (cat categoryController) createCategoryHandler(c *gin.Context) {
 
 func (cat categoryController) listCategoryHandler(c *gin.Context) {
 	resp := cat.categoryService.GetProductCategories()
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (cat categoryController) GetProductCategoryHandler(c *gin.Context) {
+	idStr := c.Param("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid id.Please enter a valid integer id",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	resp := cat.categoryService.GetProductCategory(id)
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return

@@ -16,6 +16,8 @@ type UserService interface {
 	RefreshToken(refreshToken request.RefreshRequest) response.Response
 }
 
-type ProductCategorySevice interface {
+type ProductCategoryService interface {
 	CreateProductCategory(request request.ProductCategoryRequest) response.Response
+	GetProductCategories() response.Response
+	GetProductCategory(id int) response.Response
 }

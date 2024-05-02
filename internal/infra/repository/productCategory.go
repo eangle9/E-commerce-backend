@@ -29,7 +29,7 @@ func (p productCategoryRepository) InsertProductCategory(category dto.ProductCat
 	}
 
 	if count > 0 {
-		err := fmt.Errorf("product category with category_name %s is already exists", name)
+		err := fmt.Errorf("product category with category_name '%s' is already exists", name)
 		return nil, err
 	}
 
@@ -62,8 +62,8 @@ func (p productCategoryRepository) InsertProductCategory(category dto.ProductCat
 
 }
 
-func (p productCategoryRepository) ListProductCategory() ([]utils.CategoryList, error) {
-	var productCategories []utils.CategoryList
+func (p productCategoryRepository) ListProductCategory() ([]utils.ProductCategory, error) {
+	var productCategories []utils.ProductCategory
 	DB := p.db.GetDB()
 
 	query := `SELECT category_id, name, parent_id FROM product_category`
@@ -75,7 +75,7 @@ func (p productCategoryRepository) ListProductCategory() ([]utils.CategoryList, 
 	defer rows.Close()
 
 	for rows.Next() {
-		var productCategory utils.CategoryList
+		var productCategory utils.ProductCategory
 		if err := rows.Scan(&productCategory.ID, &productCategory.Name, &productCategory.ParentID); err != nil {
 			return nil, err
 		}
@@ -88,4 +88,17 @@ func (p productCategoryRepository) ListProductCategory() ([]utils.CategoryList, 
 	}
 
 	return productCategories, nil
+}
+
+func (p productCategoryRepository) GetProductCategoryById(id int) (utils.ProductCategory, error) {
+	var category utils.ProductCategory
+	DB := p.db.GetDB()
+
+	query := `SELECT category_id, name, parent_id FROM product_category WHERE category_id = ?`
+	if err := DB.QueryRow(query, id).Scan(&category.ID, &category.Name, &category.ParentID); err != nil {
+		err = fmt.Errorf("product category with category_id %d not found", id)
+		return utils.ProductCategory{}, err
+	}
+
+	return category, nil
 }

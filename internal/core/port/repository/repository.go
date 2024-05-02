@@ -17,5 +17,6 @@ type UserRepository interface {
 
 type ProductCategoryRepository interface {
 	InsertProductCategory(category dto.ProductCategory) (*int, error)
-	ListProductCategory() ([]utils.CategoryList, error)
+	ListProductCategory() ([]utils.ProductCategory, error)
+	GetProductCategoryById(id int) (utils.ProductCategory, error)
 }
