@@ -2,6 +2,7 @@ package repository
 
 import (
 	"Eccomerce-website/internal/core/common/utils"
+	"Eccomerce-website/internal/core/common/utils/password"
 	"Eccomerce-website/internal/core/dto"
 	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/port/repository"
@@ -81,7 +82,7 @@ func (u userRepository) Authentication(email string, password string) (utils.Use
 	query := `
 	 SELECT user_id, username, email, password, first_name,
 	 last_name, phone_number, address, profile_picture, email_verified, 
-	 role, created_at, updated_at FROM users WHERE email = ?
+	 role, created_at, updated_at FROM users WHERE email = ? AND deleted_at IS NULL
 	 `
 
 	if err := DB.QueryRow(query, email).Scan(
@@ -116,7 +117,7 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 
 	query := `SELECT user_id, username, email, password, first_name,
 	last_name, phone_number, address, profile_picture, email_verified, 
-	role, created_at, updated_at FROM users`
+	role, created_at, updated_at FROM users WHERE deleted_at IS NULL`
 
 	rows, err := DB.Query(query)
 	if err != nil {
@@ -153,7 +154,7 @@ func (u userRepository) GetUserById(id int) (utils.User, error) {
 	DB := u.db.GetDB()
 	query := `SELECT user_id, username, email, password, first_name,
 	last_name, phone_number, address, profile_picture, email_verified, 
-	role, created_at, updated_at FROM users WHERE user_id = ? `
+	role, created_at, updated_at FROM users WHERE user_id = ? AND deleted_at IS NULL`
 
 	if err := DB.QueryRow(query, id).Scan(
 		&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
@@ -181,8 +182,17 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		values = append(values, user.Email)
 	}
 	if user.Password != "" {
+		errorResponse := utils.PasswordValidation(user.Password)
+		if errorResponse != nil {
+			err := fmt.Errorf("%s", errorResponse.ErrorMessage)
+			return utils.User{}, err
+		}
+		password, err := password.HasPassword(user.Password)
+		if err != nil {
+			return utils.User{}, err
+		}
 		updateFields = append(updateFields, "password = ?")
-		values = append(values, user.Password)
+		values = append(values, password)
 	}
 	if user.FirstName != "" {
 		updateFields = append(updateFields, "first_name = ?")
@@ -193,8 +203,14 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		values = append(values, user.LastName)
 	}
 	if user.PhoneNumber != "" {
+		errorResponse, phoneNumber := utils.PhoneValidation(user.PhoneNumber)
+		if errorResponse != nil {
+			err := fmt.Errorf("%s", errorResponse.ErrorMessage)
+			return utils.User{}, err
+		}
+
 		updateFields = append(updateFields, "phone_number = ?")
-		values = append(values, user.PhoneNumber)
+		values = append(values, phoneNumber)
 	}
 	if user.Address != "" {
 		updateFields = append(updateFields, "address = ?")
@@ -236,29 +252,46 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 
 func (u userRepository) DeleteUserById(id int) (string, int, string, error) {
 	DB := u.db.GetDB()
+	var deleted_at *time.Time
 
-	query := `DELETE FROM users WHERE user_id = ?`
-
-	result, err := DB.Exec(query, id)
-	if err != nil {
-		errType := errorcode.InternalError
-		return "", http.StatusInternalServerError, errType, err
-	}
-
-	rowAffected, err := result.RowsAffected()
-	if err != nil {
-		errType := errorcode.InternalError
-		return "", http.StatusInternalServerError, errType, err
-	}
-
-	if rowAffected > 0 {
-		// errType := errorcode.Success
-		resp := fmt.Sprintln("entity deleted successfully")
-		return resp, http.StatusOK, "", nil
-
-	} else {
+	if err := DB.QueryRow("SELECT deleted_at FROM users WHERE user_id = ?", id).Scan(&deleted_at); err != nil {
 		errType := errorcode.NotFoundError
-		err := errors.New("entity not found")
+		err := errors.New("user not found")
 		return "", http.StatusNotFound, errType, err
 	}
+	if deleted_at != nil {
+		errType := "CONFLICT_ERROR"
+		err := errors.New("cannot delete already deleted user")
+		return "", http.StatusConflict, errType, err
+	}
+
+	// query := `DELETE FROM users WHERE user_id = ?`
+	query := `UPDATE users SET deleted_at = ? WHERE user_id = ?`
+
+	_, err := DB.Exec(query, time.Now(), id)
+	if err != nil {
+		errType := errorcode.InternalError
+		return "", http.StatusInternalServerError, errType, err
+	}
+
+	errType := errorcode.Success
+	resp := fmt.Sprintf("user with user_id '%d' deleted successfully", id)
+	return resp, http.StatusOK, errType, nil
+	// rowAffected, err := result.RowsAffected()
+	// if err != nil {
+	// 	errType := errorcode.InternalError
+	// 	return "", http.StatusInternalServerError, errType, err
+	// }
+
+	// if rowAffected > 0 {
+	// 	errType := errorcode.Success
+	// 	resp := fmt.Sprintln("entity deleted successfully")
+	// 	return resp, http.StatusOK, errType, nil
+
+	// }
+	// else {
+	// 	errType := errorcode.NotFoundError
+	// 	err := errors.New("entity not found")
+	// 	return "", http.StatusNotFound, errType, err
+	// }
 }

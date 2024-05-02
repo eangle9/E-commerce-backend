@@ -1,7 +1,6 @@
 package service
 
 import (
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/response"
 )
 
@@ -18,7 +17,7 @@ func (u userService) DeleteUser(id int) response.Response {
 
 	response := response.Response{
 		Status:       status,
-		ErrorType:    errorcode.Success,
+		ErrorType:    errType,
 		ErrorMessage: resp,
 	}
 	return response
