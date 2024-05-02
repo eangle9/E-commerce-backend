@@ -29,6 +29,7 @@ func (cat *categoryController) InitCategoryRouter() {
 	api := r.Group("/category")
 
 	api.POST("/create", cat.createCategoryHandler)
+	api.GET("/list", cat.listCategoryHandler)
 }
 
 func (cat categoryController) createCategoryHandler(c *gin.Context) {
@@ -56,6 +57,16 @@ func (cat categoryController) createCategoryHandler(c *gin.Context) {
 	}
 
 	resp := cat.categoryService.CreateProductCategory(request)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (cat categoryController) listCategoryHandler(c *gin.Context) {
+	resp := cat.categoryService.GetProductCategories()
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return

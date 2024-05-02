@@ -39,7 +39,7 @@ func (p productCategoryService) CreateProductCategory(request request.ProductCat
 		return response
 	}
 
-	category.ID = id
+	category.ID = *id
 
 	response := response.Response{
 		Data:         category,

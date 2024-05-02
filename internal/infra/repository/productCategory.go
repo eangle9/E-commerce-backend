@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
 	"Eccomerce-website/internal/core/port/repository"
 	"fmt"
@@ -16,46 +17,75 @@ func NewProductCategoryRepository(db repository.Database) repository.ProductCate
 	}
 }
 
-func (p productCategoryRepository) InsertProductCategory(category dto.ProductCategory) (int, error) {
+func (p productCategoryRepository) InsertProductCategory(category dto.ProductCategory) (*int, error) {
 	DB := p.db.GetDB()
+
 	name := category.Name
 	parentId := category.ParentID
 
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM product_category WHERE name = ?", name).Scan(&count); err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	if count > 0 {
-		err := fmt.Errorf("product category with name %s is already exists", name)
-		return 0, err
+		err := fmt.Errorf("product category with category_name %s is already exists", name)
+		return nil, err
 	}
 
 	if parentId == 0 {
 		query := `INSERT INTO product_category(name) VALUES(?)`
 		result, err := DB.Exec(query, name)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
-		id, err := result.LastInsertId()
+		id64, err := result.LastInsertId()
 		if err != nil {
-			return 0, err
+			return nil, err
+		}
+		id := int(id64)
+		return &id, nil
+	}
+
+	query := `INSERT INTO product_category(name, parent_id) VALUES(?, ?)`
+	result, err := DB.Exec(query, name, parentId)
+	if err != nil {
+		return nil, err
+	}
+
+	id64, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	id := int(id64)
+	return &id, nil
+
+}
+
+func (p productCategoryRepository) ListProductCategory() ([]utils.CategoryList, error) {
+	var productCategories []utils.CategoryList
+	DB := p.db.GetDB()
+
+	query := `SELECT category_id, name, parent_id FROM product_category`
+	rows, err := DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var productCategory utils.CategoryList
+		if err := rows.Scan(&productCategory.ID, &productCategory.Name, &productCategory.ParentID); err != nil {
+			return nil, err
 		}
 
-		return int(id), nil
+		productCategories = append(productCategories, productCategory)
 	}
 
-	query := `INSERT INTO product_category(parent_id, name) VALUES(?, ?)`
-	result, err := DB.Exec(query, parentId, name)
-	if err != nil {
-		return 0, err
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-
-	return int(id), nil
-
+	return productCategories, nil
 }

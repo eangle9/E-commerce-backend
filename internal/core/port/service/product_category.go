@@ -7,4 +7,5 @@ import (
 
 type ProductCategoryService interface {
 	CreateProductCategory(request request.ProductCategoryRequest) response.Response
+	GetProductCategories() response.Response
 }
