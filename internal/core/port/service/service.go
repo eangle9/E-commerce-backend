@@ -21,4 +21,5 @@ type ProductCategoryService interface {
 	GetProductCategories() response.Response
 	GetProductCategory(id int) response.Response
 	UpdateProductCategory(id int, category utils.UpdateCategory) response.Response
+	DeleteProductCategory(id int) response.Response
 }

@@ -33,7 +33,8 @@ func (cat *categoryController) InitCategoryRouter() {
 	api.POST("/create", cat.createCategoryHandler)
 	api.GET("/list", cat.listCategoryHandler)
 	api.GET("/:id", cat.GetProductCategoryHandler)
-	api.PUT("/update/:id", cat.UpdateProductCategoryHandler)
+	api.PUT("/update/:id", cat.updateProductCategoryHandler)
+	api.DELETE("/delete/:id", cat.deleteProductCategoryHandler)
 }
 
 func (cat categoryController) createCategoryHandler(c *gin.Context) {
@@ -102,7 +103,7 @@ func (cat categoryController) GetProductCategoryHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
-func (cat categoryController) UpdateProductCategoryHandler(c *gin.Context) {
+func (cat categoryController) updateProductCategoryHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	var category utils.UpdateCategory
 
@@ -128,6 +129,29 @@ func (cat categoryController) UpdateProductCategoryHandler(c *gin.Context) {
 	}
 
 	resp := cat.categoryService.UpdateProductCategory(id, category)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (cat categoryController) deleteProductCategoryHandler(c *gin.Context) {
+	idStr := c.Param("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid id.Please enter a valid integer id",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	resp := cat.categoryService.DeleteProductCategory(id)
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return

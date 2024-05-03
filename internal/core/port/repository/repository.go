@@ -20,4 +20,5 @@ type ProductCategoryRepository interface {
 	ListProductCategory() ([]utils.ProductCategory, error)
 	GetProductCategoryById(id int) (utils.ProductCategory, error)
 	EditProductCategoryById(id int, category utils.UpdateCategory) (utils.ProductCategory, error)
+	DeleteProductCategoryById(id int) (string, int, string, error)
 }

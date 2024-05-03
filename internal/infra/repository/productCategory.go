@@ -3,9 +3,13 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
+	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/port/repository"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 )
 
 type productCategoryRepository struct {
@@ -25,7 +29,7 @@ func (p productCategoryRepository) InsertProductCategory(category dto.ProductCat
 	parentId := category.ParentID
 
 	var count int
-	if err := DB.QueryRow("SELECT COUNT(*) FROM product_category WHERE name = ?", name).Scan(&count); err != nil {
+	if err := DB.QueryRow("SELECT COUNT(*) FROM product_category WHERE name = ? And deleted_at IS NULL", name).Scan(&count); err != nil {
 		return nil, err
 	}
 
@@ -67,7 +71,7 @@ func (p productCategoryRepository) ListProductCategory() ([]utils.ProductCategor
 	var productCategories []utils.ProductCategory
 	DB := p.db.GetDB()
 
-	query := `SELECT category_id, name, parent_id FROM product_category`
+	query := `SELECT category_id, name, parent_id, created_at, updated_at, deleted_at FROM product_category WHERE deleted_at IS NULL`
 	rows, err := DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -77,7 +81,7 @@ func (p productCategoryRepository) ListProductCategory() ([]utils.ProductCategor
 
 	for rows.Next() {
 		var productCategory utils.ProductCategory
-		if err := rows.Scan(&productCategory.ID, &productCategory.Name, &productCategory.ParentID); err != nil {
+		if err := rows.Scan(&productCategory.ID, &productCategory.Name, &productCategory.ParentID, &productCategory.CreatedAt, &productCategory.UpdatedAt, &productCategory.DeletedAt); err != nil {
 			return nil, err
 		}
 
@@ -95,7 +99,7 @@ func (p productCategoryRepository) GetProductCategoryById(id int) (utils.Product
 	var category utils.ProductCategory
 	DB := p.db.GetDB()
 
-	query := `SELECT category_id, name, parent_id, created_at, updated_at, deleted_at FROM product_category WHERE category_id = ?`
+	query := `SELECT category_id, name, parent_id, created_at, updated_at, deleted_at FROM product_category WHERE category_id = ? AND deleted_at IS NULL`
 	if err := DB.QueryRow(query, id).Scan(&category.ID, &category.Name, &category.ParentID, &category.CreatedAt, &category.UpdatedAt, &category.DeletedAt); err != nil {
 		err = fmt.Errorf("product category with category_id %d not found", id)
 		return utils.ProductCategory{}, err
@@ -129,7 +133,7 @@ func (p productCategoryRepository) EditProductCategoryById(id int, category util
 	// 	return utils.ProductCategory{}, err
 	// }
 
-	query := fmt.Sprintf("UPDATE product_category SET %s WHERE category_id = ?", strings.Join(updateFields, ", "))
+	query := fmt.Sprintf("UPDATE product_category SET %s WHERE category_id = ? AND deleted_at IS NULL", strings.Join(updateFields, ", "))
 	values = append(values, id)
 
 	if _, err := DB.Exec(query, values...); err != nil {
@@ -142,4 +146,37 @@ func (p productCategoryRepository) EditProductCategoryById(id int, category util
 	}
 
 	return productCategory, nil
+}
+
+func (p productCategoryRepository) DeleteProductCategoryById(id int) (string, int, string, error) {
+	DB := p.db.GetDB()
+	var deleted_at *time.Time
+
+	if err := DB.QueryRow("SELECT deleted_at FROM product_category WHERE category_id = ?", id).Scan(&deleted_at); err != nil {
+		errType := errorcode.NotFoundError
+		err := fmt.Errorf("product category with id '%d' not found", id)
+		status := http.StatusNotFound
+		return "", status, errType, err
+	}
+
+	if deleted_at != nil {
+		errType := "CONFLICT_ERROR"
+		err := errors.New("can't delete already deleted product category")
+		status := http.StatusConflict
+		return "", status, errType, err
+	}
+
+	query := `UPDATE product_category SET deleted_at = ? WHERE category_id = ?`
+	if _, err := DB.Exec(query, time.Now(), id); err != nil {
+		errType := errorcode.InternalError
+		status := http.StatusInternalServerError
+		return "", status, errType, err
+	}
+
+	errType := errorcode.Success
+	resp := fmt.Sprintf("product category with id '%d' deleted successfully", id)
+	status := http.StatusOK
+
+	return resp, status, errType, nil
+
 }

@@ -203,11 +203,13 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		values = append(values, user.LastName)
 	}
 	if user.PhoneNumber != "" {
+		fmt.Println("phone", user.PhoneNumber)
 		errorResponse, phoneNumber := utils.PhoneValidation(user.PhoneNumber)
 		if errorResponse != nil {
 			err := fmt.Errorf("%s", errorResponse.ErrorMessage)
 			return utils.User{}, err
 		}
+		fmt.Println("pho", phoneNumber)
 
 		updateFields = append(updateFields, "phone_number = ?")
 		values = append(values, phoneNumber)
@@ -235,7 +237,7 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		values = append(values, time.Now())
 	}
 
-	query := fmt.Sprintf("UPDATE users SET %s WHERE user_id = ?", strings.Join(updateFields, ", "))
+	query := fmt.Sprintf("UPDATE users SET %s WHERE user_id = ? AND deleted_at IS NULL", strings.Join(updateFields, ", "))
 	values = append(values, id)
 
 	if _, err := DB.Exec(query, values...); err != nil {
@@ -261,7 +263,7 @@ func (u userRepository) DeleteUserById(id int) (string, int, string, error) {
 	}
 	if deleted_at != nil {
 		errType := "CONFLICT_ERROR"
-		err := errors.New("cannot delete already deleted user")
+		err := errors.New("can't delete already deleted user")
 		return "", http.StatusConflict, errType, err
 	}
 
