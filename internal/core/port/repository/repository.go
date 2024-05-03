@@ -19,4 +19,5 @@ type ProductCategoryRepository interface {
 	InsertProductCategory(category dto.ProductCategory) (*int, error)
 	ListProductCategory() ([]utils.ProductCategory, error)
 	GetProductCategoryById(id int) (utils.ProductCategory, error)
+	EditProductCategoryById(id int, category utils.UpdateCategory) (utils.ProductCategory, error)
 }

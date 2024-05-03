@@ -247,7 +247,7 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		return utils.User{}, err
 	}
 
-	return updateUser, err
+	return updateUser, nil
 }
 
 func (u userRepository) DeleteUserById(id int) (string, int, string, error) {

@@ -20,4 +20,5 @@ type ProductCategoryService interface {
 	CreateProductCategory(request request.ProductCategoryRequest) response.Response
 	GetProductCategories() response.Response
 	GetProductCategory(id int) response.Response
+	UpdateProductCategory(id int, category utils.UpdateCategory) response.Response
 }

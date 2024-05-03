@@ -2,6 +2,7 @@ package controller
 
 import (
 	"Eccomerce-website/internal/core/common/router"
+	"Eccomerce-website/internal/core/common/utils"
 	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
@@ -32,6 +33,7 @@ func (cat *categoryController) InitCategoryRouter() {
 	api.POST("/create", cat.createCategoryHandler)
 	api.GET("/list", cat.listCategoryHandler)
 	api.GET("/:id", cat.GetProductCategoryHandler)
+	api.PUT("/update/:id", cat.UpdateProductCategoryHandler)
 }
 
 func (cat categoryController) createCategoryHandler(c *gin.Context) {
@@ -92,6 +94,40 @@ func (cat categoryController) GetProductCategoryHandler(c *gin.Context) {
 	}
 
 	resp := cat.categoryService.GetProductCategory(id)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (cat categoryController) UpdateProductCategoryHandler(c *gin.Context) {
+	idStr := c.Param("id")
+	var category utils.UpdateCategory
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid id.Please enter a valid integer id",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	if err := c.ShouldBindJSON(&category); err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "failed to decode json request body",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	resp := cat.categoryService.UpdateProductCategory(id, category)
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return
