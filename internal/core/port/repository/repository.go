@@ -36,4 +36,5 @@ type ProductRepository interface {
 	ListProducts() ([]utils.Product, error)
 	GetProductById(id int) (utils.Product, error)
 	EditProductById(id int, product utils.UpdateProduct) (utils.Product, error)
+	DeleteProductById(id int) (string, int, string, error)
 }

@@ -37,4 +37,5 @@ type ProductService interface {
 	GetProducts() response.Response
 	GetProduct(id int) response.Response
 	UpdateProduct(id int, product utils.UpdateProduct) response.Response
+	DeleteProduct(id int) response.Response
 }
