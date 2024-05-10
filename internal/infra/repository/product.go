@@ -79,3 +79,16 @@ func (p productRepository) ListProducts() ([]utils.Product, error) {
 
 	return products, nil
 }
+
+func (p productRepository) GetProductById(id int) (utils.Product, error) {
+	var product utils.Product
+	DB := p.db.GetDB()
+
+	query := `SELECT product_id, category_id, product_name, description, created_at, updated_at, deleted_at FROM product WHERE product_id = ? AND deleted_at IS NULL`
+	if err := DB.QueryRow(query, id).Scan(&product.ID, &product.CategoryID, &product.ProductName, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt); err != nil {
+		err := fmt.Errorf("product with product_id '%d' not found", id)
+		return utils.Product{}, err
+	}
+
+	return product, nil
+}

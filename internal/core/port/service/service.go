@@ -35,4 +35,5 @@ type ColorService interface {
 type ProductService interface {
 	CreateProduct(request request.ProductRequest) response.Response
 	GetProducts() response.Response
+	GetProduct(id int) response.Response
 }

@@ -7,6 +7,7 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -30,6 +31,7 @@ func (p *productController) InitProductRouter() {
 
 	api.POST("/create", p.createProductHandler)
 	api.GET("/list", p.listProductHandler)
+	api.GET("/:id", p.GetPrductHandler)
 }
 
 func (p productController) createProductHandler(c *gin.Context) {
@@ -67,6 +69,29 @@ func (p productController) createProductHandler(c *gin.Context) {
 
 func (p productController) listProductHandler(c *gin.Context) {
 	resp := p.productService.GetProducts()
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (p productController) GetPrductHandler(c *gin.Context) {
+	idStr := c.Param("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid id.Please enter a valid integer id",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	resp := p.productService.GetProduct(id)
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return
