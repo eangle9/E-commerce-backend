@@ -4,7 +4,10 @@ import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
 	"Eccomerce-website/internal/core/port/repository"
+	"errors"
 	"fmt"
+	"strings"
+	"time"
 )
 
 type productRepository struct {
@@ -91,4 +94,49 @@ func (p productRepository) GetProductById(id int) (utils.Product, error) {
 	}
 
 	return product, nil
+}
+
+func (p productRepository) EditProductById(id int, product utils.UpdateProduct) (utils.Product, error) {
+	DB := p.db.GetDB()
+	var updateFields []string
+	var values []interface{}
+
+	if product.CategoryID != 0 {
+		updateFields = append(updateFields, "category_id = ?")
+		values = append(values, product.CategoryID)
+	}
+
+	if product.Description != "" {
+		updateFields = append(updateFields, "description = ?")
+		values = append(values, product.Description)
+	}
+
+	if product.ProductName != "" {
+		updateFields = append(updateFields, "product_name = ?")
+		values = append(values, product.ProductName)
+	}
+
+	if len(updateFields) == 0 {
+		err := errors.New("failed to update product:No fields provided for update.Please provide at least one field to update")
+		return utils.Product{}, err
+	}
+
+	if len(values) > 0 {
+		updateFields = append(updateFields, "updated_at = ?")
+		values = append(values, time.Now())
+	}
+
+	query := fmt.Sprintf("UPDATE product SET %s WHERE product_id = ? AND deleted_at IS NULL", strings.Join(updateFields, ", "))
+	values = append(values, id)
+	if _, err := DB.Exec(query, values...); err != nil {
+		return utils.Product{}, err
+	}
+
+	updatedProduct, err := p.GetProductById(id)
+	if err != nil {
+		return utils.Product{}, err
+	}
+
+	return updatedProduct, nil
+
 }

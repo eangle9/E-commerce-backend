@@ -2,6 +2,7 @@ package controller
 
 import (
 	"Eccomerce-website/internal/core/common/router"
+	"Eccomerce-website/internal/core/common/utils"
 	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
@@ -32,6 +33,7 @@ func (p *productController) InitProductRouter() {
 	api.POST("/create", p.createProductHandler)
 	api.GET("/list", p.listProductHandler)
 	api.GET("/:id", p.GetPrductHandler)
+	api.PUT("/update/:id", p.UpdateProductHandler)
 }
 
 func (p productController) createProductHandler(c *gin.Context) {
@@ -92,6 +94,40 @@ func (p productController) GetPrductHandler(c *gin.Context) {
 	}
 
 	resp := p.productService.GetProduct(id)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (p productController) UpdateProductHandler(c *gin.Context) {
+	var product utils.UpdateProduct
+	idStr := c.Param("id")
+
+	if err := c.ShouldBindJSON(&product); err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "failed to decode json request body",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid id.Please enter a valid integer id",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	resp := p.productService.UpdateProduct(id, product)
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return

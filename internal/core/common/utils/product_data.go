@@ -26,6 +26,12 @@ type Product struct {
 	DeletedAt   *time.Time `json:"deleted_at"`
 }
 
+type UpdateProduct struct {
+	CategoryID  int    `json:"category_id"`
+	ProductName string `json:"product_name"`
+	Description string `json:"description"`
+}
+
 // type Category struct {
 // 	ID        int
 // 	Name      string
