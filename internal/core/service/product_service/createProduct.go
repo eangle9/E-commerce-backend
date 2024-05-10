@@ -1,4 +1,4 @@
-package colorservice
+package productservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
@@ -10,22 +10,24 @@ import (
 	"net/http"
 )
 
-type colorService struct {
-	colorRepo repository.ColorRepository
+type productService struct {
+	productRepo repository.ProductRepository
 }
 
-func NewColorService(colorRepo repository.ColorRepository) service.ColorService {
-	return &colorService{
-		colorRepo: colorRepo,
+func NewProductService(repo repository.ProductRepository) service.ProductService {
+	return &productService{
+		productRepo: repo,
 	}
 }
 
-func (c colorService) CreateColor(request request.ColorRequest) response.Response {
-	color := dto.Color{
-		Name: request.ColorName,
+func (p productService) CreateProduct(request request.ProductRequest) response.Response {
+	product := dto.Product{
+		CategoryID:  request.CategoryID,
+		ProductName: request.ProductName,
+		Description: request.Description,
 	}
 
-	id, err := c.colorRepo.InsertColor(color)
+	id, err := p.productRepo.InsertProduct(product)
 	if err != nil {
 		response := response.Response{
 			Status:       http.StatusConflict,
@@ -35,13 +37,13 @@ func (c colorService) CreateColor(request request.ColorRequest) response.Respons
 		return response
 	}
 
-	color.ID = *id
+	product.ID = *id
 
 	response := response.Response{
-		Data:         color,
+		Data:         product,
 		Status:       http.StatusCreated,
 		ErrorType:    errorcode.Success,
-		ErrorMessage: "Congratulation, color for product created successfully!",
+		ErrorMessage: "Congratulation, product created successfully!",
 	}
 
 	return response

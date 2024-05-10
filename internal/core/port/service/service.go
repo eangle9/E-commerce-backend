@@ -31,3 +31,7 @@ type ColorService interface {
 	UpdateColor(id int, color utils.UpdateColor) response.Response
 	DeleteColor(id int) response.Response
 }
+
+type ProductService interface {
+	CreateProduct(request request.ProductRequest) response.Response
+}

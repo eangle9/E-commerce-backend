@@ -30,3 +30,7 @@ type ColorRepository interface {
 	EditColorById(id int, color utils.UpdateColor) (utils.Color, error)
 	DeleteColorById(id int) (string, int, string, error)
 }
+
+type ProductRepository interface {
+	InsertProduct(product dto.Product) (*int, error)
+}
