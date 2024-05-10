@@ -26,6 +26,7 @@ var (
 	customizer2 = g.Validator(request.LoginRequest{})
 	customizer3 = g.Validator(request.RefreshRequest{})
 	customizer4 = g.Validator(request.ProductCategoryRequest{})
+	customizer5 = g.Validator(request.ColorRequest{})
 )
 
 type UserController struct {

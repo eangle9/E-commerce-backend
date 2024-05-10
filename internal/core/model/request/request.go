@@ -24,3 +24,7 @@ type ProductCategoryRequest struct {
 	ParentID int    `json:"parent_id"`
 	Name     string `json:"name" validate:"required"`
 }
+
+type ColorRequest struct {
+	ColorName string `json:"color_name" validate:"required"`
+}

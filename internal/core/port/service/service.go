@@ -23,3 +23,10 @@ type ProductCategoryService interface {
 	UpdateProductCategory(id int, category utils.UpdateCategory) response.Response
 	DeleteProductCategory(id int) response.Response
 }
+
+type ColorService interface {
+	CreateColor(request request.ColorRequest) response.Response
+	GetColors() response.Response
+	GetColor(id int) response.Response
+	UpdateColor(id int, color utils.UpdateColor) response.Response
+}

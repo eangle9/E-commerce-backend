@@ -101,7 +101,7 @@ func (p productCategoryRepository) GetProductCategoryById(id int) (utils.Product
 
 	query := `SELECT category_id, name, parent_id, created_at, updated_at, deleted_at FROM product_category WHERE category_id = ? AND deleted_at IS NULL`
 	if err := DB.QueryRow(query, id).Scan(&category.ID, &category.Name, &category.ParentID, &category.CreatedAt, &category.UpdatedAt, &category.DeletedAt); err != nil {
-		err = fmt.Errorf("product category with category_id %d not found", id)
+		err = fmt.Errorf("product category with category_id '%d' not found", id)
 		return utils.ProductCategory{}, err
 	}
 
@@ -123,6 +123,15 @@ func (p productCategoryRepository) EditProductCategoryById(id int, category util
 		values = append(values, category.ParentID)
 	}
 
+	if len(updateFields) == 0 {
+		err := errors.New("failed to update color:No fields provided for update.Please provide at least one field to update")
+		return utils.ProductCategory{}, err
+	}
+
+	if len(values) > 0 {
+		updateFields = append(updateFields, "updated_at = ?")
+		values = append(values, time.Now())
+	}
 	// oldProductCategory, err := p.GetProductCategoryById(id)
 	// if err != nil {
 	// 	return utils.ProductCategory{}, err

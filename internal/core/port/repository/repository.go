@@ -22,3 +22,10 @@ type ProductCategoryRepository interface {
 	EditProductCategoryById(id int, category utils.UpdateCategory) (utils.ProductCategory, error)
 	DeleteProductCategoryById(id int) (string, int, string, error)
 }
+
+type ColorRepository interface {
+	InsertColor(color dto.Color) (*int, error)
+	ListColors() ([]utils.Color, error)
+	GetColorById(id int) (utils.Color, error)
+	EditColorById(id int, color utils.UpdateColor) (utils.Color, error)
+}
