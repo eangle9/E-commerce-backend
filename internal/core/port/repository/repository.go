@@ -33,4 +33,5 @@ type ColorRepository interface {
 
 type ProductRepository interface {
 	InsertProduct(product dto.Product) (*int, error)
+	ListProducts() ([]utils.Product, error)
 }
