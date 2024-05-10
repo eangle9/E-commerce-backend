@@ -3,9 +3,11 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
+	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -123,4 +125,39 @@ func (c colorRepository) EditColorById(id int, color utils.UpdateColor) (utils.C
 	}
 
 	return updatedColor, nil
+}
+
+func (c colorRepository) DeleteColorById(id int) (string, int, string, error) {
+	DB := c.db.GetDB()
+	var deleted_at *time.Time
+
+	if err := DB.QueryRow("SELECT deleted_at FROM color WHERE color_id = ?", id).Scan(&deleted_at); err != nil {
+		errType := errorcode.NotFoundError
+		status := http.StatusNotFound
+		err := fmt.Errorf("color with color_id '%d' not found", id)
+
+		return "", status, errType, err
+	}
+
+	if deleted_at != nil {
+		errType := "CONFLICT_ERROR"
+		status := http.StatusConflict
+		err := errors.New("can't delete already deleted color")
+
+		return "", status, errType, err
+	}
+
+	query := `UPDATE color SET deleted_at = ? WHERE color_id = ?`
+	if _, err := DB.Exec(query, time.Now(), id); err != nil {
+		errType := errorcode.InternalError
+		status := http.StatusInternalServerError
+
+		return "", status, errType, err
+	}
+
+	errType := errorcode.Success
+	status := http.StatusOK
+	resp := fmt.Sprintf("color withe color_id '%d' deleted successfully!", id)
+
+	return resp, status, errType, nil
 }

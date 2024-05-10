@@ -29,4 +29,5 @@ type ColorService interface {
 	GetColors() response.Response
 	GetColor(id int) response.Response
 	UpdateColor(id int, color utils.UpdateColor) response.Response
+	DeleteColor(id int) response.Response
 }

@@ -34,6 +34,7 @@ func (color *colorController) InitColorRouter() {
 	api.GET("/list", color.ListColorHandler)
 	api.GET("/:id", color.GetColorHandler)
 	api.PUT("/update/:id", color.updateColorHandler)
+	api.DELETE("/delete/:id", color.deleteColorHandler)
 }
 
 func (color colorController) createColorHandler(c *gin.Context) {
@@ -128,6 +129,29 @@ func (color colorController) updateColorHandler(c *gin.Context) {
 	}
 
 	resp := color.colorService.UpdateColor(id, request)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (color colorController) deleteColorHandler(c *gin.Context) {
+	idStr := c.Param("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid id.Please enter a valid integer id",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	resp := color.colorService.DeleteColor(id)
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return

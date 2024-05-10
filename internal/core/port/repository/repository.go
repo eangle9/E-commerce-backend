@@ -28,4 +28,5 @@ type ColorRepository interface {
 	ListColors() ([]utils.Color, error)
 	GetColorById(id int) (utils.Color, error)
 	EditColorById(id int, color utils.UpdateColor) (utils.Color, error)
+	DeleteColorById(id int) (string, int, string, error)
 }
