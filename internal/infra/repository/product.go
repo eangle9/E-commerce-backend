@@ -34,7 +34,7 @@ func (p productRepository) InsertProduct(product dto.Product) (*int, error) {
 	}
 
 	if count > 0 {
-		err := fmt.Errorf("product with product_id '%s' is already exists", name)
+		err := fmt.Errorf("product with product_name '%s' is already exists", name)
 		return nil, err
 	}
 

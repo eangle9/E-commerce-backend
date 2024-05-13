@@ -38,3 +38,7 @@ type ProductRepository interface {
 	EditProductById(id int, product utils.UpdateProduct) (utils.Product, error)
 	DeleteProductById(id int) (string, int, string, error)
 }
+
+type ProductItemRepository interface {
+	InsertProductItem(item dto.ProductItem) (*int, error)
+}
