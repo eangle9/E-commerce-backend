@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
 	"Eccomerce-website/internal/core/port/repository"
 	"fmt"
@@ -53,4 +54,34 @@ func (p productItemRepository) InsertProductItem(item dto.ProductItem) (*int, er
 	id := int(id64)
 
 	return &id, nil
+}
+
+func (p productItemRepository) ListProductItems() ([]utils.ProductItem, error) {
+	var items []utils.ProductItem
+	DB := p.db.GetDB()
+
+	query := `SELECT product_item_id, product_id, color_id, price, qty_in_stock, created_at, updated_at, deleted_at FROM product_item WHERE deleted_at IS NULL`
+
+	rows, err := DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var item utils.ProductItem
+		if err := rows.Scan(&item.ID, &item.ProductID, &item.ColorID, &item.Price, &item.QtyInStock, &item.CreatedAt, &item.UpdatedAt, &item.DeletedAt); err != nil {
+			return nil, err
+		}
+
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+
 }

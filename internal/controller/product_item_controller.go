@@ -29,6 +29,7 @@ func (p *productItemController) InitProductItemRouter() {
 	api := r.Group("/item")
 
 	api.POST("/create", p.createProductItemHandler)
+	api.GET("/list", p.getProductItemsHandler)
 }
 
 func (p productItemController) createProductItemHandler(c *gin.Context) {
@@ -56,6 +57,16 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 	}
 
 	resp := p.productItemService.CreateProductItem(request)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (p productItemController) getProductItemsHandler(c *gin.Context) {
+	resp := p.productItemService.GetProductItems()
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return
