@@ -34,6 +34,7 @@ func (p *productItemController) InitProductItemRouter() {
 	api.GET("/list", p.getProductItemsHandler)
 	api.GET("/:id", p.getProductItemHandler)
 	api.PUT("/update/:id", p.updateProductItemHandler)
+	api.DELETE("/delete/:id", p.deleteProductItemHandler)
 }
 
 func (p productItemController) createProductItemHandler(c *gin.Context) {
@@ -128,6 +129,29 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 	}
 
 	resp := p.productItemService.UpdateProductItem(id, request)
+	if resp.ErrorType != errorcode.Success {
+		c.Set("error", resp)
+		return
+	}
+
+	c.JSON(resp.Status, resp)
+}
+
+func (p productItemController) deleteProductItemHandler(c *gin.Context) {
+	idStr := c.Param("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid id.Please enter a valid integer value",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	resp := p.productItemService.DeleteProductItem(id)
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
 		return

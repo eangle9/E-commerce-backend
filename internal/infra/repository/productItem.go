@@ -3,9 +3,11 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
+	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -151,19 +153,37 @@ func (p productItemRepository) EditProductItemById(id int, productItem utils.Upd
 	return updatedItem, nil
 }
 
-// func (p productItemRepository) DeleteProductItemById(id int)  error {
-// 	DB := p.db.GetDB()
-// 	var deleted_at *time.Time
+func (p productItemRepository) DeleteProductItemById(id int) (string, int, string, error) {
+	DB := p.db.GetDB()
+	var deleted_at *time.Time
 
-// 	if err := DB.QueryRow("SELECT deleted_at FROM product_item WHERE product_item_id = ?").Scan(&deleted_at); err != nil {
-// 		err = fmt.Errorf("product item with product_item_id '%d' not found", id)
-// 		return utils.ProductItem{}, err
-// 	}
+	if err := DB.QueryRow("SELECT deleted_at FROM product_item WHERE product_item_id = ?", id).Scan(&deleted_at); err != nil {
+		err = fmt.Errorf("product item with product_item_id '%d' not found", id)
+		errorType := errorcode.NotFoundError
+		status := http.StatusNotFound
 
-// 	if deleted_at != nil {
-// 		err := errors.New("you can't delete already deleted product item")
-// 		return utils.ProductItem{}, err
-// 	}
+		return "", status, errorType, err
+	}
 
-// 	query := `SELECT `
-// }
+	if deleted_at != nil {
+		err := errors.New("you can't delete already deleted product item")
+		errType := "CONFLICT_ERROR"
+		status := http.StatusConflict
+
+		return "", status, errType, err
+	}
+
+	query := `UPDATE product_item SET deleted_at = ? WHERE product_item_id = ?`
+	if _, err := DB.Exec(query, time.Now(), id); err != nil {
+		status := http.StatusInternalServerError
+		errType := errorcode.InternalError
+
+		return "", status, errType, err
+	}
+
+	status := http.StatusOK
+	errType := errorcode.Success
+	resp := fmt.Sprintf("product item with id '%d' deleted successfully!", id)
+
+	return resp, status, errType, nil
+}

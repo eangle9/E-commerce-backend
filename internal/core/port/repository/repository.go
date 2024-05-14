@@ -44,4 +44,5 @@ type ProductItemRepository interface {
 	ListProductItems() ([]utils.ProductItem, error)
 	GetProductItemById(id int) (utils.ProductItem, error)
 	EditProductItemById(id int, productItem utils.UpdateProductItem) (utils.ProductItem, error)
+	DeleteProductItemById(id int) (string, int, string, error)
 }
