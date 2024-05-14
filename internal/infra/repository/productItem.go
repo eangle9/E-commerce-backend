@@ -85,3 +85,32 @@ func (p productItemRepository) ListProductItems() ([]utils.ProductItem, error) {
 	return items, nil
 
 }
+
+func (p productItemRepository) GetProductItemById(id int) (utils.ProductItem, error) {
+	DB := p.db.GetDB()
+	var productItem utils.ProductItem
+
+	query := `SELECT product_item_id, product_id, color_id, price, qty_in_stock, created_at, updated_at, deleted_at FROM product_item WHERE product_item_id = ? AND deleted_at IS NULL`
+	if err := DB.QueryRow(query, id).Scan(&productItem.ID, &productItem.ProductID, &productItem.ColorID, &productItem.Price, &productItem.QtyInStock, &productItem.CreatedAt, &productItem.UpdatedAt, &productItem.DeletedAt); err != nil {
+		return utils.ProductItem{}, err
+	}
+
+	return productItem, nil
+}
+
+// func (p productItemRepository) DeleteProductItemById(id int)  error {
+// 	DB := p.db.GetDB()
+// 	var deleted_at *time.Time
+
+// 	if err := DB.QueryRow("SELECT deleted_at FROM product_item WHERE product_item_id = ?").Scan(&deleted_at); err != nil {
+// 		err = fmt.Errorf("product item with product_item_id '%d' not found", id)
+// 		return utils.ProductItem{}, err
+// 	}
+
+// 	if deleted_at != nil {
+// 		err := errors.New("you can't delete already deleted product item")
+// 		return utils.ProductItem{}, err
+// 	}
+
+// 	query := `SELECT `
+// }
