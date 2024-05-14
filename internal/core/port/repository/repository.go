@@ -43,4 +43,5 @@ type ProductItemRepository interface {
 	InsertProductItem(item dto.ProductItem) (*int, error)
 	ListProductItems() ([]utils.ProductItem, error)
 	GetProductItemById(id int) (utils.ProductItem, error)
+	EditProductItemById(id int, productItem utils.UpdateProductItem) (utils.ProductItem, error)
 }

@@ -44,4 +44,5 @@ type ProductItemService interface {
 	CreateProductItem(request request.ProductItemRequest) response.Response
 	GetProductItems() response.Response
 	GetProductItem(id int) response.Response
+	UpdateProductItem(id int, productItem utils.UpdateProductItem) response.Response
 }
