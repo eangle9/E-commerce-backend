@@ -3,6 +3,7 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
+	"Eccomerce-website/internal/core/model/request"
 	// dbmodels "Eccomerce-website/internal/infra/db_models"
 )
 
@@ -45,4 +46,8 @@ type ProductItemRepository interface {
 	GetProductItemById(id int) (utils.ProductItem, error)
 	EditProductItemById(id int, productItem utils.UpdateProductItem) (utils.ProductItem, error)
 	DeleteProductItemById(id int) (string, int, string, error)
+}
+
+type ProductImageRepository interface {
+	InsertProductImage(request request.ProductImageRequest) (*int, string, error)
 }

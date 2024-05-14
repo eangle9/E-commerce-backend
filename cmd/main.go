@@ -7,6 +7,7 @@ import (
 	"Eccomerce-website/internal/core/common/router"
 	categoryservice "Eccomerce-website/internal/core/service/category_service"
 	colorservice "Eccomerce-website/internal/core/service/color_service"
+	productimageservice "Eccomerce-website/internal/core/service/product_image_service"
 	productitemservice "Eccomerce-website/internal/core/service/product_item_service"
 	productservice "Eccomerce-website/internal/core/service/product_service"
 	service "Eccomerce-website/internal/core/service/user_service"
@@ -36,6 +37,7 @@ func main() {
 	// fmt.Println("cwd :", cwd)
 	errorMiddleware := middleware.ErrorMiddleware
 	instance := gin.New()
+	instance.MaxMultipartMemory = 8 << 20 // 8MB maximum
 	instance.Use(gin.Recovery())
 	instance.Use(gin.Logger())
 	instance.Use(errorMiddleware())
@@ -94,6 +96,12 @@ func main() {
 	productItemService := productitemservice.NewProductItemService(productItemRepo)
 	productItemController := controller.NewProductItemController(engine, productItemService)
 	productItemController.InitProductItemRouter()
+
+	// product image service
+	imageRepo := repository.NewProductImageRepository(db)
+	productImageService := productimageservice.NewProductImageService(imageRepo)
+	productImageController := controller.NewProductImageController(engine, productImageService)
+	productImageController.InitProductImageRouter()
 
 	if err := server.Start(instance, *httpServerConfig); err != nil {
 		log.Fatal(err)

@@ -1,5 +1,7 @@
 package request
 
+import "mime/multipart"
+
 type SignUpRequest struct {
 	Username    string `json:"username" validate:"required"`
 	Email       string `json:"email" validate:"required,email"`
@@ -40,4 +42,9 @@ type ProductItemRequest struct {
 	ColorID    *int `json:"color_id"`
 	Price      int  `json:"price" validate:"required"`
 	QtyInStock int  `json:"qty_in_stock"`
+}
+
+type ProductImageRequest struct {
+	ProductItemId int `json:"product_item_id" validate:"required"`
+	File          *multipart.FileHeader
 }

@@ -47,3 +47,7 @@ type ProductItemService interface {
 	UpdateProductItem(id int, productItem utils.UpdateProductItem) response.Response
 	DeleteProductItem(id int) response.Response
 }
+
+type ProductImageService interface {
+	CreateProductImage(request request.ProductImageRequest) response.Response
+}

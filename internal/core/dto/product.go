@@ -20,3 +20,9 @@ type ProductItem struct {
 	Price      int  `json:"price"`
 	QtyInStock int  `json:"qty_in_stock"`
 }
+
+type ProductImage struct {
+	ID            int    `json:"image_id"`
+	ProductItemID int    `json:"product_item_id"`
+	ImageUrl      string `json:"image_url"`
+}
