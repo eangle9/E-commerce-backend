@@ -3,13 +3,11 @@ package service
 import (
 	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/response"
-	"fmt"
 	"net/http"
 )
 
 func (u userService) GetUsers() response.Response {
 	users, err := u.userRepo.ListUsers()
-	fmt.Println("error: ", err)
 	if err != nil {
 		errorResponse := response.Response{
 			Status:       http.StatusInternalServerError,

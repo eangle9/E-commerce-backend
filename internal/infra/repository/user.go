@@ -43,10 +43,10 @@ func (u userRepository) InsertUser(user dto.User) (int, error) {
 		return 0, err
 	}
 
-	query := `INSERT INTO users(username, email, password, first_name, last_name, phone_number, role, email_verified, profile_picture)
-	          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO users(username, email, password, first_name, last_name, phone_number, email_verified, profile_picture)
+	          VALUES(?, ?, ?, ?, ?, ?, ?, ?)`
 
-	result, err := DB.Exec(query, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.PhoneNumber, user.Role, user.EmailVerified, user.ProfilePicture)
+	result, err := DB.Exec(query, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.PhoneNumber, user.EmailVerified, user.ProfilePicture)
 	if err != nil {
 		return 0, err
 	}
@@ -197,7 +197,6 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 			err := fmt.Errorf("%s", errorResponse.ErrorMessage)
 			return utils.User{}, err
 		}
-		fmt.Println("pho", phoneNumber)
 
 		updateFields = append(updateFields, "phone_number = ?")
 		values = append(values, phoneNumber)
@@ -210,10 +209,10 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		updateFields = append(updateFields, "profile_picture = ?")
 		values = append(values, user.ProfilePicture)
 	}
-	if user.Role != "" {
-		updateFields = append(updateFields, "role = ?")
-		values = append(values, user.Role)
-	}
+	// if user.Role != "" {
+	// 	updateFields = append(updateFields, "role = ?")
+	// 	values = append(values, user.Role)
+	// }
 
 	if len(updateFields) == 0 {
 		err := errors.New("failed to update user:No fields provided for update.Please provide at least one field to update")

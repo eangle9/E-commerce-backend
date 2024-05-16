@@ -28,5 +28,5 @@ type UpdateUser struct {
 	PhoneNumber string `json:"phone_number"`
 	// Address        string `json:"address"`
 	ProfilePicture string `json:"profile_picture"`
-	Role           string `json:"role"`
+	// Role           string `json:"role"`
 }

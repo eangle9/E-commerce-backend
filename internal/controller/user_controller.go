@@ -128,6 +128,9 @@ func (u UserController) LoginHandler(c *gin.Context) {
 }
 
 func (u UserController) listUserHandler(c *gin.Context) {
+	// id, _ := c.Get("userId")
+	// role, _ := c.Get("role")
+	// fmt.Printf("id: %d and role: %s \n", id, role)
 	resp := u.userService.GetUsers()
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)

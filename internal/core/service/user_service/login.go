@@ -34,7 +34,7 @@ func (u userService) LoginUser(request request.LoginRequest) response.Response {
 		return errorResponse
 	}
 
-	tokenMap, err := jwttoken.GenerateTokenPair(uint(user.ID))
+	tokenMap, err := jwttoken.GenerateTokenPair(uint(user.ID), user.Role)
 	if err != nil {
 		errorResponse := response.Response{
 			Status:       http.StatusInternalServerError,

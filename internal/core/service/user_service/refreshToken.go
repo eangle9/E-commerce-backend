@@ -16,7 +16,7 @@ type tokenPair struct {
 func (u userService) RefreshToken(refreshToken request.RefreshRequest) response.Response {
 	rfToken := refreshToken.RefreshToken
 
-	id, err := jwttoken.VerifyToken(rfToken)
+	id, role, err := jwttoken.VerifyToken(rfToken)
 	if err != nil {
 		response := response.Response{
 			Status:       http.StatusUnauthorized,
@@ -26,7 +26,7 @@ func (u userService) RefreshToken(refreshToken request.RefreshRequest) response.
 		return response
 	}
 
-	tokenMap, err := jwttoken.GenerateTokenPair(id)
+	tokenMap, err := jwttoken.GenerateTokenPair(id, role)
 	if err != nil {
 		response := response.Response{
 			Status:       http.StatusInternalServerError,

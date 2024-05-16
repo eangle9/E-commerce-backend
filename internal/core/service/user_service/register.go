@@ -59,7 +59,7 @@ func (u userService) SignUp(request request.SignUpRequest) response.Response {
 		LastName:    request.LastName,
 		PhoneNumber: phoneNumber,
 		// Address:       request.Address,
-		Role:          "user",
+		// Role:          "user",
 		EmailVerified: false,
 		// CreatedAt:     time.Now(),
 		// UpdatedAt:     time.Now(),

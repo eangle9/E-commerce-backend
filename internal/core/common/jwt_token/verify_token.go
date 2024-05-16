@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func VerifyToken(tokenString string) (uint, error) {
+func VerifyToken(tokenString string) (uint, string, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			err := fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
@@ -24,27 +24,33 @@ func VerifyToken(tokenString string) (uint, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	if !token.Valid {
 		err := errors.New("invalid token")
-		return 0, err
+		return 0, "", err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		err := errors.New("unable to extract claims from the token")
-		return 0, err
+		return 0, "", err
 	}
 
 	idFloat, ok := claims["id"].(float64)
 	if !ok {
 		err := errors.New("unable to get id from the claims")
-		return 0, err
+		return 0, "", err
+	}
+
+	role, ok := claims["role"].(string)
+	if !ok {
+		err := errors.New("unable to get role from claims")
+		return 0, "", err
 	}
 
 	id := uint(idFloat)
 
-	return id, nil
+	return id, role, nil
 }

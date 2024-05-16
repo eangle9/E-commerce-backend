@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func GenerateTokenPair(id uint) (map[string]string, error) {
+func GenerateTokenPair(id uint, role string) (map[string]string, error) {
 	// viper.SetConfigFile("../.env")
 	viper.AddConfigPath("../")
 	viper.SetConfigName(".env")
@@ -25,8 +25,9 @@ func GenerateTokenPair(id uint) (map[string]string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"id":  id,
-			"exp": time.Now().Add(30 * time.Second).Unix(),
+			"id":   id,
+			"role": role,
+			"exp":  time.Now().Add(30 * time.Second).Unix(),
 		})
 
 	tokenString, err := token.SignedString([]byte(secret))
@@ -36,8 +37,9 @@ func GenerateTokenPair(id uint) (map[string]string, error) {
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"id":  id,
-			"exp": time.Now().Add(24 * time.Hour).Unix(),
+			"id":   id,
+			"role": role,
+			"exp":  time.Now().Add(24 * time.Hour).Unix(),
 		})
 
 	refreshTokenString, err := refreshToken.SignedString([]byte(secret))

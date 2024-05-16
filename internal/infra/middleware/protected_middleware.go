@@ -24,7 +24,7 @@ func ProtectedMiddleware() gin.HandlerFunc {
 		}
 
 		token := strings.Split(bearerToken, " ")[1]
-		id, err := jwttoken.VerifyToken(token)
+		id, role, err := jwttoken.VerifyToken(token)
 		if err != nil {
 			errorResponse := response.Response{
 				Status:       http.StatusUnauthorized,
@@ -36,6 +36,7 @@ func ProtectedMiddleware() gin.HandlerFunc {
 		}
 
 		c.Set("userId", id)
+		c.Set("role", role)
 
 		c.Next()
 	}
