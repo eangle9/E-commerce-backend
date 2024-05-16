@@ -37,7 +37,7 @@ func main() {
 	// fmt.Println("cwd :", cwd)
 	errorMiddleware := middleware.ErrorMiddleware
 	instance := gin.New()
-	instance.MaxMultipartMemory = 8 << 20 // 8MB maximum
+	// instance.MaxMultipartMemory = 8 << 20 // 8MB maximum
 	instance.Use(gin.Recovery())
 	instance.Use(gin.Logger())
 	instance.Use(errorMiddleware())

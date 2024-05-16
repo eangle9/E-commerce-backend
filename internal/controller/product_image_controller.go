@@ -7,6 +7,7 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/service"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -33,16 +34,6 @@ func (p *productImageController) InitProductImageRouter() {
 
 func (p productImageController) uploadProductImageHandler(c *gin.Context) {
 	var request request.ProductImageRequest
-
-	// if err := c.ShouldBindJSON(&request); err != nil {
-	// 	errorResponse := response.Response{
-	// 		Status:       http.StatusBadRequest,
-	// 		ErrorType:    errorcode.InvalidRequest,
-	// 		ErrorMessage: "failed to decode json request body",
-	// 	}
-	// 	c.Set("error", errorResponse)
-	// 	return
-	// }
 
 	productItemIdStr := c.PostForm("product_item_id")
 	if productItemIdStr == "" {
@@ -74,6 +65,39 @@ func (p productImageController) uploadProductImageHandler(c *gin.Context) {
 			Status:       http.StatusBadRequest,
 			ErrorType:    errorcode.InvalidRequest,
 			ErrorMessage: "unable to retrieve file from the upload file",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	maxUploadSize := 8 * 1024 * 1024
+	fileSize := file.Size
+
+	if fileSize > int64(maxUploadSize) {
+		errorResponse := response.Response{
+			Status:       http.StatusRequestEntityTooLarge,
+			ErrorType:    "FILE_TOO_LARGE",
+			ErrorMessage: "the uploaded product image is too large.Please upload a size less than 8MB",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	validExt := map[string]bool{
+		".jpeg": true,
+		".png":  true,
+		".jpg":  true,
+		".gif":  true,
+		".webp": true,
+		".svg":  true,
+	}
+
+	ext := filepath.Ext(file.Filename)
+	if !validExt[ext] {
+		errorResponse := response.Response{
+			Status:       http.StatusUnsupportedMediaType,
+			ErrorType:    "INVALID_FILE_EXTENSION",
+			ErrorMessage: "invalid file extension",
 		}
 		c.Set("error", errorResponse)
 		return
