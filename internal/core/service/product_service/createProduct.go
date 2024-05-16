@@ -23,6 +23,7 @@ func NewProductService(repo repository.ProductRepository) service.ProductService
 func (p productService) CreateProduct(request request.ProductRequest) response.Response {
 	product := dto.Product{
 		CategoryID:  request.CategoryID,
+		Brand:       request.Brand,
 		ProductName: request.ProductName,
 		Description: request.Description,
 	}

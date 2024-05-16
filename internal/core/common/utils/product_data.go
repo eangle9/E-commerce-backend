@@ -20,6 +20,7 @@ type Product struct {
 	ID          int        `json:"product_id"`
 	CategoryID  int        `json:"category_id"`
 	ProductName string     `json:"product_name"`
+	Brand       string     `json:"brand"`
 	Description string     `json:"description"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
@@ -28,6 +29,7 @@ type Product struct {
 
 type UpdateProduct struct {
 	CategoryID  int    `json:"category_id"`
+	Brand       string `json:"brand"`
 	ProductName string `json:"product_name"`
 	Description string `json:"description"`
 }

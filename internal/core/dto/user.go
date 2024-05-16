@@ -1,14 +1,14 @@
 package dto
 
 type User struct {
-	ID             int    `json:"user_id,omitempty"`
-	Username       string `json:"username,omitempty"`
-	Email          string `json:"email,omitempty"`
-	Password       string `json:"password,omitempty"`
-	FirstName      string `json:"firstName,omitempty"`
-	LastName       string `json:"lastName,omitempty"`
-	PhoneNumber    string `json:"phoneNumber,omitempty"`
-	Address        string `json:"address,omitempty"`
+	ID          int    `json:"user_id,omitempty"`
+	Username    string `json:"username,omitempty"`
+	Email       string `json:"email,omitempty"`
+	Password    string `json:"password,omitempty"`
+	FirstName   string `json:"firstName,omitempty"`
+	LastName    string `json:"lastName,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
+	// Address        string `json:"address,omitempty"`
 	Role           string `json:"role,omitempty"`
 	EmailVerified  bool   `json:"emailVerified"`
 	ProfilePicture string `json:"profilePicture,omitempty"`

@@ -25,6 +25,7 @@ func NewProductRepository(db repository.Database) repository.ProductRepository {
 func (p productRepository) InsertProduct(product dto.Product) (*int, error) {
 	DB := p.db.GetDB()
 	categoryId := product.CategoryID
+	brand := product.Brand
 	name := product.ProductName
 	description := product.Description
 
@@ -38,8 +39,8 @@ func (p productRepository) InsertProduct(product dto.Product) (*int, error) {
 		return nil, err
 	}
 
-	query := `INSERT INTO product(category_id, product_name, description) VALUES(?, ?, ?)`
-	result, err := DB.Exec(query, categoryId, name, description)
+	query := `INSERT INTO product(category_id, brand, product_name, description) VALUES(?, ?, ?, ?)`
+	result, err := DB.Exec(query, categoryId, brand, name, description)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func (p productRepository) ListProducts() ([]utils.Product, error) {
 	var products []utils.Product
 	DB := p.db.GetDB()
 
-	query := `SELECT product_id, category_id, product_name, description, created_at, updated_at, deleted_at FROM product WHERE deleted_at IS NULL`
+	query := `SELECT product_id, category_id, brand, product_name, description, created_at, updated_at, deleted_at FROM product WHERE deleted_at IS NULL`
 
 	rows, err := DB.Query(query)
 	if err != nil {
@@ -71,7 +72,7 @@ func (p productRepository) ListProducts() ([]utils.Product, error) {
 	for rows.Next() {
 		var product utils.Product
 
-		if err := rows.Scan(&product.ID, &product.CategoryID, &product.ProductName, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt); err != nil {
+		if err := rows.Scan(&product.ID, &product.CategoryID, &product.Brand, &product.ProductName, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt); err != nil {
 			return nil, err
 		}
 
@@ -89,8 +90,8 @@ func (p productRepository) GetProductById(id int) (utils.Product, error) {
 	var product utils.Product
 	DB := p.db.GetDB()
 
-	query := `SELECT product_id, category_id, product_name, description, created_at, updated_at, deleted_at FROM product WHERE product_id = ? AND deleted_at IS NULL`
-	if err := DB.QueryRow(query, id).Scan(&product.ID, &product.CategoryID, &product.ProductName, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt); err != nil {
+	query := `SELECT product_id, category_id, brand, product_name, description, created_at, updated_at, deleted_at FROM product WHERE product_id = ? AND deleted_at IS NULL`
+	if err := DB.QueryRow(query, id).Scan(&product.ID, &product.CategoryID, &product.Brand, &product.ProductName, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt); err != nil {
 		err := fmt.Errorf("product with product_id '%d' not found", id)
 		return utils.Product{}, err
 	}
@@ -106,6 +107,11 @@ func (p productRepository) EditProductById(id int, product utils.UpdateProduct) 
 	if product.CategoryID != 0 {
 		updateFields = append(updateFields, "category_id = ?")
 		values = append(values, product.CategoryID)
+	}
+
+	if product.Brand != "" {
+		updateFields = append(updateFields, "brand = ?")
+		values = append(values, product.Brand)
 	}
 
 	if product.Description != "" {

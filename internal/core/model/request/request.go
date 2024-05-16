@@ -9,8 +9,8 @@ type SignUpRequest struct {
 	FirstName   string `json:"firstName" validate:"required"`
 	LastName    string `json:"lastName" validate:"required"`
 	PhoneNumber string `json:"phoneNumber" validate:"required"`
-	Address     string `json:"address" validate:"required"`
-	Role        string `json:"role" validate:"required"`
+	// Address     string `json:"address" validate:"required"`
+	// Role string `json:"role" validate:"required"`
 }
 
 type LoginRequest struct {
@@ -33,6 +33,7 @@ type ColorRequest struct {
 
 type ProductRequest struct {
 	CategoryID  int    `json:"category_id" validate:"required"`
+	Brand       string `json:"brand"`
 	ProductName string `json:"product_name" validate:"required"`
 	Description string `json:"description" validate:"required"`
 }

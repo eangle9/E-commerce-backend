@@ -15,18 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// import (
-// 	"Eccomerce-website/internal/core/dto"
-// 	"Eccomerce-website/internal/core/port/repository"
-// 	dbmodels "Eccomerce-website/internal/infra/db_models"
-// 	"errors"
-// 	"fmt"
-
-//	"golang.org/x/crypto/bcrypt"
-//	"gorm.io/gorm"
-//
-// )
-
 type userRepository struct {
 	db repository.Database
 }
@@ -55,10 +43,10 @@ func (u userRepository) InsertUser(user dto.User) (int, error) {
 		return 0, err
 	}
 
-	query := `INSERT INTO users(username, email, password, first_name, last_name, phone_number, address, role, email_verified, profile_picture)
-	          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO users(username, email, password, first_name, last_name, phone_number, role, email_verified, profile_picture)
+	          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	result, err := DB.Exec(query, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.PhoneNumber, user.Address, user.Role, user.EmailVerified, user.ProfilePicture)
+	result, err := DB.Exec(query, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.PhoneNumber, user.Role, user.EmailVerified, user.ProfilePicture)
 	if err != nil {
 		return 0, err
 	}
@@ -81,13 +69,13 @@ func (u userRepository) Authentication(email string, password string) (utils.Use
 
 	query := `
 	 SELECT user_id, username, email, password, first_name,
-	 last_name, phone_number, address, profile_picture, email_verified, 
+	 last_name, phone_number, profile_picture, email_verified, 
 	 role, created_at, updated_at FROM users WHERE email = ? AND deleted_at IS NULL
 	 `
 
 	if err := DB.QueryRow(query, email).Scan(
 		&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
-		&user.LastName, &user.PhoneNumber, &user.Address, &user.ProfilePicture,
+		&user.LastName, &user.PhoneNumber, &user.ProfilePicture,
 		&user.EmailVerified, &user.Role, &user.CreatedAt, &user.UpdatedAt); err != nil {
 		err = fmt.Errorf("user with email %s is not found: %s", email, err)
 		return utils.User{}, err
@@ -116,7 +104,7 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 	DB := u.db.GetDB()
 
 	query := `SELECT user_id, username, email, password, first_name,
-	last_name, phone_number, address, profile_picture, email_verified, 
+	last_name, phone_number, profile_picture, email_verified, 
 	role, created_at, updated_at FROM users WHERE deleted_at IS NULL`
 
 	rows, err := DB.Query(query)
@@ -129,7 +117,7 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 		var user utils.User
 		if err := rows.Scan(
 			&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
-			&user.LastName, &user.PhoneNumber, &user.Address, &user.ProfilePicture,
+			&user.LastName, &user.PhoneNumber, &user.ProfilePicture,
 			&user.EmailVerified, &user.Role, &user.CreatedAt, &user.UpdatedAt); err != nil {
 			return nil, err
 		}
@@ -153,12 +141,12 @@ func (u userRepository) GetUserById(id int) (utils.User, error) {
 	var user utils.User
 	DB := u.db.GetDB()
 	query := `SELECT user_id, username, email, password, first_name,
-	last_name, phone_number, address, profile_picture, email_verified, 
+	last_name, phone_number, profile_picture, email_verified, 
 	role, created_at, updated_at FROM users WHERE user_id = ? AND deleted_at IS NULL`
 
 	if err := DB.QueryRow(query, id).Scan(
 		&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
-		&user.LastName, &user.PhoneNumber, &user.Address, &user.ProfilePicture,
+		&user.LastName, &user.PhoneNumber, &user.ProfilePicture,
 		&user.EmailVerified, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
 		err = fmt.Errorf("user with id %d not found", id)
@@ -214,10 +202,10 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		updateFields = append(updateFields, "phone_number = ?")
 		values = append(values, phoneNumber)
 	}
-	if user.Address != "" {
-		updateFields = append(updateFields, "address = ?")
-		values = append(values, user.Address)
-	}
+	// if user.Address != "" {
+	// 	updateFields = append(updateFields, "address = ?")
+	// 	values = append(values, user.Address)
+	// }
 	if user.ProfilePicture != "" {
 		updateFields = append(updateFields, "profile_picture = ?")
 		values = append(values, user.ProfilePicture)

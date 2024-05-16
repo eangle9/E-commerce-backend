@@ -52,14 +52,14 @@ func (u userService) SignUp(request request.SignUpRequest) response.Response {
 	request.Password = hashPassword
 
 	user := dto.User{
-		Username:      request.Username,
-		Email:         request.Email,
-		Password:      request.Password,
-		FirstName:     request.FirstName,
-		LastName:      request.LastName,
-		PhoneNumber:   phoneNumber,
-		Address:       request.Address,
-		Role:          request.Role,
+		Username:    request.Username,
+		Email:       request.Email,
+		Password:    request.Password,
+		FirstName:   request.FirstName,
+		LastName:    request.LastName,
+		PhoneNumber: phoneNumber,
+		// Address:       request.Address,
+		Role:          "user",
 		EmailVerified: false,
 		// CreatedAt:     time.Now(),
 		// UpdatedAt:     time.Now(),
