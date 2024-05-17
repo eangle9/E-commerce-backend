@@ -4,6 +4,7 @@ import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
 	"Eccomerce-website/internal/core/model/request"
+	"Eccomerce-website/internal/core/model/response"
 	// dbmodels "Eccomerce-website/internal/infra/db_models"
 )
 
@@ -50,4 +51,8 @@ type ProductItemRepository interface {
 
 type ProductImageRepository interface {
 	InsertProductImage(request request.ProductImageRequest) (*int, string, error)
+}
+
+type CartRepository interface {
+	InsertCartItem(request request.CartRequest) ([]response.CartResponse, error)
 }

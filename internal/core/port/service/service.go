@@ -51,3 +51,7 @@ type ProductItemService interface {
 type ProductImageService interface {
 	CreateProductImage(request request.ProductImageRequest) response.Response
 }
+
+type CartService interface {
+	AddToCart(request request.CartRequest) response.Response
+}

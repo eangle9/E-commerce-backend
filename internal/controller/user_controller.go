@@ -29,7 +29,7 @@ var (
 	customizer5 = g.Validator(request.ColorRequest{})
 	customizer6 = g.Validator(request.ProductRequest{})
 	customizer7 = g.Validator(request.ProductItemRequest{})
-	// customizer8 = g.Validator(request.ProductImageRequest{})
+	customizer8 = g.Validator(request.CartRequest{})
 )
 
 type UserController struct {
@@ -148,6 +148,7 @@ func (u UserController) LoginHandler(c *gin.Context) {
 // listUserHandler godoc
 // @Summary List users
 // @Description Retrieves a list of users. Requires authentication with JWT token.
+// @Tags    user
 // @ID list-users
 // @Produce json
 // @Security ApiKeyAuth

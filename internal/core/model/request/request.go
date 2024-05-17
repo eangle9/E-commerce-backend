@@ -49,3 +49,14 @@ type ProductImageRequest struct {
 	ProductItemId int `json:"product_item_id" validate:"required"`
 	File          *multipart.FileHeader
 }
+
+// type CartItem struct {
+// 	ProductItemID int `json:"product_item_id" validate:"required"`
+// 	Quantity      int `json:"quantity" validate:"required"`
+// }
+
+type CartRequest struct {
+	UserID        int `json:"user_id" validate:"required"`
+	ProductItemID int `json:"product_item_id" validate:"required"`
+	Quantity      int `json:"quantity" validate:"required"`
+}
