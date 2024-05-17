@@ -58,6 +58,15 @@ func (u *UserController) InitRouter() {
 	api.POST("/token", u.refreshTokenHandler)
 }
 
+// registerHandler   godoc
+// @Summary   Insert user
+// @Description   Add a new user
+// @Tags   user
+// @Accept   json
+// @Produce  json
+// @Param   user body request.SignUpRequest true "User data"
+// @Success   201 {object} response.Response
+// @Router   /user/register [post]
 func (u UserController) registerHandler(c *gin.Context) {
 	var request request.SignUpRequest
 
@@ -94,6 +103,15 @@ func (u UserController) registerHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
+// LoginHandler   godoc
+// @Summary        Login user
+// @Description    User login by email and password
+// @Tags           user
+// @Accept         json
+// @Produce        json
+// @Param user body request.LoginRequest true "Login data"
+// @Success        200 {object} response.Response
+// @Router         /user/login [post]
 func (u UserController) LoginHandler(c *gin.Context) {
 	var request request.LoginRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -127,6 +145,15 @@ func (u UserController) LoginHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
+// listUserHandler godoc
+// @Summary List users
+// @Description Retrieves a list of users. Requires authentication with JWT token.
+// @ID list-users
+// @Produce json
+// @Security ApiKeyAuth
+// @Header 200 {string} Authorization "Bearer JWT token obtained after successful authentication"
+// @Success 200 {object} response.Response
+// @Router /user/list [get]
 func (u UserController) listUserHandler(c *gin.Context) {
 	// id, _ := c.Get("userId")
 	// role, _ := c.Get("role")

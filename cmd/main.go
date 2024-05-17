@@ -1,10 +1,10 @@
 package main
 
 import (
-	// "Eccomerce-website/internal/controller"
-	// "Eccomerce-website/internal/core/common/router"
+	_ "Eccomerce-website/docs"
 	"Eccomerce-website/internal/controller"
 	"Eccomerce-website/internal/core/common/router"
+	"Eccomerce-website/internal/core/server"
 	categoryservice "Eccomerce-website/internal/core/service/category_service"
 	colorservice "Eccomerce-website/internal/core/service/color_service"
 	productimageservice "Eccomerce-website/internal/core/service/product_image_service"
@@ -12,31 +12,36 @@ import (
 	productservice "Eccomerce-website/internal/core/service/product_service"
 	service "Eccomerce-website/internal/core/service/user_service"
 
-	// "Eccomerce-website/internal/core/service"
-
-	// "Eccomerce-website/internal/core/port/service"
-	"Eccomerce-website/internal/core/server"
-
-	// "Eccomerce-website/internal/core/service"
 	"Eccomerce-website/internal/infra/config"
 	"Eccomerce-website/internal/infra/middleware"
 	"Eccomerce-website/internal/infra/repository"
 
-	// "Eccomerce-website/schema"
 	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
-	// "github.com/go-playground/validator/v10"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// @title E-commerce API
+// @version 1.0
+// @description This is a sample server for an e-commerce platform.
+
+// @contact.name Engdawork yismaw
+// @contact.email engdaworkyismaw9@gmail.com
+
+// @host localhost:9000
 
 func main() {
 	// cwd, _ := os.Getwd()
 	// fmt.Println("cwd :", cwd)
 	errorMiddleware := middleware.ErrorMiddleware
 	instance := gin.New()
+
+	instance.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	// instance.MaxMultipartMemory = 8 << 20 // 8MB maximum
 	instance.Use(gin.Recovery())
 	instance.Use(gin.Logger())
