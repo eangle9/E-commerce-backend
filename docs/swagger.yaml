@@ -9,6 +9,13 @@ definitions:
     - email
     - password
     type: object
+  request.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   request.SignUpRequest:
     properties:
       email:
@@ -40,6 +47,24 @@ definitions:
       type:
         type: string
     type: object
+  utils.UpdateUser:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        description: Address        string `json:"address"`
+        type: string
+      username:
+        type: string
+    type: object
 host: localhost:9000
 info:
   contact:
@@ -49,6 +74,50 @@ info:
   title: E-commerce API
   version: "1.0"
 paths:
+  /user/{id}:
+    get:
+      description: Get a single user by id
+      operationId: get-user-by-id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Get user
+      tags:
+      - user
+  /user/delete/{id}:
+    delete:
+      description: delete user by id
+      operationId: delete-user-by-id
+      parameters:
+      - description: UserID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Delete user
+      tags:
+      - user
   /user/list:
     get:
       description: Retrieves a list of users. Requires authentication with JWT token.
@@ -61,13 +130,16 @@ paths:
           schema:
             $ref: '#/definitions/response.Response'
       security:
-      - ApiKeyAuth: []
+      - JWT: []
       summary: List users
+      tags:
+      - user
   /user/login:
     post:
       consumes:
       - application/json
       description: User login by email and password
+      operationId: login-user
       parameters:
       - description: Login data
         in: body
@@ -90,6 +162,7 @@ paths:
       consumes:
       - application/json
       description: Add a new user
+      operationId: register-user
       parameters:
       - description: User data
         in: body
@@ -107,4 +180,66 @@ paths:
       summary: Insert user
       tags:
       - user
+  /user/token:
+    post:
+      consumes:
+      - application/json
+      description: refresh the expired access token
+      operationId: refresh-access-token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/request.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Refresh token
+      tags:
+      - user
+  /user/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: update user by id
+      operationId: update-user-by-id
+      parameters:
+      - description: UserID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/utils.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Update user
+      tags:
+      - user
+schemes:
+- http
+securityDefinitions:
+  JWT:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

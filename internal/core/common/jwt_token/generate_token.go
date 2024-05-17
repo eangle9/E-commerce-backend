@@ -27,7 +27,7 @@ func GenerateTokenPair(id uint, role string) (map[string]string, error) {
 		jwt.MapClaims{
 			"id":   id,
 			"role": role,
-			"exp":  time.Now().Add(30 * time.Second).Unix(),
+			"exp":  time.Now().Add(5 * time.Minute).Unix(),
 		})
 
 	tokenString, err := token.SignedString([]byte(secret))

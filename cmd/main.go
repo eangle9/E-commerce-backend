@@ -34,7 +34,12 @@ import (
 // @contact.name Engdawork yismaw
 // @contact.email engdaworkyismaw9@gmail.com
 
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+
 // @host localhost:9000
+// @schemes http
 
 func main() {
 	// cwd, _ := os.Getwd()
