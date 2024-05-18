@@ -56,7 +56,7 @@ type ProductImageRequest struct {
 // }
 
 type CartRequest struct {
-	UserID        int `json:"user_id" validate:"required"`
+	// UserID        int `json:"user_id" validate:"required"`
 	ProductItemID int `json:"product_item_id" validate:"required"`
 	Quantity      int `json:"quantity" validate:"required"`
 }

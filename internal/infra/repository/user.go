@@ -5,6 +5,7 @@ import (
 	"Eccomerce-website/internal/core/common/utils/password"
 	"Eccomerce-website/internal/core/dto"
 	errorcode "Eccomerce-website/internal/core/entity/error_code"
+	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
@@ -32,6 +33,7 @@ func matchPassword(hashPassword string, password string) (bool, error) {
 }
 
 func (u userRepository) InsertUser(user dto.User) (int, error) {
+	user.Email = strings.ToLower(user.Email)
 	DB := u.db.GetDB()
 
 	var count int
@@ -63,8 +65,10 @@ func (u userRepository) InsertUser(user dto.User) (int, error) {
 	return int(id), nil
 }
 
-func (u userRepository) Authentication(email string, password string) (utils.User, error) {
+func (u userRepository) Authentication(request request.LoginRequest) (utils.User, error) {
 	var user utils.User
+	email := strings.ToLower(request.Email)
+	password := request.Password
 	DB := u.db.GetDB()
 
 	query := `

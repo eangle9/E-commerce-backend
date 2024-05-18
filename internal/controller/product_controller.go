@@ -7,6 +7,7 @@ import (
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/service"
+	"Eccomerce-website/internal/infra/middleware"
 	"net/http"
 	"strconv"
 
@@ -27,16 +28,29 @@ func NewProductController(engine *router.Router, productService service.ProductS
 }
 
 func (p *productController) InitProductRouter() {
+	protectedMiddleware := middleware.ProtectedMiddleware
 	r := p.engine
 	api := r.Group("/product")
 
-	api.POST("/create", p.createProductHandler)
+	api.POST("/create", protectedMiddleware(), p.createProductHandler)
 	api.GET("/list", p.listProductHandler)
-	api.GET("/:id", p.GetPrductHandler)
-	api.PUT("/update/:id", p.UpdateProductHandler)
-	api.DELETE("/delete/:id", p.DeleteProductHandler)
+	api.GET("/:id", p.getProductHandler)
+	api.PUT("/update/:id", protectedMiddleware(), p.updateProductHandler)
+	api.DELETE("/delete/:id", protectedMiddleware(), p.deleteProductHandler)
 }
 
+// createProductHandler godoc
+//
+//	@Summary		create product
+//	@Description	Insert a new product
+//	@Tags			product
+//	@ID				create-product
+//	@Accept			json
+//	@Produce		json
+//	@Security		JWT
+//	@Param			product	body		request.ProductRequest	true	"Product data"
+//	@Success		201		{object}	response.Response
+//	@Router			/product/create [post]
 func (p productController) createProductHandler(c *gin.Context) {
 	var request request.ProductRequest
 
@@ -70,6 +84,15 @@ func (p productController) createProductHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
+// listProductHandler godoc
+//
+//	@Summary		List products
+//	@Description	Retrieves a list of products
+//	@Tags			product
+//	@ID				list-products
+//	@Produce		json
+//	@Success		200	{object}	response.Response
+//	@Router			/product/list [get]
 func (p productController) listProductHandler(c *gin.Context) {
 	resp := p.productService.GetProducts()
 	if resp.ErrorType != errorcode.Success {
@@ -80,7 +103,17 @@ func (p productController) listProductHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
-func (p productController) GetPrductHandler(c *gin.Context) {
+// getProductHandler godoc
+//
+//	@Summary		Get product
+//	@Description	Get single product by id
+//	@Tags			product
+//	@ID				get-product-by-id
+//	@Produce		json
+//	@Param			id	path		int	true	"Product ID"
+//	@Success		200	{object}	response.Response
+//	@Router			/product/{id} [get]
+func (p productController) getProductHandler(c *gin.Context) {
 	idStr := c.Param("id")
 
 	id, err := strconv.Atoi(idStr)
@@ -103,7 +136,20 @@ func (p productController) GetPrductHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
-func (p productController) UpdateProductHandler(c *gin.Context) {
+// updateProductHandler godoc
+//
+//	@Summary		Update product
+//	@Description	Update product by id
+//	@Tags			product
+//	@ID				update-product-by-id
+//	@Accept			json
+//	@Produce		json
+//	@Security		JWT
+//	@Param			id		path		int					true	"Product ID"
+//	@Param			product	body		utils.UpdateProduct	true	"Update product data"
+//	@Success		200		{object}	response.Response
+//	@Router			/product/update/{id} [put]
+func (p productController) updateProductHandler(c *gin.Context) {
 	var product utils.UpdateProduct
 	idStr := c.Param("id")
 
@@ -137,7 +183,18 @@ func (p productController) UpdateProductHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
-func (p productController) DeleteProductHandler(c *gin.Context) {
+// deleteProductHandler godoc
+//
+//	@Summary		Delete product
+//	@Description	Delete product by id
+//	@Tags			product
+//	@ID				delete-product-by-id
+//	@Produce		json
+//	@Security		JWT
+//	@Param			id	path		int	true	"Product ID"
+//	@Success		200	{object}	response.Response
+//	@Router			/product/delete/{id} [delete]
+func (p productController) deleteProductHandler(c *gin.Context) {
 	idStr := c.Param("id")
 
 	id, err := strconv.Atoi(idStr)

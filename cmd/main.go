@@ -27,19 +27,19 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title E-commerce API
-// @version 1.0
-// @description This is a sample server for an e-commerce platform.
+//	@title			E-commerce API
+//	@version		1.0
+//	@description	This is a sample server for an e-commerce platform.
 
-// @contact.name Engdawork yismaw
-// @contact.email engdaworkyismaw9@gmail.com
+//	@contact.name	Engdawork yismaw
+//	@contact.email	engdaworkyismaw9@gmail.com
 
-// @securityDefinitions.apiKey JWT
-// @in header
-// @name Authorization
+//	@securityDefinitions.apiKey	JWT
+//	@in							header
+//	@name						Authorization
 
-// @host localhost:9000
-// @schemes http
+//	@host		localhost:9000
+//	@schemes	http
 
 func main() {
 	// cwd, _ := os.Getwd()

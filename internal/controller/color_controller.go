@@ -7,6 +7,7 @@ import (
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/service"
+	"Eccomerce-website/internal/infra/middleware"
 	"net/http"
 	"strconv"
 
@@ -27,16 +28,28 @@ func NewColorController(engine *router.Router, colorService service.ColorService
 }
 
 func (color *colorController) InitColorRouter() {
+	protectedMiddleware := middleware.ProtectedMiddleware
 	r := color.engine
 	api := r.Group("/color")
 
-	api.POST("/create", color.createColorHandler)
-	api.GET("/list", color.ListColorHandler)
-	api.GET("/:id", color.GetColorHandler)
-	api.PUT("/update/:id", color.updateColorHandler)
-	api.DELETE("/delete/:id", color.deleteColorHandler)
+	api.POST("/create", protectedMiddleware(), color.createColorHandler)
+	api.GET("/list", protectedMiddleware(), color.listColorHandler)
+	api.GET("/:id", protectedMiddleware(), color.getColorHandler)
+	api.PUT("/update/:id", protectedMiddleware(), color.updateColorHandler)
+	api.DELETE("/delete/:id", protectedMiddleware(), color.deleteColorHandler)
 }
 
+// createColorHandler godoc
+// @Summary           Create color
+// @Description       Insert a new color
+// @Tags              product color
+// @ID                create-color
+// @Accept            json
+// @Produce           json
+// @Security          JWT
+// @Param             color body request.ColorRequest true "Color data"
+// @Success           201 {object} response.Response
+// @Router            /color/create [post]
 func (color colorController) createColorHandler(c *gin.Context) {
 	var request request.ColorRequest
 
@@ -70,7 +83,16 @@ func (color colorController) createColorHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
-func (color colorController) ListColorHandler(c *gin.Context) {
+// listColorHandler godoc
+// @Summary         List color
+// @Description     Retrieves a list of colors
+// @Tags            product color
+// @ID              list-color
+// @Produce         json
+// @Security        JWT
+// @Success         200 {object} response.Response
+// @Router          /color/list [get]
+func (color colorController) listColorHandler(c *gin.Context) {
 	resp := color.colorService.GetColors()
 	if resp.ErrorType != errorcode.Success {
 		c.Set("error", resp)
@@ -80,7 +102,17 @@ func (color colorController) ListColorHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
-func (color colorController) GetColorHandler(c *gin.Context) {
+// getColorHandler godoc
+// @Summary        Get color
+// @Description    Get a single color by id
+// @Tags           product color
+// @ID             get-color-by-id
+// @Produce        json
+// @Security       JWT
+// @Param          id path int true "Color ID"
+// @Success        200 {object} response.Response
+// @Router         /color/{id} [get]
+func (color colorController) getColorHandler(c *gin.Context) {
 	idStr := c.Param("id")
 
 	id, err := strconv.Atoi(idStr)
@@ -103,6 +135,18 @@ func (color colorController) GetColorHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
+// updateColorHandler godoc
+// @Summary           Update color
+// @Description       Update color by id
+// @Tags              product color
+// @ID                update-color-by-id
+// @Accept            json
+// @Produce           json
+// @Security          JWT
+// @Param             id path int true "Color ID"
+// @Param             color body utils.UpdateColor true "Update color data"
+// @Success           200 {object} response.Response
+// @Router            /color/update/{id} [put]
 func (color colorController) updateColorHandler(c *gin.Context) {
 	var request utils.UpdateColor
 	idStr := c.Param("id")
@@ -137,6 +181,16 @@ func (color colorController) updateColorHandler(c *gin.Context) {
 	c.JSON(resp.Status, resp)
 }
 
+// deleteColorHandler godoc
+// @Summary           Delete color
+// @Description       Delete color by id
+// @Tags              product color
+// @ID                delete-color-by-id
+// @Produce           json
+// @Security          JWT
+// @Param             id path int true "Color ID"
+// @Success           200 {object} response.Response
+// @Router            /color/delete/{id} [delete]
 func (color colorController) deleteColorHandler(c *gin.Context) {
 	idStr := c.Param("id")
 

@@ -1,4 +1,22 @@
 definitions:
+  request.CartRequest:
+    properties:
+      product_item_id:
+        description: UserID        int `json:"user_id" validate:"required"`
+        type: integer
+      quantity:
+        type: integer
+    required:
+    - product_item_id
+    - quantity
+    type: object
+  request.ColorRequest:
+    properties:
+      color_name:
+        type: string
+    required:
+    - color_name
+    type: object
   request.LoginRequest:
     properties:
       email:
@@ -8,6 +26,44 @@ definitions:
     required:
     - email
     - password
+    type: object
+  request.ProductCategoryRequest:
+    properties:
+      name:
+        type: string
+      parent_id:
+        type: integer
+    required:
+    - name
+    type: object
+  request.ProductItemRequest:
+    properties:
+      color_id:
+        type: integer
+      price:
+        type: integer
+      product_id:
+        type: integer
+      qty_in_stock:
+        type: integer
+    required:
+    - price
+    - product_id
+    type: object
+  request.ProductRequest:
+    properties:
+      brand:
+        type: string
+      category_id:
+        type: integer
+      description:
+        type: string
+      product_name:
+        type: string
+    required:
+    - category_id
+    - description
+    - product_name
     type: object
   request.RefreshRequest:
     properties:
@@ -47,6 +103,40 @@ definitions:
       type:
         type: string
     type: object
+  utils.UpdateCategory:
+    properties:
+      name:
+        type: string
+      parent_id:
+        type: integer
+    type: object
+  utils.UpdateColor:
+    properties:
+      color_name:
+        type: string
+    type: object
+  utils.UpdateProduct:
+    properties:
+      brand:
+        type: string
+      category_id:
+        type: integer
+      description:
+        type: string
+      product_name:
+        type: string
+    type: object
+  utils.UpdateProductItem:
+    properties:
+      color_id:
+        type: integer
+      price:
+        type: integer
+      product_id:
+        type: integer
+      qty_in_stock:
+        type: integer
+    type: object
   utils.UpdateUser:
     properties:
       email:
@@ -74,6 +164,508 @@ info:
   title: E-commerce API
   version: "1.0"
 paths:
+  /cart/add:
+    post:
+      consumes:
+      - application/json
+      description: Add product to shopping cart
+      operationId: add-to-cart
+      parameters:
+      - description: Cart item data
+        in: body
+        name: cart_item
+        required: true
+        schema:
+          $ref: '#/definitions/request.CartRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: AddToCart
+      tags:
+      - cart
+  /category/{id}:
+    get:
+      description: Get a single product category by id
+      operationId: get-product-category-by-id
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get category
+      tags:
+      - product category
+  /category/create:
+    post:
+      consumes:
+      - application/json
+      description: Insert a new product category
+      operationId: create-product-category
+      parameters:
+      - description: Product category data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/request.ProductCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Create category
+      tags:
+      - product category
+  /category/delete/{id}:
+    delete:
+      description: Delete product category by id
+      operationId: delete-product-category-by-id
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Delete category
+      tags:
+      - product category
+  /category/list:
+    get:
+      description: Retrieves a list of product category
+      operationId: list-product-category
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List category
+      tags:
+      - product category
+  /category/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update product category by id
+      operationId: update-product-category-by-id
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update product category data
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/utils.UpdateCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Update category
+      tags:
+      - product category
+  /color/{id}:
+    get:
+      description: Get a single color by id
+      operationId: get-color-by-id
+      parameters:
+      - description: Color ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Get color
+      tags:
+      - product color
+  /color/create:
+    post:
+      consumes:
+      - application/json
+      description: Insert a new color
+      operationId: create-color
+      parameters:
+      - description: Color data
+        in: body
+        name: color
+        required: true
+        schema:
+          $ref: '#/definitions/request.ColorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Create color
+      tags:
+      - product color
+  /color/delete/{id}:
+    delete:
+      description: Delete color by id
+      operationId: delete-color-by-id
+      parameters:
+      - description: Color ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Delete color
+      tags:
+      - product color
+  /color/list:
+    get:
+      description: Retrieves a list of colors
+      operationId: list-color
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: List color
+      tags:
+      - product color
+  /color/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update color by id
+      operationId: update-color-by-id
+      parameters:
+      - description: Color ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update color data
+        in: body
+        name: color
+        required: true
+        schema:
+          $ref: '#/definitions/utils.UpdateColor'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Update color
+      tags:
+      - product color
+  /image/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload an image for a product in cloudinary
+      operationId: upload-product-image
+      parameters:
+      - description: Product Item ID
+        in: formData
+        name: product_item_id
+        required: true
+        type: integer
+      - description: product image
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Upload image
+      tags:
+      - product image
+  /item/{id}:
+    get:
+      description: Get single product item by id
+      operationId: product-item-by-id
+      parameters:
+      - description: Product item id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get product item
+      tags:
+      - product item
+  /item/create:
+    post:
+      consumes:
+      - application/json
+      description: insert a new product item
+      operationId: create-product-item
+      parameters:
+      - description: Product item data
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/request.ProductItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Create product item
+      tags:
+      - product item
+  /item/delete/{id}:
+    delete:
+      description: Delete product item by id
+      operationId: delete-product-item-by-id
+      parameters:
+      - description: Product item id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Delete product item
+      tags:
+      - product item
+  /item/list:
+    get:
+      description: Retrieves a list of product items
+      operationId: list-product-item
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: list product items
+      tags:
+      - product item
+  /item/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Edit product item by id
+      operationId: update-product-item-by-id
+      parameters:
+      - description: Product item id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update product item data
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/utils.UpdateProductItem'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Update product item
+      tags:
+      - product item
+  /product/{id}:
+    get:
+      description: Get single product by id
+      operationId: get-product-by-id
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get product
+      tags:
+      - product
+  /product/create:
+    post:
+      consumes:
+      - application/json
+      description: Insert a new product
+      operationId: create-product
+      parameters:
+      - description: Product data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/request.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: create product
+      tags:
+      - product
+  /product/delete/{id}:
+    delete:
+      description: Delete product by id
+      operationId: delete-product-by-id
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Delete product
+      tags:
+      - product
+  /product/list:
+    get:
+      description: Retrieves a list of products
+      operationId: list-products
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List products
+      tags:
+      - product
+  /product/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update product by id
+      operationId: update-product-by-id
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update product data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/utils.UpdateProduct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Update product
+      tags:
+      - product
   /user/{id}:
     get:
       description: Get a single user by id

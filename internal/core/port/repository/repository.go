@@ -10,7 +10,7 @@ import (
 
 type UserRepository interface {
 	InsertUser(user dto.User) (int, error)
-	Authentication(email string, password string) (utils.User, error)
+	Authentication(request.LoginRequest) (utils.User, error)
 	ListUsers() ([]utils.User, error)
 	GetUserById(id int) (utils.User, error)
 	EditUserById(id int, user utils.UpdateUser) (utils.User, error)
@@ -54,5 +54,5 @@ type ProductImageRepository interface {
 }
 
 type CartRepository interface {
-	InsertCartItem(request request.CartRequest) ([]response.CartResponse, error)
+	InsertCartItem(request request.CartRequest, userId uint) ([]response.CartResponse, error)
 }

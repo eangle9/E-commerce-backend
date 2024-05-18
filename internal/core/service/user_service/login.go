@@ -21,10 +21,10 @@ type tokenData struct {
 }
 
 func (u userService) LoginUser(request request.LoginRequest) response.Response {
-	email := request.Email
-	password := request.Password
+	// email := request.Email
+	// password := request.Password
 
-	user, err := u.userRepo.Authentication(email, password)
+	user, err := u.userRepo.Authentication(request)
 	if err != nil {
 		errorResponse := response.Response{
 			Status:       http.StatusUnauthorized,

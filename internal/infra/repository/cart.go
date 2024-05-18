@@ -19,10 +19,10 @@ func NewCartRepository(db repository.Database) repository.CartRepository {
 	}
 }
 
-func (c cartRepository) InsertCartItem(request request.CartRequest) ([]response.CartResponse, error) {
+func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint) ([]response.CartResponse, error) {
 	var cartResponses []response.CartResponse
 	DB := c.db.GetDB()
-	userId := request.UserID
+	// userId := request.UserID
 	productItemId := request.ProductItemID
 	quantity := request.Quantity
 

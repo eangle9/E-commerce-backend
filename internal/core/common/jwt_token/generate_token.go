@@ -2,7 +2,6 @@ package jwttoken
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -21,7 +20,7 @@ func GenerateTokenPair(id uint, role string) (map[string]string, error) {
 		return nil, err
 	}
 	secret := secretKey.(string)
-	fmt.Println("secretKey: ", secret)
+	// fmt.Println("secretKey: ", secret)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{

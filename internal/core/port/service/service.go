@@ -53,5 +53,5 @@ type ProductImageService interface {
 }
 
 type CartService interface {
-	AddToCart(request request.CartRequest) response.Response
+	AddToCart(request request.CartRequest, userId uint) response.Response
 }

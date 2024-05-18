@@ -6,6 +6,7 @@ import (
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/service"
+	"Eccomerce-website/internal/infra/middleware"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -26,12 +27,26 @@ func NewProductImageController(engine *router.Router, productImageService servic
 }
 
 func (p *productImageController) InitProductImageRouter() {
+	protectedMiddleware := middleware.ProtectedMiddleware
 	r := p.engine
 	api := r.Group("/image")
 
-	api.POST("/upload", p.uploadProductImageHandler)
+	api.POST("/upload", protectedMiddleware(), p.uploadProductImageHandler)
 }
 
+// uploadProductImageHandler godoc
+//
+//	@Summary		Upload image
+//	@Description	Upload an image for a product in cloudinary
+//	@Tags			product image
+//	@ID				upload-product-image
+//	@Accept			mpfd
+//	@Produce		json
+//	@Security		JWT
+//	@Param			product_item_id	formData	int		true	"Product Item ID"
+//	@Param			image			formData	file	true	"product image"
+//	@Success		200				{object}	response.Response
+//	@Router			/image/upload [post]
 func (p productImageController) uploadProductImageHandler(c *gin.Context) {
 	var request request.ProductImageRequest
 
@@ -51,7 +66,7 @@ func (p productImageController) uploadProductImageHandler(c *gin.Context) {
 		errorResponse := response.Response{
 			Status:       http.StatusBadRequest,
 			ErrorType:    errorcode.InvalidRequest,
-			ErrorMessage: "invalid id.Please enter a valid integer id",
+			ErrorMessage: "invalid product_item_id.Please enter a valid integer id",
 		}
 		c.Set("error", errorResponse)
 		return
