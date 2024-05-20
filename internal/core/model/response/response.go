@@ -14,6 +14,7 @@ type CartResponse struct {
 	ProductName  string          `json:"product_name"`
 	Description  string          `json:"description"`
 	UnitPrice    decimal.Decimal `json:"unit_price"`
+	QtyInStock   string          `json:"qty_in_stock"`
 	CartItemID   int             `json:"cart_item_id"`
 	Quantity     int             `json:"quantity"`
 	SubTotal     decimal.Decimal `json:"sub_total"`

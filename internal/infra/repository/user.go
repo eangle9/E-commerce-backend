@@ -245,27 +245,47 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 
 func (u userRepository) DeleteUserById(id int) (string, int, string, error) {
 	DB := u.db.GetDB()
-	var deleted_at *time.Time
+	// var deleted_at *time.Time
 
-	if err := DB.QueryRow("SELECT deleted_at FROM users WHERE user_id = ?", id).Scan(&deleted_at); err != nil {
-		errType := errorcode.NotFoundError
-		err := errors.New("user not found")
-		return "", http.StatusNotFound, errType, err
-	}
-	if deleted_at != nil {
-		errType := "CONFLICT_ERROR"
-		err := errors.New("can't delete already deleted user")
-		return "", http.StatusConflict, errType, err
-	}
-
-	// query := `DELETE FROM users WHERE user_id = ?`
-	query := `UPDATE users SET deleted_at = ? WHERE user_id = ?`
-
-	_, err := DB.Exec(query, time.Now(), id)
-	if err != nil {
+	var count int
+	if err := DB.QueryRow("SELECT COUNT(*) FROM users WHERE user_id = ?", id).Scan(&count); err != nil {
+		status := http.StatusInternalServerError
 		errType := errorcode.InternalError
-		return "", http.StatusInternalServerError, errType, err
+		return "", status, errType, err
 	}
+	if count == 0 {
+		status := http.StatusNotFound
+		errType := errorcode.NotFoundError
+		err := fmt.Errorf("user with user_id '%d' not found", id)
+		return "", status, errType, err
+	}
+
+	query := `DELETE FROM users WHERE user_id = ?`
+	if _, err := DB.Exec(query, id); err != nil {
+		status := http.StatusInternalServerError
+		errType := errorcode.InternalError
+		return "", status, errType, err
+	}
+
+	// if err := DB.QueryRow("SELECT deleted_at FROM users WHERE user_id = ?", id).Scan(&deleted_at); err != nil {
+	// 	errType := errorcode.NotFoundError
+	// 	err := errors.New("user not found")
+	// 	return "", http.StatusNotFound, errType, err
+	// }
+	// if deleted_at != nil {
+	// 	errType := "CONFLICT_ERROR"
+	// 	err := errors.New("can't delete already deleted user")
+	// 	return "", http.StatusConflict, errType, err
+	// }
+
+	// // query := `DELETE FROM users WHERE user_id = ?`
+	// query := `UPDATE users SET deleted_at = ? WHERE user_id = ?`
+
+	// _, err := DB.Exec(query, time.Now(), id)
+	// if err != nil {
+	// 	errType := errorcode.InternalError
+	// 	return "", http.StatusInternalServerError, errType, err
+	// }
 
 	errType := errorcode.Success
 	resp := fmt.Sprintf("user with user_id '%d' deleted successfully", id)

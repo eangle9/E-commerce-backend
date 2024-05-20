@@ -86,7 +86,8 @@ func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint)
 	    pimage.image_url,
 	    p.product_name, 
 	    p.description, 
-	    pi.price AS unit_price, 
+	    pi.price AS unit_price,
+		pi.qty_in_stock, 
 		ci.item_id,
 	    ci.quantity, 
 	    ci.total AS sub_total, 
@@ -115,17 +116,6 @@ func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint)
 
 	defer rows.Close()
 
-	// var (
-	// 	imageUrl     string
-	// 	productName  string
-	// 	description  string
-	// 	price        decimal.Decimal
-	// 	qty          int
-	// 	subTotal     decimal.Decimal
-	// 	cartSubTotal decimal.Decimal
-	// 	sum          decimal.Decimal
-	// )
-
 	for rows.Next() {
 		var cartResponse response.CartResponse
 		if err := rows.Scan(
@@ -133,12 +123,12 @@ func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint)
 			&cartResponse.ProductName,
 			&cartResponse.Description,
 			&cartResponse.UnitPrice,
+			&cartResponse.QtyInStock,
 			&cartResponse.CartItemID,
 			&cartResponse.Quantity,
 			&cartResponse.SubTotal,
 			&cartResponse.CartSubTotal,
 			&cartResponse.Total,
-			// &imageUrl, &productName, &description, &price, &qty, &subTotal, &cartSubTotal, &sum,
 		); err != nil {
 			return nil, err
 		}
@@ -148,17 +138,6 @@ func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint)
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-
-	// cartResponse := response.CartResponse{
-	// 	ImageUrl:     imageUrl,
-	// 	ProductName:  productName,
-	// 	Description:  description,
-	// 	UnitPrice:    price,
-	// 	Quantity:     qty,
-	// 	SubTotal:     subTotal,
-	// 	CartSubTotal: cartSubTotal,
-	// 	Total:        sum,
-	// }
 
 	return cartResponses, nil
 

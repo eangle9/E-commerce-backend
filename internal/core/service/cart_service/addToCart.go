@@ -6,6 +6,7 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
+	"database/sql"
 	"net/http"
 )
 
@@ -22,12 +23,22 @@ func NewCartService(cartRepo repository.CartRepository) service.CartService {
 func (c cartService) AddToCart(request request.CartRequest, userId uint) response.Response {
 	cartResponse, err := c.cartRepo.InsertCartItem(request, userId)
 	if err != nil {
-		response := response.Response{
-			Status:       http.StatusInternalServerError,
-			ErrorType:    errorcode.InternalError,
-			ErrorMessage: err.Error(),
+		if err == sql.ErrNoRows {
+			response := response.Response{
+				Status:       http.StatusNotFound,
+				ErrorType:    errorcode.NotFoundError,
+				ErrorMessage: err.Error(),
+			}
+			return response
+		} else {
+			response := response.Response{
+				Status:       http.StatusInternalServerError,
+				ErrorType:    errorcode.InternalError,
+				ErrorMessage: err.Error(),
+			}
+			return response
 		}
-		return response
+
 	}
 
 	response := response.Response{
