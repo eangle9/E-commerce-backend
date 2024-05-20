@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/shopspring/decimal"
+
 type ProductCategory struct {
 	ID       int    `json:"category_id,omitempty"`
 	Name     string `json:"name,omitempty"`
@@ -15,11 +17,11 @@ type Product struct {
 }
 
 type ProductItem struct {
-	ID         int  `json:"product_item_id"`
-	ProductID  int  `json:"product_id"`
-	ColorID    *int `json:"color_id"`
-	Price      int  `json:"price"`
-	QtyInStock int  `json:"qty_in_stock"`
+	ID         int             `json:"product_item_id"`
+	ProductID  int             `json:"product_id"`
+	ColorID    *int            `json:"color_id"`
+	Price      decimal.Decimal `json:"price"`
+	QtyInStock int             `json:"qty_in_stock"`
 }
 
 type ProductImage struct {

@@ -1,6 +1,10 @@
 package request
 
-import "mime/multipart"
+import (
+	"mime/multipart"
+
+	"github.com/shopspring/decimal"
+)
 
 type SignUpRequest struct {
 	Username    string `json:"username" validate:"required"`
@@ -39,10 +43,10 @@ type ProductRequest struct {
 }
 
 type ProductItemRequest struct {
-	ProductID  int  `json:"product_id" validate:"required"`
-	ColorID    *int `json:"color_id"`
-	Price      int  `json:"price" validate:"required"`
-	QtyInStock int  `json:"qty_in_stock"`
+	ProductID  int             `json:"product_id" validate:"required"`
+	ColorID    *int            `json:"color_id"`
+	Price      decimal.Decimal `json:"price" validate:"required"`
+	QtyInStock int             `json:"qty_in_stock"`
 }
 
 type ProductImageRequest struct {

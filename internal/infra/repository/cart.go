@@ -85,6 +85,8 @@ func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint)
 	SELECT 
 	    pimage.image_url,
 	    p.product_name, 
+		COALESCE(c.color_name, '') AS color_name,
+		COALESCE(s.size_name, '') AS size_name,
 	    p.description, 
 	    pi.price AS unit_price,
 		pi.qty_in_stock, 
@@ -103,6 +105,10 @@ func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint)
 	  product_item pi ON ci.product_item_id = pi.product_item_id
     JOIN 
 	  product_image pimage ON pi.product_item_id = pimage.product_item_id
+	LEFT JOIN
+	  color c ON pi.color_id = c.color_id 
+	LEFT JOIN
+	  size s ON pi.size_id = s.size_id    
     JOIN 
 	  product p ON pi.product_id = p.product_id
     WHERE 
@@ -121,6 +127,8 @@ func (c cartRepository) InsertCartItem(request request.CartRequest, userId uint)
 		if err := rows.Scan(
 			&cartResponse.ImageUrl,
 			&cartResponse.ProductName,
+			&cartResponse.Color,
+			&cartResponse.Size,
 			&cartResponse.Description,
 			&cartResponse.UnitPrice,
 			&cartResponse.QtyInStock,

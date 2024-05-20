@@ -1,6 +1,10 @@
 package utils
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type ProductCategory struct {
 	ID        int        `json:"category_id"`
@@ -35,21 +39,21 @@ type UpdateProduct struct {
 }
 
 type ProductItem struct {
-	ID         int        `json:"product_item_id"`
-	ProductID  int        `json:"product_id"`
-	ColorID    *int       `json:"color_id"`
-	Price      int        `json:"price"`
-	QtyInStock int        `json:"qty_in_stock"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
-	DeletedAt  *time.Time `json:"deleted_at"`
+	ID         int             `json:"product_item_id"`
+	ProductID  int             `json:"product_id"`
+	ColorID    *int            `json:"color_id"`
+	Price      decimal.Decimal `json:"price"`
+	QtyInStock int             `json:"qty_in_stock"`
+	CreatedAt  time.Time       `json:"created_at"`
+	UpdatedAt  time.Time       `json:"updated_at"`
+	DeletedAt  *time.Time      `json:"deleted_at"`
 }
 
 type UpdateProductItem struct {
-	ProductID  int  `json:"product_id"`
-	ColorID    int  `json:"color_id"`
-	Price      int  `json:"price"`
-	QtyInStock *int `json:"qty_in_stock"`
+	ProductID  int             `json:"product_id"`
+	ColorID    int             `json:"color_id"`
+	Price      decimal.Decimal `json:"price"`
+	QtyInStock *int            `json:"qty_in_stock"`
 }
 
 // type Category struct {

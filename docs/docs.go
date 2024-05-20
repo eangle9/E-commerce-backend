@@ -1127,7 +1127,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "product_id": {
                     "type": "integer"
@@ -1257,7 +1257,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "product_id": {
                     "type": "integer"

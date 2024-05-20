@@ -12,6 +12,8 @@ type Response struct {
 type CartResponse struct {
 	ImageUrl     string          `json:"image_url"`
 	ProductName  string          `json:"product_name"`
+	Color        string          `json:"color"`
+	Size         string          `json:"size"`
 	Description  string          `json:"description"`
 	UnitPrice    decimal.Decimal `json:"unit_price"`
 	QtyInStock   string          `json:"qty_in_stock"`

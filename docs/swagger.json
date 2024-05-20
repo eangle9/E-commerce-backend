@@ -1123,7 +1123,7 @@
                     "type": "integer"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "product_id": {
                     "type": "integer"
@@ -1253,7 +1253,7 @@
                     "type": "integer"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "product_id": {
                     "type": "integer"

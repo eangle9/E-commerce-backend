@@ -41,7 +41,7 @@ definitions:
       color_id:
         type: integer
       price:
-        type: integer
+        type: number
       product_id:
         type: integer
       qty_in_stock:
@@ -131,7 +131,7 @@ definitions:
       color_id:
         type: integer
       price:
-        type: integer
+        type: number
       product_id:
         type: integer
       qty_in_stock:

@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type productItemRepository struct {
@@ -105,6 +107,7 @@ func (p productItemRepository) GetProductItemById(id int) (utils.ProductItem, er
 
 func (p productItemRepository) EditProductItemById(id int, productItem utils.UpdateProductItem) (utils.ProductItem, error) {
 	DB := p.db.GetDB()
+	zeroDecimal := decimal.NewFromInt(0)
 	var updateFields []string
 	var values []interface{}
 
@@ -118,7 +121,7 @@ func (p productItemRepository) EditProductItemById(id int, productItem utils.Upd
 		values = append(values, productItem.ColorID)
 	}
 
-	if productItem.Price != 0 {
+	if !productItem.Price.Equal(zeroDecimal) {
 		updateFields = append(updateFields, "price = ?")
 		values = append(values, productItem.Price)
 	}
