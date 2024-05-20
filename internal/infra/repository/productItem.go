@@ -170,11 +170,81 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 		return "", status, errType, err
 	}
 
+	var productID int
+	if err := DB.QueryRow("SELECT product_id FROM product_item WHERE product_item_id = ?", id).Scan(&productID); err != nil {
+		status := http.StatusInternalServerError
+		errType := errorcode.InternalError
+		return "", status, errType, err
+	}
+
+	var cartID int
+	if err := DB.QueryRow("SELECT cart_id FROM cart_item WHERE product_item_id = ?", id).Scan(&cartID); err != nil {
+		status := http.StatusInternalServerError
+		errType := errorcode.InternalError
+		return "", status, errType, err
+	}
+
 	query := `DELETE FROM product_item WHERE product_item_id = ?`
 	if _, err := DB.Exec(query, id); err != nil {
 		status := http.StatusInternalServerError
 		errType := errorcode.InternalError
 		return "", status, errType, err
+	}
+
+	var productCount int
+	if err := DB.QueryRow("SELECT COUNT(*) FROM product_item WHERE product_id = ?", productID).Scan(&productCount); err != nil {
+		status := http.StatusInternalServerError
+		errType := errorcode.InternalError
+		return "", status, errType, err
+	}
+
+	if productCount == 0 {
+		var pdtCount int
+		if err := DB.QueryRow("SELECT COUNT(*) FROM product WHERE product_id = ?", productID).Scan(&pdtCount); err != nil {
+			status := http.StatusInternalServerError
+			errType := errorcode.InternalError
+			return "", status, errType, err
+		}
+		if pdtCount > 0 {
+			pdtQuery := `DELETE FROM product WHERE product_id = ?`
+			if _, err := DB.Exec(pdtQuery, productID); err != nil {
+				status := http.StatusInternalServerError
+				errType := errorcode.InternalError
+				return "", status, errType, err
+			}
+		}
+	}
+
+	var cartCount int
+	if err := DB.QueryRow("SELECT COUNT(*) FROM cart_item WHERE cart_id = ?", cartID).Scan(&cartCount); err != nil {
+		status := http.StatusInternalServerError
+		errType := errorcode.InternalError
+		return "", status, errType, err
+	}
+
+	if cartCount == 0 {
+		var ctCount int
+		if err := DB.QueryRow("SELECT COUNT(*) FROM shopping_cart WHERE cart_id = ?", cartID).Scan(&ctCount); err != nil {
+			status := http.StatusInternalServerError
+			errType := errorcode.InternalError
+			return "", status, errType, err
+		}
+		if ctCount > 0 {
+			cartQuery := `DELETE FROM shopping_cart WHERE cart_id = ?`
+			if _, err := DB.Exec(cartQuery, cartID); err != nil {
+				status := http.StatusInternalServerError
+				errType := errorcode.InternalError
+				return "", status, errType, err
+			}
+		}
+	}
+
+	if cartCount > 0 {
+		if err := UpdateShoppingCart(DB, cartID); err != nil {
+			status := http.StatusInternalServerError
+			errType := errorcode.InternalError
+			return "", status, errType, err
+		}
 	}
 
 	// if err := DB.QueryRow("SELECT deleted_at FROM product_item WHERE product_item_id = ?", id).Scan(&deleted_at); err != nil {
