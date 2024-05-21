@@ -94,6 +94,13 @@ definitions:
     - phoneNumber
     - username
     type: object
+  request.SizeRequest:
+    properties:
+      size_name:
+        type: string
+    required:
+    - size_name
+    type: object
   response.Response:
     properties:
       data: {}
@@ -666,6 +673,31 @@ paths:
       summary: Update product
       tags:
       - product
+  /size/create:
+    post:
+      consumes:
+      - application/json
+      description: Insert New product size
+      operationId: create-size
+      parameters:
+      - description: Size data
+        in: body
+        name: size
+        required: true
+        schema:
+          $ref: '#/definitions/request.SizeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Create size
+      tags:
+      - size
   /user/{id}:
     get:
       description: Get a single user by id

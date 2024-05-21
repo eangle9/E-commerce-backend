@@ -56,3 +56,7 @@ type ProductImageRepository interface {
 type CartRepository interface {
 	InsertCartItem(request request.CartRequest, userId uint) ([]response.CartResponse, error)
 }
+
+type SizeRepository interface {
+	InsertSize(size dto.Size) (*int, error)
+}

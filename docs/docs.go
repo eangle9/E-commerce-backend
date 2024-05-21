@@ -805,6 +805,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/size/create": {
+            "post": {
+                "security": [
+                    {
+                        "JWT": []
+                    }
+                ],
+                "description": "Insert New product size",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "size"
+                ],
+                "summary": "Create size",
+                "operationId": "create-size",
+                "parameters": [
+                    {
+                        "description": "Size data",
+                        "name": "size",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SizeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/delete/{id}": {
             "delete": {
                 "security": [
@@ -1197,6 +1237,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.SizeRequest": {
+            "type": "object",
+            "required": [
+                "size_name"
+            ],
+            "properties": {
+                "size_name": {
                     "type": "string"
                 }
             }

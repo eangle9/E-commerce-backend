@@ -64,3 +64,7 @@ type CartRequest struct {
 	ProductItemID int `json:"product_item_id" validate:"required"`
 	Quantity      int `json:"quantity" validate:"required"`
 }
+
+type SizeRequest struct {
+	SizeName string `json:"size_name" validate:"required"`
+}
