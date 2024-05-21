@@ -144,6 +144,11 @@ definitions:
       qty_in_stock:
         type: integer
     type: object
+  utils.UpdateSize:
+    properties:
+      size_name:
+        type: string
+    type: object
   utils.UpdateUser:
     properties:
       email:
@@ -673,6 +678,26 @@ paths:
       summary: Update product
       tags:
       - product
+  /size/{id}:
+    get:
+      description: Get a single size by id
+      operationId: get-size-by-id
+      parameters:
+      - description: Size ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get size
+      tags:
+      - size
   /size/create:
     post:
       consumes:
@@ -696,6 +721,72 @@ paths:
       security:
       - JWT: []
       summary: Create size
+      tags:
+      - size
+  /size/delete/{id}:
+    delete:
+      description: Delete product size by id
+      operationId: delete-size-by-id
+      parameters:
+      - description: Size ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Delete size
+      tags:
+      - size
+  /size/list:
+    get:
+      description: Retrieves a list of product sizes
+      operationId: list-product-size
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List product sizes
+      tags:
+      - size
+  /size/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update product size by id
+      operationId: update-size-by-id
+      parameters:
+      - description: Size ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update size data
+        in: body
+        name: size
+        required: true
+        schema:
+          $ref: '#/definitions/utils.UpdateSize'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Update size
       tags:
       - size
   /user/{id}:

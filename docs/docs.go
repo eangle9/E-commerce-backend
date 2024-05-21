@@ -845,6 +845,139 @@ const docTemplate = `{
                 }
             }
         },
+        "/size/delete/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "JWT": []
+                    }
+                ],
+                "description": "Delete product size by id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "size"
+                ],
+                "summary": "Delete size",
+                "operationId": "delete-size-by-id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Size ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/size/list": {
+            "get": {
+                "description": "Retrieves a list of product sizes",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "size"
+                ],
+                "summary": "List product sizes",
+                "operationId": "list-product-size",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/size/update/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "JWT": []
+                    }
+                ],
+                "description": "Update product size by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "size"
+                ],
+                "summary": "Update size",
+                "operationId": "update-size-by-id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Size ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update size data",
+                        "name": "size",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/utils.UpdateSize"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/size/{id}": {
+            "get": {
+                "description": "Get a single size by id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "size"
+                ],
+                "summary": "Get size",
+                "operationId": "get-size-by-id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Size ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/delete/{id}": {
             "delete": {
                 "security": [
@@ -1315,6 +1448,14 @@ const docTemplate = `{
                 },
                 "qty_in_stock": {
                     "type": "integer"
+                }
+            }
+        },
+        "utils.UpdateSize": {
+            "type": "object",
+            "properties": {
+                "size_name": {
+                    "type": "string"
                 }
             }
         },

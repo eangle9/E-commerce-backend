@@ -58,4 +58,8 @@ type CartService interface {
 
 type SizeService interface {
 	CreateSize(request request.SizeRequest) response.Response
+	GetSizes() response.Response
+	GetSize(id int) response.Response
+	UpdateSize(id int, size utils.UpdateSize) response.Response
+	DeleteSize(id int) response.Response
 }

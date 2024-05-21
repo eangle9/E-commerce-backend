@@ -59,4 +59,8 @@ type CartRepository interface {
 
 type SizeRepository interface {
 	InsertSize(size dto.Size) (*int, error)
+	ListSizes() ([]utils.Size, error)
+	GetSizeById(id int) (utils.Size, error)
+	EditSizeById(id int, size utils.UpdateSize) (utils.Size, error)
+	DeleteSizeById(id int) (string, int, string, error)
 }

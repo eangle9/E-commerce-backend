@@ -1,9 +1,9 @@
-package colorservice
+package sizeservice
 
 import "Eccomerce-website/internal/core/model/response"
 
-func (c colorService) DeleteColor(id int) response.Response {
-	resp, status, errType, err := c.colorRepo.DeleteColorById(id)
+func (s sizeService) DeleteSize(id int) response.Response {
+	resp, status, errType, err := s.sizeRepo.DeleteSizeById(id)
 	if err != nil {
 		response := response.Response{
 			Status:       status,
