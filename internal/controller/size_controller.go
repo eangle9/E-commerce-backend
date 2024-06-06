@@ -40,16 +40,16 @@ func (s *sizeController) InitSizeRouter() {
 }
 
 // createSizeHandler godoc
-// @Summary          Create size
-// @Description      Insert New product size
-// @Tags             size
-// @ID               create-size
-// @Accept           json
-// @Produce          json
-// @Security         JWT
-// @Param            size body request.SizeRequest true "Size data"
-// @Success          201 {object} response.Response
-// @Router           /size/create [post]
+//	@Summary		Create size
+//	@Description	Insert New product size
+//	@Tags			size
+//	@ID				create-size
+//	@Accept			json
+//	@Produce		json
+//	@Security		JWT
+//	@Param			size	body		request.SizeRequest	true	"Size data"
+//	@Success		201		{object}	response.Response
+//	@Router			/size/create [post]
 func (s sizeController) createSizeHandler(c *gin.Context) {
 	var request request.SizeRequest
 
@@ -84,13 +84,13 @@ func (s sizeController) createSizeHandler(c *gin.Context) {
 }
 
 // listSizeHandler godoc
-// @Summary        List product sizes
-// @Description    Retrieves a list of product sizes
-// @Tags           size
-// @ID             list-product-size
-// @Produce        json
-// @Success        200 {object} response.Response
-// @Router         /size/list [get]
+//	@Summary		List product sizes
+//	@Description	Retrieves a list of product sizes
+//	@Tags			size
+//	@ID				list-product-size
+//	@Produce		json
+//	@Success		200	{object}	response.Response
+//	@Router			/size/list [get]
 func (s sizeController) listSizeHandler(c *gin.Context) {
 	resp := s.sizeService.GetSizes()
 	if resp.ErrorType != errorcode.Success {
@@ -102,14 +102,14 @@ func (s sizeController) listSizeHandler(c *gin.Context) {
 }
 
 // getSizeHandler godoc
-// @Summary       Get size
-// @Description   Get a single size by id
-// @Tags          size
-// @ID            get-size-by-id
-// @Produce       json
-// @Param         id path int true "Size ID"
-// @Success       200 {object} response.Response
-// @Router        /size/{id} [get]
+//	@Summary		Get size
+//	@Description	Get a single size by id
+//	@Tags			size
+//	@ID				get-size-by-id
+//	@Produce		json
+//	@Param			id	path		int	true	"Size ID"
+//	@Success		200	{object}	response.Response
+//	@Router			/size/{id} [get]
 func (s sizeController) getSizeHandler(c *gin.Context) {
 	idStr := c.Param("id")
 
@@ -134,17 +134,17 @@ func (s sizeController) getSizeHandler(c *gin.Context) {
 }
 
 // updateSizeHandler godoc
-// @Summary          Update size
-// @Description      Update product size by id
-// @Tags             size
-// @ID               update-size-by-id
-// @Accept           json
-// @Produce          json
-// @Security         JWT
-// @Param            id path int true "Size ID"
-// @Param            size body utils.UpdateSize true "Update size data"
-// @Success          200 {object} response.Response
-// @Router           /size/update/{id} [put]
+//	@Summary		Update size
+//	@Description	Update product size by id
+//	@Tags			size
+//	@ID				update-size-by-id
+//	@Accept			json
+//	@Produce		json
+//	@Security		JWT
+//	@Param			id		path		int					true	"Size ID"
+//	@Param			size	body		utils.UpdateSize	true	"Update size data"
+//	@Success		200		{object}	response.Response
+//	@Router			/size/update/{id} [put]
 func (s sizeController) updateSizeHandler(c *gin.Context) {
 	var size utils.UpdateSize
 	idStr := c.Param("id")
@@ -180,15 +180,15 @@ func (s sizeController) updateSizeHandler(c *gin.Context) {
 }
 
 // deleteSizeHandler godoc
-// @Summary          Delete size
-// @Description      Delete product size by id
-// @Tags             size
-// @ID               delete-size-by-id
-// @Produce          json
-// @Security         JWT
-// @Param            id path int true "Size ID"
-// @Success          200 {object} response.Response
-// @Router           /size/delete/{id} [delete]
+//	@Summary		Delete size
+//	@Description	Delete product size by id
+//	@Tags			size
+//	@ID				delete-size-by-id
+//	@Produce		json
+//	@Security		JWT
+//	@Param			id	path		int	true	"Size ID"
+//	@Success		200	{object}	response.Response
+//	@Router			/size/delete/{id} [delete]
 func (s sizeController) deleteSizeHandler(c *gin.Context) {
 	idStr := c.Param("id")
 

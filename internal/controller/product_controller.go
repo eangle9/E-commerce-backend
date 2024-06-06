@@ -40,7 +40,6 @@ func (p *productController) InitProductRouter() {
 }
 
 // createProductHandler godoc
-//
 //	@Summary		create product
 //	@Description	Insert a new product
 //	@Tags			product
@@ -85,7 +84,6 @@ func (p productController) createProductHandler(c *gin.Context) {
 }
 
 // listProductHandler godoc
-//
 //	@Summary		List products
 //	@Description	Retrieves a list of products
 //	@Tags			product
@@ -104,7 +102,6 @@ func (p productController) listProductHandler(c *gin.Context) {
 }
 
 // getProductHandler godoc
-//
 //	@Summary		Get product
 //	@Description	Get single product by id
 //	@Tags			product
@@ -137,7 +134,6 @@ func (p productController) getProductHandler(c *gin.Context) {
 }
 
 // updateProductHandler godoc
-//
 //	@Summary		Update product
 //	@Description	Update product by id
 //	@Tags			product
@@ -184,7 +180,6 @@ func (p productController) updateProductHandler(c *gin.Context) {
 }
 
 // deleteProductHandler godoc
-//
 //	@Summary		Delete product
 //	@Description	Delete product by id
 //	@Tags			product

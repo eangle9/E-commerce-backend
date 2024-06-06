@@ -36,20 +36,6 @@ definitions:
     required:
     - name
     type: object
-  request.ProductItemRequest:
-    properties:
-      color_id:
-        type: integer
-      price:
-        type: number
-      product_id:
-        type: integer
-      qty_in_stock:
-        type: integer
-    required:
-    - price
-    - product_id
-    type: object
   request.ProductRequest:
     properties:
       brand:
@@ -479,16 +465,33 @@ paths:
   /item/create:
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: insert a new product item
       operationId: create-product-item
       parameters:
-      - description: Product item data
-        in: body
-        name: item
+      - description: Product ID
+        in: formData
+        name: product_id
         required: true
-        schema:
-          $ref: '#/definitions/request.ProductItemRequest'
+        type: integer
+      - description: Color ID
+        in: formData
+        name: color_id
+        type: integer
+      - description: Price
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Quantity in stock
+        in: formData
+        name: qty_in_stock
+        type: integer
+      - description: Product Image File
+        in: formData
+        name: image
+        required: true
+        type: file
       produces:
       - application/json
       responses:
@@ -678,6 +681,20 @@ paths:
       summary: Update product
       tags:
       - product
+  /products/list:
+    get:
+      description: Retrieves a list of products
+      operationId: list_of_products
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List of products
+      tags:
+      - products
   /size/{id}:
     get:
       description: Get a single size by id

@@ -9,10 +9,11 @@ import (
 	"Eccomerce-website/internal/core/port/service"
 	"Eccomerce-website/internal/infra/middleware"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	"github.com/shopspring/decimal"
 )
 
 type productItemController struct {
@@ -45,35 +46,175 @@ func (p *productItemController) InitProductItemRouter() {
 //	@Description	insert a new product item
 //	@Tags			product item
 //	@ID				create-product-item
-//	@Accept			json
+//	@Accept			mpfd
 //	@Produce		json
 //	@Security		JWT
-//	@Param			item	body		request.ProductItemRequest	true	"Product item data"
-//	@Success		201		{object}	response.Response
+//	@Param			product_id		formData	int		true	"Product ID"
+//	@Param			color_id		formData	int		false	"Color ID"
+//	@Param			price			formData	number	true	"Price"
+//	@Param			qty_in_stock	formData	int		false	"Quantity in stock"
+//	@Param			image			formData	file	true	"Product Image File"
+//	@Success		201				{object}	response.Response
 //	@Router			/item/create [post]
 func (p productItemController) createProductItemHandler(c *gin.Context) {
 	var request request.ProductItemRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	productIdStr := c.PostForm("product_id")
+	if productIdStr == "" {
 		errorResponse := response.Response{
 			Status:       http.StatusBadRequest,
 			ErrorType:    errorcode.InvalidRequest,
-			ErrorMessage: "failed to decode json request body",
+			ErrorMessage: "product_id is required",
 		}
 		c.Set("error", errorResponse)
 		return
 	}
 
-	validate := c.MustGet("validator").(*validator.Validate)
-	if err := validate.Struct(request); err != nil {
+	productId, err := strconv.Atoi(productIdStr)
+	if err != nil {
 		errorResponse := response.Response{
 			Status:       http.StatusBadRequest,
-			ErrorType:    errorcode.ValidationError,
-			ErrorMessage: customizer7.DecryptErrors(err),
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid product_item_id.Please enter a valid integer id",
 		}
 		c.Set("error", errorResponse)
 		return
 	}
+	request.ProductID = productId
+
+	colorIdStr := c.PostForm("color_id")
+
+	if colorIdStr != "" {
+		colorId, err := strconv.Atoi(colorIdStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid color_id.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+		request.ColorID = &colorId
+	}
+
+	priceStr := c.PostForm("price")
+	if priceStr == "" {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "price is required",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	priceInt, err := strconv.Atoi(priceStr)
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "invalid price.Please enter a valid integer id",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	price := decimal.NewFromInt(int64(priceInt))
+	request.Price = price
+
+	qtyInStockStr := c.PostForm("qty_in_stock")
+
+	if qtyInStockStr != "" {
+		qtyInStock, err := strconv.Atoi(qtyInStockStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid qty_in_stock.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+		request.QtyInStock = &qtyInStock
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "unable to retrieve file from the upload file",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	maxUploadSize := 8 * 1024 * 1024
+	fileSize := file.Size
+
+	if fileSize > int64(maxUploadSize) {
+		errorResponse := response.Response{
+			Status:       http.StatusRequestEntityTooLarge,
+			ErrorType:    "FILE_TOO_LARGE",
+			ErrorMessage: "the uploaded product image is too large.Please upload a size less than 8MB",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	validExt := map[string]bool{
+		".jpeg": true,
+		".png":  true,
+		".jpg":  true,
+		".gif":  true,
+		".webp": true,
+		".svg":  true,
+	}
+
+	ext := filepath.Ext(file.Filename)
+	if !validExt[ext] {
+		errorResponse := response.Response{
+			Status:       http.StatusUnsupportedMediaType,
+			ErrorType:    "INVALID_FILE_EXTENSION",
+			ErrorMessage: "invalid file extension",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
+		errorResponse := response.Response{
+			Status:       http.StatusInternalServerError,
+			ErrorType:    errorcode.InternalError,
+			ErrorMessage: "failed to save image",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+
+	request.File = file
+
+	// if err := c.ShouldBindJSON(&request); err != nil {
+	// 	errorResponse := response.Response{
+	// 		Status:       http.StatusBadRequest,
+	// 		ErrorType:    errorcode.InvalidRequest,
+	// 		ErrorMessage: "failed to decode json request body",
+	// 	}
+	// 	c.Set("error", errorResponse)
+	// 	return
+	// }
+
+	// validate := c.MustGet("validator").(*validator.Validate)
+	// if err := validate.Struct(request); err != nil {
+	// 	errorResponse := response.Response{
+	// 		Status:       http.StatusBadRequest,
+	// 		ErrorType:    errorcode.ValidationError,
+	// 		ErrorMessage: customizer7.DecryptErrors(err),
+	// 	}
+	// 	c.Set("error", errorResponse)
+	// 	return
+	// }
 
 	resp := p.productItemService.CreateProductItem(request)
 	if resp.ErrorType != errorcode.Success {

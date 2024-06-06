@@ -42,6 +42,7 @@ type ProductItem struct {
 	ID         int             `json:"product_item_id"`
 	ProductID  int             `json:"product_id"`
 	ColorID    *int            `json:"color_id"`
+	ImageUrl   string          `json:"image_url"`
 	Price      decimal.Decimal `json:"price"`
 	QtyInStock int             `json:"qty_in_stock"`
 	CreatedAt  time.Time       `json:"created_at"`
@@ -54,6 +55,21 @@ type UpdateProductItem struct {
 	ColorID    int             `json:"color_id"`
 	Price      decimal.Decimal `json:"price"`
 	QtyInStock *int            `json:"qty_in_stock"`
+}
+
+type SingleProduct struct {
+	ProductID    int              `json:"product_id"`
+	Product      string           `json:"product"`
+	ProductItems []ProductVariant `json:"product_items"`
+}
+
+type ProductVariant struct {
+	ItemID   int             `json:"item_id"`
+	Color    *string         `json:"color"`
+	ImageUrl string          `json:"image_url"`
+	Price    decimal.Decimal `json:"price"`
+	InStock  *int            `json:"in stock"`
+	// Sizes    []string `json:"sizes"`
 }
 
 // type Category struct {

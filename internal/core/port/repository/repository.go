@@ -42,7 +42,7 @@ type ProductRepository interface {
 }
 
 type ProductItemRepository interface {
-	InsertProductItem(item dto.ProductItem) (*int, error)
+	InsertProductItem(item request.ProductItemRequest) (*int, string, error)
 	ListProductItems() ([]utils.ProductItem, error)
 	GetProductItemById(id int) (utils.ProductItem, error)
 	EditProductItemById(id int, productItem utils.UpdateProductItem) (utils.ProductItem, error)
@@ -63,4 +63,8 @@ type SizeRepository interface {
 	GetSizeById(id int) (utils.Size, error)
 	EditSizeById(id int, size utils.UpdateSize) (utils.Size, error)
 	DeleteSizeById(id int) (string, int, string, error)
+}
+
+type GetProducts interface {
+	ListAllProducts() ([]utils.SingleProduct, error)
 }

@@ -11,6 +11,7 @@ import (
 	productimageservice "Eccomerce-website/internal/core/service/product_image_service"
 	productitemservice "Eccomerce-website/internal/core/service/product_item_service"
 	productservice "Eccomerce-website/internal/core/service/product_service"
+	productsservice "Eccomerce-website/internal/core/service/products_service"
 	sizeservice "Eccomerce-website/internal/core/service/size_service"
 	service "Eccomerce-website/internal/core/service/user_service"
 
@@ -126,6 +127,12 @@ func main() {
 	sizeService := sizeservice.NewSizeService(sizeRepo)
 	sizeController := controller.NewSizeController(engine, sizeService)
 	sizeController.InitSizeRouter()
+
+	// products service
+	productsRepo := repository.NewProductsRepository(db)
+	productsService := productsservice.NewProductsService(productsRepo)
+	productsController := controller.NewProductsController(engine, productsService)
+	productsController.InitProductsRouter()
 
 	if err := server.Start(instance, *httpServerConfig); err != nil {
 		log.Fatal(err)

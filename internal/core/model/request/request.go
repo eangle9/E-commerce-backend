@@ -46,7 +46,8 @@ type ProductItemRequest struct {
 	ProductID  int             `json:"product_id" validate:"required"`
 	ColorID    *int            `json:"color_id"`
 	Price      decimal.Decimal `json:"price" validate:"required"`
-	QtyInStock int             `json:"qty_in_stock"`
+	QtyInStock *int            `json:"qty_in_stock"`
+	File       *multipart.FileHeader
 }
 
 type ProductImageRequest struct {

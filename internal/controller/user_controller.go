@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golodash/galidator"
+	pagination "github.com/webstradev/gin-pagination"
 )
 
 var (
@@ -28,7 +29,7 @@ var (
 	customizer4 = g.Validator(request.ProductCategoryRequest{})
 	customizer5 = g.Validator(request.ColorRequest{})
 	customizer6 = g.Validator(request.ProductRequest{})
-	customizer7 = g.Validator(request.ProductItemRequest{})
+	// customizer7 = g.Validator(request.ProductItemRequest{})
 	customizer8 = g.Validator(request.CartRequest{})
 	customizer9 = g.Validator(request.SizeRequest{})
 )
@@ -47,6 +48,7 @@ func NewUserController(engine *router.Router, userService service.UserService) *
 
 func (u *UserController) InitRouter() {
 	protectedMiddleware := middleware.ProtectedMiddleware
+	pagination.New("page", "page_size", "1", "10", 1, 150)
 	r := u.engine
 	api := r.Group("/user")
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
-	"github.com/google/uuid"
 )
 
 func UploadToCloudinary(file *multipart.FileHeader) (string, error) {
@@ -22,7 +21,8 @@ func UploadToCloudinary(file *multipart.FileHeader) (string, error) {
 	}
 
 	var ctx = context.Background()
-	resp, err := cld.Upload.Upload(ctx, "./internal/core/common/upload/"+file.Filename, uploader.UploadParams{PublicID: "my_ecommerce" + "-" + file.Filename + generateUid()})
+	resp, err := cld.Upload.Upload(ctx, "./internal/core/common/upload/"+file.Filename, uploader.UploadParams{PublicID: "my_ecommerce" + "-" + file.Filename})
+	// + generateUid()
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +30,7 @@ func UploadToCloudinary(file *multipart.FileHeader) (string, error) {
 	return resp.SecureURL, nil
 }
 
-func generateUid() string {
-	uniqueId := uuid.New().String()
-	return uniqueId
-}
+// func generateUid() string {
+// 	uniqueId := uuid.New().String()
+// 	return uniqueId
+// }

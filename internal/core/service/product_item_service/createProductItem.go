@@ -28,7 +28,7 @@ func (p productItemService) CreateProductItem(request request.ProductItemRequest
 		QtyInStock: request.QtyInStock,
 	}
 
-	id, err := p.itemRepo.InsertProductItem(productItem)
+	id, image_url, err := p.itemRepo.InsertProductItem(request)
 	if err != nil {
 		response := response.Response{
 			Status:       http.StatusConflict,
@@ -39,6 +39,7 @@ func (p productItemService) CreateProductItem(request request.ProductItemRequest
 	}
 
 	productItem.ID = *id
+	productItem.ImageUrl = image_url
 
 	response := response.Response{
 		Data:         productItem,

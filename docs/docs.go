@@ -468,7 +468,7 @@ const docTemplate = `{
                 ],
                 "description": "insert a new product item",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -480,13 +480,37 @@ const docTemplate = `{
                 "operationId": "create-product-item",
                 "parameters": [
                     {
-                        "description": "Product item data",
-                        "name": "item",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.ProductItemRequest"
-                        }
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Color ID",
+                        "name": "color_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Price",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Quantity in stock",
+                        "name": "qty_in_stock",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Product Image File",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -795,6 +819,27 @@ const docTemplate = `{
                         "required": true
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/list": {
+            "get": {
+                "description": "Retrieves a list of products",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "List of products",
+                "operationId": "list_of_products",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1285,27 +1330,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "parent_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "request.ProductItemRequest": {
-            "type": "object",
-            "required": [
-                "price",
-                "product_id"
-            ],
-            "properties": {
-                "color_id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "product_id": {
-                    "type": "integer"
-                },
-                "qty_in_stock": {
                     "type": "integer"
                 }
             }

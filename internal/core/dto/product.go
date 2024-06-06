@@ -21,7 +21,8 @@ type ProductItem struct {
 	ProductID  int             `json:"product_id"`
 	ColorID    *int            `json:"color_id"`
 	Price      decimal.Decimal `json:"price"`
-	QtyInStock int             `json:"qty_in_stock"`
+	QtyInStock *int            `json:"qty_in_stock"`
+	ImageUrl   string          `json:"image_url"`
 }
 
 type ProductImage struct {

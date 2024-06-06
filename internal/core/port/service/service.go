@@ -63,3 +63,7 @@ type SizeService interface {
 	UpdateSize(id int, size utils.UpdateSize) response.Response
 	DeleteSize(id int) response.Response
 }
+
+type GetProductService interface {
+	GetAllProducts() response.Response
+}

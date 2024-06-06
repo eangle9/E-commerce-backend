@@ -40,16 +40,16 @@ func (cat *categoryController) InitCategoryRouter() {
 }
 
 // createProductCategoryHandler godoc
-// @Summary           Create category
-// @Description       Insert a new product category
-// @Tags              product category
-// @ID                create-product-category
-// @Accept            json
-// @Produce           json
-// @Security          JWT
-// @Param             category body request.ProductCategoryRequest true "Product category data"
-// @Success           201 {object} response.Response
-// @Router            /category/create [post]
+//	@Summary		Create category
+//	@Description	Insert a new product category
+//	@Tags			product category
+//	@ID				create-product-category
+//	@Accept			json
+//	@Produce		json
+//	@Security		JWT
+//	@Param			category	body		request.ProductCategoryRequest	true	"Product category data"
+//	@Success		201			{object}	response.Response
+//	@Router			/category/create [post]
 func (cat categoryController) createProductCategoryHandler(c *gin.Context) {
 	var request request.ProductCategoryRequest
 
@@ -84,13 +84,13 @@ func (cat categoryController) createProductCategoryHandler(c *gin.Context) {
 }
 
 // listProductCategoryHandler godoc
-// @Summary         List category
-// @Description     Retrieves a list of product category
-// @Tags            product category
-// @ID              list-product-category
-// @Produce         json
-// @Success         200 {object} response.Response
-// @Router          /category/list [get]
+//	@Summary		List category
+//	@Description	Retrieves a list of product category
+//	@Tags			product category
+//	@ID				list-product-category
+//	@Produce		json
+//	@Success		200	{object}	response.Response
+//	@Router			/category/list [get]
 func (cat categoryController) listProductCategoryHandler(c *gin.Context) {
 	resp := cat.categoryService.GetProductCategories()
 	if resp.ErrorType != errorcode.Success {
@@ -102,14 +102,14 @@ func (cat categoryController) listProductCategoryHandler(c *gin.Context) {
 }
 
 // getProductCategoryHandler godoc
-// @Summary        Get category
-// @Description    Get a single product category by id
-// @Tags           product category
-// @ID             get-product-category-by-id
-// @Produce        json
-// @Param          id path int true "Category ID"
-// @Success        200 {object} response.Response
-// @Router         /category/{id} [get]
+//	@Summary		Get category
+//	@Description	Get a single product category by id
+//	@Tags			product category
+//	@ID				get-product-category-by-id
+//	@Produce		json
+//	@Param			id	path		int	true	"Category ID"
+//	@Success		200	{object}	response.Response
+//	@Router			/category/{id} [get]
 func (cat categoryController) getProductCategoryHandler(c *gin.Context) {
 	idStr := c.Param("id")
 
@@ -134,17 +134,17 @@ func (cat categoryController) getProductCategoryHandler(c *gin.Context) {
 }
 
 // updateProductCategoryHandler godoc
-// @Summary           Update category
-// @Description       Update product category by id
-// @Tags              product category
-// @ID                update-product-category-by-id
-// @Accept            json
-// @Produce           json
-// @Security          JWT
-// @Param             id path int true "Category ID"
-// @Param             category body utils.UpdateCategory true "Update product category data"
-// @Success           200 {object} response.Response
-// @Router            /category/update/{id} [put]
+//	@Summary		Update category
+//	@Description	Update product category by id
+//	@Tags			product category
+//	@ID				update-product-category-by-id
+//	@Accept			json
+//	@Produce		json
+//	@Security		JWT
+//	@Param			id			path		int						true	"Category ID"
+//	@Param			category	body		utils.UpdateCategory	true	"Update product category data"
+//	@Success		200			{object}	response.Response
+//	@Router			/category/update/{id} [put]
 func (cat categoryController) updateProductCategoryHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	var category utils.UpdateCategory
@@ -180,15 +180,15 @@ func (cat categoryController) updateProductCategoryHandler(c *gin.Context) {
 }
 
 // deleteProductCategoryHandler godoc
-// @Summary           Delete category
-// @Description       Delete product category by id
-// @Tags              product category
-// @ID                delete-product-category-by-id
-// @Produce           json
-// @Security          JWT
-// @Param             id path int true "Category ID"
-// @Success           200 {object} response.Response
-// @Router            /category/delete/{id} [delete]
+//	@Summary		Delete category
+//	@Description	Delete product category by id
+//	@Tags			product category
+//	@ID				delete-product-category-by-id
+//	@Produce		json
+//	@Security		JWT
+//	@Param			id	path		int	true	"Category ID"
+//	@Success		200	{object}	response.Response
+//	@Router			/category/delete/{id} [delete]
 func (cat categoryController) deleteProductCategoryHandler(c *gin.Context) {
 	idStr := c.Param("id")
 
