@@ -35,16 +35,16 @@ func (cart *cartController) InitCartRouter() {
 }
 
 // addToCartHandler godoc
-//	@Summary		AddToCart
-//	@Description	Add product to shopping cart
-//	@Tags			cart
-//	@ID				add-to-cart
-//	@Accept			json
-//	@Produce		json
-//	@Security		JWT
-//	@Param			cart_item	body		request.CartRequest	true	"Cart item data"
-//	@Success		200			{object}	response.Response
-//	@Router			/cart/add [post]
+// @Summary		    AddToCart
+// @Description	    Add product to shopping cart
+// @Tags			cart
+// @ID				add-to-cart
+// @Accept			json
+// @Produce		    json
+// @Security		JWT
+// @Param			cart_item	body		request.CartRequest	true	"Cart item data"
+// @Success		    200			{object}	response.Response
+// @Router			/cart/add [post]
 func (cart cartController) addToCartHandler(c *gin.Context) {
 	var request request.CartRequest
 	idAny, exist := c.Get("userId")
