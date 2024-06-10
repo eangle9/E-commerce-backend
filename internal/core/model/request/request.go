@@ -45,7 +45,9 @@ type ProductRequest struct {
 type ProductItemRequest struct {
 	ProductID  int             `json:"product_id" validate:"required"`
 	ColorID    *int            `json:"color_id"`
+	SizeID     *int            `json:"size_id"`
 	Price      decimal.Decimal `json:"price" validate:"required"`
+	Discount   decimal.Decimal `json:"discount"`
 	QtyInStock *int            `json:"qty_in_stock"`
 	File       *multipart.FileHeader
 }
@@ -68,4 +70,11 @@ type CartRequest struct {
 
 type SizeRequest struct {
 	SizeName string `json:"size_name" validate:"required"`
+}
+
+type ReviewRequest struct {
+	UserID    int    `json:"user_id" validate:"required"`
+	ProductID int    `json:"product_id" validate:"required"`
+	Rating    uint   `json:"rating" validate:"required"`
+	Comment   string `json:"comment" validate:"required"`
 }

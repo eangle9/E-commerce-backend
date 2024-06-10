@@ -58,6 +58,22 @@ definitions:
     required:
     - refresh_token
     type: object
+  request.ReviewRequest:
+    properties:
+      comment:
+        type: string
+      product_id:
+        type: integer
+      rating:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - comment
+    - product_id
+    - rating
+    - user_id
+    type: object
   request.SignUpRequest:
     properties:
       email:
@@ -120,15 +136,6 @@ definitions:
         type: string
     type: object
   utils.UpdateProductItem:
-    properties:
-      color_id:
-        type: integer
-      price:
-        type: number
-      product_id:
-        type: integer
-      qty_in_stock:
-        type: integer
     type: object
   utils.UpdateSize:
     properties:
@@ -478,10 +485,18 @@ paths:
         in: formData
         name: color_id
         type: integer
+      - description: Size ID
+        in: formData
+        name: size_id
+        type: integer
       - description: Price
         in: formData
         name: price
         required: true
+        type: number
+      - description: Discount
+        in: formData
+        name: discount
         type: number
       - description: Quantity in stock
         in: formData
@@ -695,6 +710,45 @@ paths:
       summary: List of products
       tags:
       - products
+  /review/create:
+    post:
+      consumes:
+      - application/json
+      description: Insert a new review
+      operationId: create-review
+      parameters:
+      - description: review data
+        in: body
+        name: review
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - JWT: []
+      summary: Create review
+      tags:
+      - product review
+  /review/list:
+    get:
+      description: Retrieves a list of reviews
+      operationId: list-review
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List review
+      tags:
+      - product review
   /size/{id}:
     get:
       description: Get a single size by id

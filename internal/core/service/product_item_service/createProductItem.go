@@ -24,7 +24,9 @@ func (p productItemService) CreateProductItem(request request.ProductItemRequest
 	productItem := dto.ProductItem{
 		ProductID:  request.ProductID,
 		ColorID:    request.ColorID,
+		SizeID:     request.SizeID,
 		Price:      request.Price,
+		Discount:   request.Discount,
 		QtyInStock: request.QtyInStock,
 	}
 

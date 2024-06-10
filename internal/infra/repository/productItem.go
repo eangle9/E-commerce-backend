@@ -31,13 +31,15 @@ func (p productItemRepository) InsertProductItem(item request.ProductItemRequest
 	DB := p.db.GetDB()
 	productId := item.ProductID
 	colorId := item.ColorID
+	sizeId := item.SizeID
 	price := item.Price
+	discount := item.Discount
 	qty := item.QtyInStock
 	file := item.File
 
 	var count int
-	if colorId != nil {
-		if err := DB.QueryRow("SELECT COUNT(*) FROM product_item WHERE product_id = ? AND color_id = ? AND deleted_at IS NULL", productId, colorId).Scan(&count); err != nil {
+	if colorId != nil && sizeId != nil {
+		if err := DB.QueryRow("SELECT COUNT(*) FROM product_item WHERE product_id = ? AND color_id = ? AND size_id = ? AND deleted_at IS NULL", productId, colorId, sizeId).Scan(&count); err != nil {
 			return nil, "", err
 		}
 	}
@@ -53,7 +55,7 @@ func (p productItemRepository) InsertProductItem(item request.ProductItemRequest
 	// }
 
 	if count > 0 {
-		err := fmt.Errorf("product_item with product_id '%d' and color_id '%v' already exists", productId, colorId)
+		err := fmt.Errorf("product_item with product_id '%d', color_id '%v' and size_id '%v' already exists", productId, colorId, sizeId)
 		return nil, "", err
 	}
 
@@ -62,8 +64,8 @@ func (p productItemRepository) InsertProductItem(item request.ProductItemRequest
 		return nil, "", err
 	}
 
-	query := `INSERT INTO product_item(product_id, color_id, image_url, price, qty_in_stock) VALUES(?, ?, ?, ?, ?)`
-	result, err := DB.Exec(query, productId, colorId, image_url, price, qty)
+	query := `INSERT INTO product_item(product_id, color_id, size_id, image_url, price, discount, qty_in_stock) VALUES(?, ?, ?, ?, ?, ?, ?)`
+	result, err := DB.Exec(query, productId, colorId, sizeId, image_url, price, discount, qty)
 	if err != nil {
 		return nil, "", err
 	}
@@ -82,7 +84,7 @@ func (p productItemRepository) ListProductItems() ([]utils.ProductItem, error) {
 	var items []utils.ProductItem
 	DB := p.db.GetDB()
 
-	query := `SELECT product_item_id, product_id, color_id, image_url, price, qty_in_stock, created_at, updated_at, deleted_at FROM product_item WHERE deleted_at IS NULL`
+	query := `SELECT product_item_id, product_id, color_id, size_id, image_url, price, discount, qty_in_stock, created_at, updated_at, deleted_at FROM product_item WHERE deleted_at IS NULL`
 
 	rows, err := DB.Query(query)
 	if err != nil {
@@ -93,7 +95,7 @@ func (p productItemRepository) ListProductItems() ([]utils.ProductItem, error) {
 
 	for rows.Next() {
 		var item utils.ProductItem
-		if err := rows.Scan(&item.ID, &item.ProductID, &item.ColorID, &item.ImageUrl, &item.Price, &item.QtyInStock, &item.CreatedAt, &item.UpdatedAt, &item.DeletedAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.ProductID, &item.ColorID, &item.SizeID, &item.ImageUrl, &item.Price, &item.Discount, &item.QtyInStock, &item.CreatedAt, &item.UpdatedAt, &item.DeletedAt); err != nil {
 			return nil, err
 		}
 
@@ -112,8 +114,8 @@ func (p productItemRepository) GetProductItemById(id int) (utils.ProductItem, er
 	DB := p.db.GetDB()
 	var productItem utils.ProductItem
 
-	query := `SELECT product_item_id, product_id, color_id, image_url, price, qty_in_stock, created_at, updated_at, deleted_at FROM product_item WHERE product_item_id = ? AND deleted_at IS NULL`
-	if err := DB.QueryRow(query, id).Scan(&productItem.ID, &productItem.ProductID, &productItem.ColorID, &productItem.ImageUrl, &productItem.Price, &productItem.QtyInStock, &productItem.CreatedAt, &productItem.UpdatedAt, &productItem.DeletedAt); err != nil {
+	query := `SELECT product_item_id, product_id, color_id, size_id, image_url, price, discount, qty_in_stock, created_at, updated_at, deleted_at FROM product_item WHERE product_item_id = ? AND deleted_at IS NULL`
+	if err := DB.QueryRow(query, id).Scan(&productItem.ID, &productItem.ProductID, &productItem.ColorID, &productItem.SizeID, &productItem.ImageUrl, &productItem.Price, &productItem.Discount, &productItem.QtyInStock, &productItem.CreatedAt, &productItem.UpdatedAt, &productItem.DeletedAt); err != nil {
 		return utils.ProductItem{}, err
 	}
 
@@ -126,14 +128,19 @@ func (p productItemRepository) EditProductItemById(id int, productItem utils.Upd
 	var updateFields []string
 	var values []interface{}
 
-	if productItem.ProductID != 0 {
+	if productItem.ProductID != nil {
 		updateFields = append(updateFields, "product_id = ?")
 		values = append(values, productItem.ProductID)
 	}
 
-	if productItem.ColorID != 0 {
+	if productItem.ColorID != nil {
 		updateFields = append(updateFields, "color_id = ?")
 		values = append(values, productItem.ColorID)
+	}
+
+	if productItem.SizeID != nil {
+		updateFields = append(updateFields, "size_id = ?")
+		values = append(values, productItem.SizeID)
 	}
 
 	if !productItem.Price.Equal(zeroDecimal) {
@@ -141,9 +148,23 @@ func (p productItemRepository) EditProductItemById(id int, productItem utils.Upd
 		values = append(values, productItem.Price)
 	}
 
+	if productItem.Discount != zeroDecimal {
+		updateFields = append(updateFields, "discount = ?")
+		values = append(values, productItem.Discount)
+	}
+
 	if productItem.QtyInStock != nil {
 		updateFields = append(updateFields, "qty_in_stock = ?")
 		values = append(values, productItem.QtyInStock)
+	}
+
+	if productItem.File != nil {
+		ImageUrl, err := cloudinaryupload.UploadToCloudinary(productItem.File)
+		if err != nil {
+			return utils.ProductItem{}, err
+		}
+		updateFields = append(updateFields, "image_url")
+		values = append(values, ImageUrl)
 	}
 
 	if len(updateFields) == 0 {

@@ -15,9 +15,9 @@ func NewProductsRepository(db repository.Database) repository.GetProducts {
 	}
 }
 
-func (p productsRepository) ListAllProducts() ([]utils.SingleProduct, error) {
+func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 	DB := p.db.GetDB()
-	var products []utils.SingleProduct
+	var products []utils.ListProduct
 
 	productRows, err := DB.Query("SELECT product_id, product_name FROM product")
 	if err != nil {
@@ -27,9 +27,9 @@ func (p productsRepository) ListAllProducts() ([]utils.SingleProduct, error) {
 	defer productRows.Close()
 
 	for productRows.Next() {
-		var singleProduct utils.SingleProduct
+		var singleProduct utils.ListProduct
 
-		if err := productRows.Scan(&singleProduct.ProductID, &singleProduct.Product); err != nil {
+		if err := productRows.Scan(&singleProduct.ProductID, &singleProduct.Name); err != nil {
 			return nil, err
 		}
 
@@ -37,13 +37,17 @@ func (p productsRepository) ListAllProducts() ([]utils.SingleProduct, error) {
 		SELECT 
 		    p.product_item_id, 
 			c.color_name, 
+			s.size_name,
 			p.image_url, 
 			p.price, 
-			p.qty_in_stock 
+			p.discount,
+			p.qty_in_stock
 		FROM 
 		    product_item p 
 		LEFT JOIN 
 		    color c ON p.color_id = c.color_id
+		LEFT JOIN
+		    size s ON p.size_id = s.size_id	
 		WHERE 
 		    p.product_id = ?
 		 `
@@ -57,15 +61,68 @@ func (p productsRepository) ListAllProducts() ([]utils.SingleProduct, error) {
 		var productItems []utils.ProductVariant
 		for productItemRows.Next() {
 			var productItem utils.ProductVariant
-			if err := productItemRows.Scan(&productItem.ItemID, &productItem.Color, &productItem.ImageUrl, &productItem.Price, &productItem.InStock); err != nil {
+			if err := productItemRows.Scan(&productItem.ItemID, &productItem.Color, &productItem.Size, &productItem.ImageUrl, &productItem.Price, &productItem.Discount, &productItem.InStock); err != nil {
 				return nil, err
 			}
 			productItems = append(productItems, productItem)
 		}
 
+		if err := productItemRows.Err(); err != nil {
+			return nil, err
+		}
+
 		singleProduct.ProductItems = productItems
+
+		reviewQuery := `
+    SELECT 
+        r.review_id,
+        r.user_id,
+        r.product_id,
+        r.rating,
+        r.comment,
+        r.created_at,
+        u.user_id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.phone_number
+    FROM 
+        review r
+    LEFT JOIN
+        users u ON r.user_id = u.user_id
+    WHERE
+        r.product_id = ?
+`
+
+		reviewRows, err := DB.Query(reviewQuery, singleProduct.ProductID)
+		if err != nil {
+			return nil, err
+		}
+
+		defer reviewRows.Close()
+
+		var reviews []utils.ProductReview
+		for reviewRows.Next() {
+			var review utils.ProductReview
+			if err := reviewRows.Scan(&review.ReviewID, &review.UserID, &review.ProductID, &review.Rating, &review.Comment, &review.CreatedAt, &review.User.ID, &review.User.Username, &review.User.FirstName, &review.User.LastName, &review.User.Email, &review.User.PhoneNumber); err != nil {
+				return nil, err
+			}
+			reviews = append(reviews, review)
+		}
+
+		if err := reviewRows.Err(); err != nil {
+			return nil, err
+		}
+
+		singleProduct.Reviews = reviews
+
 		products = append(products, singleProduct)
 	}
 
 	return products, nil
 }
+
+// func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, error) {
+
+// }

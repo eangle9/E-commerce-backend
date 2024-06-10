@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"mime/multipart"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -42,8 +43,10 @@ type ProductItem struct {
 	ID         int             `json:"product_item_id"`
 	ProductID  int             `json:"product_id"`
 	ColorID    *int            `json:"color_id"`
+	SizeID     *int            `json:"size_id"`
 	ImageUrl   string          `json:"image_url"`
 	Price      decimal.Decimal `json:"price"`
+	Discount   decimal.Decimal `json:"discount"`
 	QtyInStock int             `json:"qty_in_stock"`
 	CreatedAt  time.Time       `json:"created_at"`
 	UpdatedAt  time.Time       `json:"updated_at"`
@@ -51,25 +54,70 @@ type ProductItem struct {
 }
 
 type UpdateProductItem struct {
-	ProductID  int             `json:"product_id"`
-	ColorID    int             `json:"color_id"`
+	ProductID  *int            `json:"product_id"`
+	ColorID    *int            `json:"color_id"`
+	SizeID     *int            `json:"size_id"`
 	Price      decimal.Decimal `json:"price"`
+	Discount   decimal.Decimal `json:"discount"`
 	QtyInStock *int            `json:"qty_in_stock"`
+	// ImageUrl   *string         `json:"image_url"`
+	File *multipart.FileHeader
 }
 
-type SingleProduct struct {
+type ListProduct struct {
 	ProductID    int              `json:"product_id"`
-	Product      string           `json:"product"`
+	Name         string           `json:"name"`
 	ProductItems []ProductVariant `json:"product_items"`
+	Reviews      []ProductReview  `json:"reviews"`
 }
 
 type ProductVariant struct {
 	ItemID   int             `json:"item_id"`
 	Color    *string         `json:"color"`
+	Size     *string         `json:"size"`
 	ImageUrl string          `json:"image_url"`
 	Price    decimal.Decimal `json:"price"`
-	InStock  *int            `json:"in stock"`
-	// Sizes    []string `json:"sizes"`
+	Discount decimal.Decimal `json:"discount"`
+	InStock  *int            `json:"in_stock"`
+}
+
+type SingleProduct struct {
+	ProductID   int             `json:"product_id"`
+	Name        string          `json:"name"`
+	Category    string          `json:"category"`
+	Brand       string          `json:"brand"`
+	Description string          `json:"description"`
+	Items       []ItemVariant   `json:"items"`
+	Reviews     []ProductReview `json:"reviews"`
+}
+
+type ItemVariant struct {
+	ItemID   int     `json:"item_id"`
+	Color    *string `json:"color"`
+	Size     *string `json:"size"`
+	ImageUrl string  `json:"image_url"`
+	Price    int     `json:"price"`
+	Discount *int    `json:"discount"`
+	InStock  *int    `json:"in stock"`
+}
+
+type ProductReview struct {
+	ReviewID  int       `json:"review_id"`
+	UserID    *int      `json:"user_id"`
+	ProductID *int      `json:"product_id"`
+	Rating    uint      `json:"rating"`
+	Comment   string    `json:"comment"`
+	CreatedAt time.Time `json:"created_at"`
+	User      Reviewer  `json:"user"`
+}
+
+type Reviewer struct {
+	ID          int    `json:"id"`
+	Username    string `json:"username"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
 }
 
 // type Category struct {

@@ -12,6 +12,7 @@ import (
 	productitemservice "Eccomerce-website/internal/core/service/product_item_service"
 	productservice "Eccomerce-website/internal/core/service/product_service"
 	productsservice "Eccomerce-website/internal/core/service/products_service"
+	reviewservice "Eccomerce-website/internal/core/service/review_service"
 	sizeservice "Eccomerce-website/internal/core/service/size_service"
 	service "Eccomerce-website/internal/core/service/user_service"
 
@@ -23,6 +24,8 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	// "github.com/go-chi/cors"
+	"github.com/gin-contrib/cors"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	swaggerFiles "github.com/swaggo/files"
@@ -48,6 +51,16 @@ func main() {
 	// fmt.Println("cwd :", cwd)
 	errorMiddleware := middleware.ErrorMiddleware
 	instance := gin.New()
+
+	// cors middleware
+	instance.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "http://*"}, // Adjust origins as necessary
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposeHeaders:    []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           12 * 3600, // 12 hours
+	}))
 
 	instance.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	// instance.MaxMultipartMemory = 8 << 20 // 8MB maximum
@@ -133,6 +146,12 @@ func main() {
 	productsService := productsservice.NewProductsService(productsRepo)
 	productsController := controller.NewProductsController(engine, productsService)
 	productsController.InitProductsRouter()
+
+	// review service
+	reviewRepo := repository.NewReviewRepository(db)
+	reviewService := reviewservice.NewReviewService(reviewRepo)
+	reviewController := controller.NewReviewController(engine, reviewService)
+	reviewController.InitReviewRouter()
 
 	if err := server.Start(instance, *httpServerConfig); err != nil {
 		log.Fatal(err)

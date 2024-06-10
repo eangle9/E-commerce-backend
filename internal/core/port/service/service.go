@@ -66,4 +66,10 @@ type SizeService interface {
 
 type GetProductService interface {
 	GetAllProducts() response.Response
+	// GetSingleProduct(id int) response.Response
+}
+
+type ReviewService interface {
+	CreateReview(request request.ReviewRequest) response.Response
+	GetReviews() response.Response
 }

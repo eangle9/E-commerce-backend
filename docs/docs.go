@@ -493,11 +493,23 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "integer",
+                        "description": "Size ID",
+                        "name": "size_id",
+                        "in": "formData"
+                    },
+                    {
                         "type": "number",
                         "description": "Price",
                         "name": "price",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Discount",
+                        "name": "discount",
+                        "in": "formData"
                     },
                     {
                         "type": "integer",
@@ -840,6 +852,67 @@ const docTemplate = `{
                 ],
                 "summary": "List of products",
                 "operationId": "list_of_products",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/review/create": {
+            "post": {
+                "security": [
+                    {
+                        "JWT": []
+                    }
+                ],
+                "description": "Insert a new review",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product review"
+                ],
+                "summary": "Create review",
+                "operationId": "create-review",
+                "parameters": [
+                    {
+                        "description": "review data",
+                        "name": "review",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/review/list": {
+            "get": {
+                "description": "Retrieves a list of reviews",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product review"
+                ],
+                "summary": "List review",
+                "operationId": "list-review",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1367,6 +1440,29 @@ const docTemplate = `{
                 }
             }
         },
+        "request.ReviewRequest": {
+            "type": "object",
+            "required": [
+                "comment",
+                "product_id",
+                "rating",
+                "user_id"
+            ],
+            "properties": {
+                "comment": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "request.SignUpRequest": {
             "type": "object",
             "required": [
@@ -1459,21 +1555,7 @@ const docTemplate = `{
             }
         },
         "utils.UpdateProductItem": {
-            "type": "object",
-            "properties": {
-                "color_id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "product_id": {
-                    "type": "integer"
-                },
-                "qty_in_stock": {
-                    "type": "integer"
-                }
-            }
+            "type": "object"
         },
         "utils.UpdateSize": {
             "type": "object",

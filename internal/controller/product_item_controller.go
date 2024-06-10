@@ -8,6 +8,7 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/service"
 	"Eccomerce-website/internal/infra/middleware"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -41,21 +42,22 @@ func (p *productItemController) InitProductItemRouter() {
 }
 
 // createProductItemHandler godoc
-//
-//	@Summary		Create product item
-//	@Description	insert a new product item
-//	@Tags			product item
-//	@ID				create-product-item
-//	@Accept			mpfd
-//	@Produce		json
-//	@Security		JWT
-//	@Param			product_id		formData	int		true	"Product ID"
-//	@Param			color_id		formData	int		false	"Color ID"
-//	@Param			price			formData	number	true	"Price"
-//	@Param			qty_in_stock	formData	int		false	"Quantity in stock"
-//	@Param			image			formData	file	true	"Product Image File"
-//	@Success		201				{object}	response.Response
-//	@Router			/item/create [post]
+// @Summary		    Create product item
+// @Description	    insert a new product item
+// @Tags			product item
+// @ID				create-product-item
+// @Accept			mpfd
+// @Produce		    json
+// @Security		JWT
+// @Param			product_id		formData	int		true	"Product ID"
+// @Param			color_id		formData	int		false	"Color ID"
+// @Param           size_id         formData    int     false    "Size ID"
+// @Param			price			formData	number	true	"Price"
+// @Param           discount        formData    number  false    "Discount"
+// @Param			qty_in_stock	formData	int		false	"Quantity in stock"
+// @Param			image			formData	file	true	"Product Image File"
+// @Success		    201				{object}	response.Response
+// @Router			/item/create [post]
 func (p productItemController) createProductItemHandler(c *gin.Context) {
 	var request request.ProductItemRequest
 
@@ -75,7 +77,7 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		errorResponse := response.Response{
 			Status:       http.StatusBadRequest,
 			ErrorType:    errorcode.InvalidRequest,
-			ErrorMessage: "invalid product_item_id.Please enter a valid integer id",
+			ErrorMessage: "invalid product_id.Please enter a valid integer id",
 		}
 		c.Set("error", errorResponse)
 		return
@@ -98,6 +100,22 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		request.ColorID = &colorId
 	}
 
+	sizeIdStr := c.PostForm("size_id")
+
+	if sizeIdStr != "" {
+		sizeId, err := strconv.Atoi(sizeIdStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid size_id.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+		request.SizeID = &sizeId
+	}
+
 	priceStr := c.PostForm("price")
 	if priceStr == "" {
 		errorResponse := response.Response{
@@ -109,19 +127,37 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		return
 	}
 
-	priceInt, err := strconv.Atoi(priceStr)
+	price, err := decimal.NewFromString(priceStr)
 	if err != nil {
 		errorResponse := response.Response{
 			Status:       http.StatusBadRequest,
 			ErrorType:    errorcode.InvalidRequest,
-			ErrorMessage: "invalid price.Please enter a valid integer id",
+			ErrorMessage: fmt.Errorf("error converting string to decimal: %v", err),
 		}
 		c.Set("error", errorResponse)
 		return
 	}
 
-	price := decimal.NewFromInt(int64(priceInt))
+	// price := decimal.NewFromInt(int64(priceInt))
 	request.Price = price
+
+	discountStr := c.PostForm("discount")
+
+	if discountStr != "" {
+		discount, err := decimal.NewFromString(discountStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: fmt.Errorf("error converting string to decimal: %v", err),
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+
+		// discount := decimal.NewFromInt(int64(discountInt))
+		request.Discount = discount
+	}
 
 	qtyInStockStr := c.PostForm("qty_in_stock")
 
@@ -294,15 +330,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	var request utils.UpdateProductItem
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		errorResponse := response.Response{
-			Status:       http.StatusBadRequest,
-			ErrorType:    errorcode.InvalidRequest,
-			ErrorMessage: "failed to decode json request body",
-		}
-		c.Set("error", errorResponse)
-		return
-	}
+	// if err := c.ShouldBindJSON(&request); err != nil {
+	// 	errorResponse := response.Response{
+	// 		Status:       http.StatusBadRequest,
+	// 		ErrorType:    errorcode.InvalidRequest,
+	// 		ErrorMessage: "failed to decode json request body",
+	// 	}
+	// 	c.Set("error", errorResponse)
+	// 	return
+	// }
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -313,6 +349,157 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 		}
 		c.Set("error", errorResponse)
 		return
+	}
+
+	productIdStr := c.PostForm("product_id")
+	if productIdStr != "" {
+		productId, err := strconv.Atoi(productIdStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid product_id.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+		request.ProductID = &productId
+	}
+
+	colorIdStr := c.PostForm("color_id")
+	if colorIdStr != "" {
+		colorId, err := strconv.Atoi(colorIdStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid color_id.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+		request.ColorID = &colorId
+	}
+
+	sizeIdStr := c.PostForm("size_id")
+	if sizeIdStr != "" {
+		sizeId, err := strconv.Atoi(sizeIdStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid size_id.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+		request.SizeID = &sizeId
+	}
+
+	priceStr := c.PostForm("price")
+	if priceStr != "" {
+		priceInt, err := strconv.Atoi(priceStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid price.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+
+		price := decimal.NewFromInt(int64(priceInt))
+		request.Price = price
+	}
+
+	discountStr := c.PostForm("discount")
+	if discountStr != "" {
+		discountInt, err := strconv.Atoi(discountStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid discount.Please enter a valid integer value",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+
+		discount := decimal.NewFromInt(int64(discountInt))
+		request.Discount = discount
+	}
+
+	qtyInStockStr := c.PostForm("qty_in_stock")
+	if qtyInStockStr != "" {
+		qtyInStock, err := strconv.Atoi(qtyInStockStr)
+		if err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusBadRequest,
+				ErrorType:    errorcode.InvalidRequest,
+				ErrorMessage: "invalid qty_in_stock.Please enter a valid integer id",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+		request.QtyInStock = &qtyInStock
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil && err != http.ErrMissingFile {
+		errorResponse := response.Response{
+			Status:       http.StatusBadRequest,
+			ErrorType:    errorcode.InvalidRequest,
+			ErrorMessage: "unable to retrieve file from the upload file",
+		}
+		c.Set("error", errorResponse)
+		return
+	}
+	if err == nil && file != nil {
+		maxUploadSize := 8 * 1024 * 1024
+		fileSize := file.Size
+
+		if fileSize > int64(maxUploadSize) {
+			errorResponse := response.Response{
+				Status:       http.StatusRequestEntityTooLarge,
+				ErrorType:    "FILE_TOO_LARGE",
+				ErrorMessage: "the uploaded product image is too large.Please upload a size less than 8MB",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+
+		validExt := map[string]bool{
+			".jpeg": true,
+			".png":  true,
+			".jpg":  true,
+			".gif":  true,
+			".webp": true,
+			".svg":  true,
+		}
+
+		ext := filepath.Ext(file.Filename)
+		if !validExt[ext] {
+			errorResponse := response.Response{
+				Status:       http.StatusUnsupportedMediaType,
+				ErrorType:    "INVALID_FILE_EXTENSION",
+				ErrorMessage: "invalid file extension",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+
+		if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
+			errorResponse := response.Response{
+				Status:       http.StatusInternalServerError,
+				ErrorType:    errorcode.InternalError,
+				ErrorMessage: "failed to save image",
+			}
+			c.Set("error", errorResponse)
+			return
+		}
+
+		request.File = file
 	}
 
 	resp := p.productItemService.UpdateProductItem(id, request)

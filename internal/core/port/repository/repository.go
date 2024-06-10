@@ -66,5 +66,11 @@ type SizeRepository interface {
 }
 
 type GetProducts interface {
-	ListAllProducts() ([]utils.SingleProduct, error)
+	ListAllProducts() ([]utils.ListProduct, error)
+	// GetSingleProductById(id int) (utils.SingleProduct, error)
+}
+
+type ReviewRepository interface {
+	InsertReview(review dto.Review) (*int, error)
+	ListReviews() ([]utils.Review, error)
 }
