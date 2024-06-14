@@ -696,6 +696,26 @@ paths:
       summary: Update product
       tags:
       - product
+  /products/{id}:
+    get:
+      description: Get a single product by id
+      operationId: get-products-by-id
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get single product
+      tags:
+      - products
   /products/list:
     get:
       description: Retrieves a list of products

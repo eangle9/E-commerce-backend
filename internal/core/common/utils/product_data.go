@@ -92,13 +92,13 @@ type SingleProduct struct {
 }
 
 type ItemVariant struct {
-	ItemID   int     `json:"item_id"`
-	Color    *string `json:"color"`
-	Size     *string `json:"size"`
-	ImageUrl string  `json:"image_url"`
-	Price    int     `json:"price"`
-	Discount *int    `json:"discount"`
-	InStock  *int    `json:"in stock"`
+	ItemID   int             `json:"item_id"`
+	Color    *string         `json:"color"`
+	Size     *string         `json:"size"`
+	ImageUrl string          `json:"image_url"`
+	Price    decimal.Decimal `json:"price"`
+	Discount decimal.Decimal `json:"discount"`
+	InStock  *int            `json:"in_stock"`
 }
 
 type ProductReview struct {

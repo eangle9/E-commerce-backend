@@ -123,6 +123,113 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 	return products, nil
 }
 
-// func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, error) {
+func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, error) {
+	DB := p.db.GetDB()
+	var singleProduct utils.SingleProduct
 
-// }
+	prouductQuery := `
+	SELECT
+	   p.product_id,
+	   c.name,
+	   p.brand,
+	   p.product_name,
+	   p.description
+	FROM 
+	  product p
+	LEFT JOIN
+	  product_category c ON p.category_id = c.category_id
+	WHERE
+	  p.product_id = ?    
+	`
+
+	if err := DB.QueryRow(prouductQuery, id).Scan(&singleProduct.ProductID, &singleProduct.Category, &singleProduct.Brand, &singleProduct.Name, &singleProduct.Description); err != nil {
+		return utils.SingleProduct{}, err
+	}
+
+	itemQuery := `
+	SELECT 
+	   p.product_item_id,
+	   c.color_name,
+	   s.size_name,
+	   p.image_url,
+	   p.price,
+	   p.discount,
+	   qty_in_stock
+	FROM 
+	  product_item p
+	LEFT JOIN
+	  color c ON p.color_id = c.color_id
+	LEFT JOIN
+	  size s ON p.size_id = s.size_id
+	WHERE
+	  p.product_id = ?    
+	`
+
+	itemRows, err := DB.Query(itemQuery, id)
+	if err != nil {
+		return utils.SingleProduct{}, err
+	}
+
+	defer itemRows.Close()
+
+	var items []utils.ItemVariant
+	for itemRows.Next() {
+		var item utils.ItemVariant
+
+		if err := itemRows.Scan(&item.ItemID, &item.Color, &item.Size, &item.ImageUrl, &item.Price, &item.Discount, &item.InStock); err != nil {
+			return utils.SingleProduct{}, err
+		}
+		items = append(items, item)
+	}
+
+	if err := itemRows.Err(); err != nil {
+		return utils.SingleProduct{}, err
+	}
+
+	singleProduct.Items = items
+
+	reviewQuery := `
+	SELECT
+	   r.review_id,
+	   r.user_id,
+	   r.product_id,
+	   r.rating,
+	   r.comment,
+	   r.created_at,
+	   u.user_id,
+	   u.username,
+	   u.first_name,
+	   u.last_name,
+	   u.email,
+	   u.phone_number
+	FROM 
+	  review r
+	LEFT JOIN 
+	  users u ON r.user_id = u.user_id
+	WHERE
+	  r.product_id = ?    
+	`
+	reviewRows, err := DB.Query(reviewQuery, id)
+	if err != nil {
+		return utils.SingleProduct{}, err
+	}
+
+	defer reviewRows.Close()
+
+	var reviews []utils.ProductReview
+	for reviewRows.Next() {
+		var review utils.ProductReview
+		if err := reviewRows.Scan(&review.ReviewID, &review.UserID, &review.ProductID, &review.Rating, &review.Comment, &review.CreatedAt, &review.User.ID, &review.User.Username, &review.User.FirstName, &review.User.LastName, &review.User.Email, &review.User.PhoneNumber); err != nil {
+			return utils.SingleProduct{}, err
+		}
+		reviews = append(reviews, review)
+	}
+
+	if err := reviewRows.Err(); err != nil {
+		return utils.SingleProduct{}, err
+	}
+
+	singleProduct.Reviews = reviews
+
+	return singleProduct, nil
+}

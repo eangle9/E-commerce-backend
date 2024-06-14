@@ -67,7 +67,7 @@ type SizeRepository interface {
 
 type GetProducts interface {
 	ListAllProducts() ([]utils.ListProduct, error)
-	// GetSingleProductById(id int) (utils.SingleProduct, error)
+	GetSingleProductById(id int) (utils.SingleProduct, error)
 }
 
 type ReviewRepository interface {
