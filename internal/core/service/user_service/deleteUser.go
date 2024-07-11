@@ -2,23 +2,19 @@ package service
 
 import (
 	"Eccomerce-website/internal/core/model/response"
+	"fmt"
+	"net/http"
 )
 
-func (u userService) DeleteUser(id int) response.Response {
-	resp, status, errType, err := u.userRepo.DeleteUserById(id)
+func (u userService) DeleteUser(id int) (response.Response, error) {
+	err := u.userRepo.DeleteUserById(id)
 	if err != nil {
-		response := response.Response{
-			Status:       status,
-			ErrorType:    errType,
-			ErrorMessage: err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
-		Status:       status,
-		ErrorType:    errType,
-		ErrorMessage: resp,
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("user with user_id %d deleted successfully", id),
 	}
-	return response
+	return response, nil
 }

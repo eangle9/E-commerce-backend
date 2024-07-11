@@ -7,13 +7,13 @@ import (
 )
 
 type UserService interface {
-	SignUp(request request.SignUpRequest) response.Response
-	LoginUser(request request.LoginRequest) response.Response
-	GetUsers() response.Response
-	GetUser(id int) response.Response
-	UpdateUser(id int, user utils.UpdateUser) response.Response
-	DeleteUser(id int) response.Response
-	RefreshToken(refreshToken request.RefreshRequest) response.Response
+	SignUp(request request.SignUpRequest) (response.Response, error)
+	LoginUser(request request.LoginRequest) (response.Response, error)
+	GetUsers(request request.PaginationQuery) (response.Response, error)
+	GetUser(id int) (response.Response, error)
+	UpdateUser(id int, user request.UpdateUser) (response.Response, error)
+	DeleteUser(id int) (response.Response, error)
+	RefreshToken(refreshToken request.RefreshRequest) (response.Response, error)
 }
 
 type ProductCategoryService interface {

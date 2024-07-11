@@ -1,7 +1,6 @@
 package cartservice
 
 import (
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
@@ -25,16 +24,14 @@ func (c cartService) AddToCart(request request.CartRequest, userId uint) respons
 	if err != nil {
 		if err == sql.ErrNoRows {
 			response := response.Response{
-				Status:       http.StatusNotFound,
-				ErrorType:    errorcode.NotFoundError,
-				ErrorMessage: err.Error(),
+				StatusCode: http.StatusNotFound,
+				Message:    err.Error(),
 			}
 			return response
 		} else {
 			response := response.Response{
-				Status:       http.StatusInternalServerError,
-				ErrorType:    errorcode.InternalError,
-				ErrorMessage: err.Error(),
+				StatusCode: http.StatusInternalServerError,
+				Message:    err.Error(),
 			}
 			return response
 		}
@@ -42,10 +39,9 @@ func (c cartService) AddToCart(request request.CartRequest, userId uint) respons
 	}
 
 	response := response.Response{
-		Data:         cartResponse,
-		Status:       http.StatusOK,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: "successfully added product item to shopping cart",
+		Data:       cartResponse,
+		StatusCode: http.StatusOK,
+		Message:    "successfully added product item to shopping cart",
 	}
 
 	return response

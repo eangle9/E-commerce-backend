@@ -2,7 +2,6 @@ package colorservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
@@ -28,9 +27,8 @@ func (c colorService) CreateColor(request request.ColorRequest) response.Respons
 	id, err := c.colorRepo.InsertColor(color)
 	if err != nil {
 		response := response.Response{
-			Status:       http.StatusConflict,
-			ErrorType:    "DUPLICATE_ENTRY",
-			ErrorMessage: err.Error(),
+			StatusCode: http.StatusConflict,
+			Message:    err.Error(),
 		}
 		return response
 	}
@@ -38,10 +36,9 @@ func (c colorService) CreateColor(request request.ColorRequest) response.Respons
 	color.ID = *id
 
 	response := response.Response{
-		Data:         color,
-		Status:       http.StatusCreated,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: "Congratulation, color for product created successfully!",
+		Data:       color,
+		StatusCode: http.StatusCreated,
+		Message:    "Congratulation, color for product created successfully!",
 	}
 
 	return response

@@ -1,6 +1,7 @@
 package jwttoken
 
 import (
+	"Eccomerce-website/internal/core/entity"
 	"errors"
 	"time"
 
@@ -17,33 +18,35 @@ func GenerateTokenPair(id uint, role string) (map[string]string, error) {
 	secretKey := viper.Get("JWT_SECRET")
 	if secretKey == nil {
 		err := errors.New("unable to get jwt secret key")
-		return nil, err
+		errorResponse := entity.AuthInternalError.Wrap(err, "failed to get jwt secret key in .env file").WithProperty(entity.StatusCode, 500)
+		return nil, errorResponse
 	}
 	secret := secretKey.(string)
-	// fmt.Println("secretKey: ", secret)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"id":   id,
 			"role": role,
-			"exp":  time.Now().Add(10 * time.Minute).Unix(),
+			"exp":  time.Now().Add(15 * time.Minute).Unix(),
 		})
 
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return nil, err
+		errorResponse := entity.AuthInternalError.Wrap(err, "failed to signed access_token by secret key").WithProperty(entity.StatusCode, 500)
+		return nil, errorResponse
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"id":   id,
 			"role": role,
-			"exp":  time.Now().Add(24 * time.Hour).Unix(),
+			"exp":  time.Now().Add(30 * 24 * time.Hour).Unix(),
 		})
 
 	refreshTokenString, err := refreshToken.SignedString([]byte(secret))
 	if err != nil {
-		return nil, err
+		errorResponse := entity.AuthInternalError.Wrap(err, "failed to signed refresh_token by secret key").WithProperty(entity.StatusCode, 500)
+		return nil, errorResponse
 	}
 
 	tokenMap := map[string]string{

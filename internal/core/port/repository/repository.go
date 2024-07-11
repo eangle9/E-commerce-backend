@@ -11,10 +11,10 @@ import (
 type UserRepository interface {
 	InsertUser(user dto.User) (int, error)
 	Authentication(request.LoginRequest) (utils.User, error)
-	ListUsers() ([]utils.User, error)
+	ListUsers(offset, perPage int) ([]utils.User, error)
 	GetUserById(id int) (utils.User, error)
-	EditUserById(id int, user utils.UpdateUser) (utils.User, error)
-	DeleteUserById(id int) (string, int, string, error)
+	EditUserById(id int, user request.UpdateUser) (utils.User, error)
+	DeleteUserById(id int) error
 }
 
 type ProductCategoryRepository interface {

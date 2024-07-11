@@ -2,14 +2,12 @@ package repository
 
 import (
 	"Eccomerce-website/internal/core/common/utils"
-	"Eccomerce-website/internal/core/common/utils/password"
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -28,8 +26,12 @@ func NewUserRepository(db repository.Database) repository.UserRepository {
 
 func matchPassword(hashPassword string, password string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(hashPassword), []byte(password))
-	isMatch := err == nil
-	return isMatch, err
+	if err != nil {
+		errorResponse := entity.InvalidCredentials.Wrap(err, "invalid password").WithProperty(entity.StatusCode, 401)
+		return false, errorResponse
+	}
+
+	return true, nil
 }
 
 func (u userRepository) InsertUser(user dto.User) (int, error) {
@@ -38,11 +40,13 @@ func (u userRepository) InsertUser(user dto.User) (int, error) {
 
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM users WHERE username = ? OR email = ?", user.Username, user.Email).Scan(&count); err != nil {
-		return 0, err
+		errorResponse := entity.UnableToRead.Wrap(err, "unable to read COUNT in the query").WithProperty(entity.StatusCode, 500)
+		return 0, errorResponse
 	}
 	if count > 0 {
 		err := errors.New("user already exists")
-		return 0, err
+		errorResponse := entity.DuplicateEntry.Wrap(err, "conflict error").WithProperty(entity.StatusCode, 409)
+		return 0, errorResponse
 	}
 
 	query := `INSERT INTO users(username, email, password, first_name, last_name, phone_number, email_verified, profile_picture)
@@ -50,17 +54,15 @@ func (u userRepository) InsertUser(user dto.User) (int, error) {
 
 	result, err := DB.Exec(query, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.PhoneNumber, user.EmailVerified, user.ProfilePicture)
 	if err != nil {
-		return 0, err
+		errorResponse := entity.UnableToSave.Wrap(err, "failed to insert user").WithProperty(entity.StatusCode, 500)
+		return 0, errorResponse
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, err
+		errorResponse := entity.UnableToRead.Wrap(err, "failed to get the inserted id").WithProperty(entity.StatusCode, 500)
+		return 0, errorResponse
 	}
-	// result := DB.Create(user)
-	// if result.Error != nil {
-	// 	return result.Error
-	// }
 
 	return int(id), nil
 }
@@ -81,21 +83,13 @@ func (u userRepository) Authentication(request request.LoginRequest) (utils.User
 		&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
 		&user.LastName, &user.PhoneNumber, &user.ProfilePicture,
 		&user.EmailVerified, &user.Role, &user.CreatedAt, &user.UpdatedAt); err != nil {
-		err = fmt.Errorf("user with email %s is not found: %s", email, err)
-		return utils.User{}, err
+		errorMessage := fmt.Sprintf("user with email %s is not found", email)
+		errorResponse := entity.UnableToFindResource.Wrap(err, errorMessage).WithProperty(entity.StatusCode, 404)
+		return utils.User{}, errorResponse
 	}
-	// if err := DB.Where("email=?", email).First(&user).Error; err != nil {
-	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
-	// 		err = fmt.Errorf("user with email %s is not found", email)
-	// 		return dbmodels.User{}, err
-	// 	}
-
-	// 	return dbmodels.User{}, err
-	// }
 
 	match, err := matchPassword(user.Password, password)
 	if err != nil || !match {
-		err = errors.New("invalid password")
 		return utils.User{}, err
 	}
 
@@ -103,17 +97,18 @@ func (u userRepository) Authentication(request request.LoginRequest) (utils.User
 
 }
 
-func (u userRepository) ListUsers() ([]utils.User, error) {
+func (u userRepository) ListUsers(offset, perPage int) ([]utils.User, error) {
 	var users []utils.User
 	DB := u.db.GetDB()
 
 	query := `SELECT user_id, username, email, password, first_name,
 	last_name, phone_number, profile_picture, email_verified, 
-	role, created_at, updated_at FROM users WHERE deleted_at IS NULL`
+	role, created_at, updated_at FROM users WHERE deleted_at IS NULL ORDER BY user_id LIMIT ? OFFSET ?`
 
-	rows, err := DB.Query(query)
+	rows, err := DB.Query(query, perPage, offset)
 	if err != nil {
-		return nil, err
+		errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get list of users").WithProperty(entity.StatusCode, 404)
+		return nil, errorResponse
 	}
 	defer rows.Close()
 
@@ -123,7 +118,8 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 			&user.ID, &user.Username, &user.Email, &user.Password, &user.FirstName,
 			&user.LastName, &user.PhoneNumber, &user.ProfilePicture,
 			&user.EmailVerified, &user.Role, &user.CreatedAt, &user.UpdatedAt); err != nil {
-			return nil, err
+			errorResponse := entity.UnableToRead.Wrap(err, "failed to scan users data").WithProperty(entity.StatusCode, 500)
+			return nil, errorResponse
 		}
 
 		users = append(users, user)
@@ -131,12 +127,9 @@ func (u userRepository) ListUsers() ([]utils.User, error) {
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		errorResponse := entity.UnableToRead.Wrap(err, "db rows error").WithProperty(entity.StatusCode, 500)
+		return nil, errorResponse
 	}
-	// result := DB.Find(&users)
-	// if result.Error != nil {
-	// 	return []dbmodels.User{}, result.Error
-	// }
 
 	return users, nil
 }
@@ -153,14 +146,15 @@ func (u userRepository) GetUserById(id int) (utils.User, error) {
 		&user.LastName, &user.PhoneNumber, &user.ProfilePicture,
 		&user.EmailVerified, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	); err != nil {
-		err = fmt.Errorf("user with id %d not found", id)
-		return utils.User{}, err
+		errorMessage := fmt.Sprintf("user with id %d not found", id)
+		errorResponse := entity.UnableToFindResource.Wrap(err, errorMessage).WithProperty(entity.StatusCode, 404)
+		return utils.User{}, errorResponse
 	}
 
 	return user, nil
 }
 
-func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User, error) {
+func (u userRepository) EditUserById(id int, user request.UpdateUser) (utils.User, error) {
 	var updateFields []string
 	var values []interface{}
 	DB := u.db.GetDB()
@@ -174,17 +168,17 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		values = append(values, user.Email)
 	}
 	if user.Password != "" {
-		errorResponse := utils.PasswordValidation(user.Password)
-		if errorResponse != nil {
-			err := fmt.Errorf("%s", errorResponse.ErrorMessage)
-			return utils.User{}, err
-		}
-		password, err := password.HasPassword(user.Password)
-		if err != nil {
-			return utils.User{}, err
-		}
+		// errorResponse := utils.PasswordValidation(user.Password)
+		// if errorResponse != nil {
+		// 	err := fmt.Errorf("%s", errorResponse.ErrorMessage)
+		// 	return utils.User{}, err
+		// }
+		// password, err := password.HasPassword(user.Password)
+		// if err != nil {
+		// 	return utils.User{}, err
+		// }
 		updateFields = append(updateFields, "password = ?")
-		values = append(values, password)
+		values = append(values, user.Password)
 	}
 	if user.FirstName != "" {
 		updateFields = append(updateFields, "first_name = ?")
@@ -195,15 +189,15 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 		values = append(values, user.LastName)
 	}
 	if user.PhoneNumber != "" {
-		fmt.Println("phone", user.PhoneNumber)
-		errorResponse, phoneNumber := utils.PhoneValidation(user.PhoneNumber)
-		if errorResponse != nil {
-			err := fmt.Errorf("%s", errorResponse.ErrorMessage)
-			return utils.User{}, err
-		}
+		// fmt.Println("phone", user.PhoneNumber)
+		// errorResponse, phoneNumber := utils.PhoneValidation(user.PhoneNumber)
+		// if errorResponse != nil {
+		// 	err := fmt.Errorf("%s", errorResponse.ErrorMessage)
+		// 	return utils.User{}, err
+		// }
 
 		updateFields = append(updateFields, "phone_number = ?")
-		values = append(values, phoneNumber)
+		values = append(values, user.PhoneNumber)
 	}
 	// if user.Address != "" {
 	// 	updateFields = append(updateFields, "address = ?")
@@ -220,7 +214,8 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 
 	if len(updateFields) == 0 {
 		err := errors.New("failed to update user:No fields provided for update.Please provide at least one field to update")
-		return utils.User{}, err
+		errorResponse := entity.BadRequest.Wrap(err, "updated fields are required").WithProperty(entity.StatusCode, 400)
+		return utils.User{}, errorResponse
 	}
 
 	if len(values) > 0 {
@@ -232,7 +227,8 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 	values = append(values, id)
 
 	if _, err := DB.Exec(query, values...); err != nil {
-		return utils.User{}, err
+		errorResponse := entity.UnableToSave.Wrap(err, "failed to update user data").WithProperty(entity.StatusCode, 500)
+		return utils.User{}, errorResponse
 	}
 
 	updateUser, err := u.GetUserById(id)
@@ -243,29 +239,27 @@ func (u userRepository) EditUserById(id int, user utils.UpdateUser) (utils.User,
 	return updateUser, nil
 }
 
-func (u userRepository) DeleteUserById(id int) (string, int, string, error) {
+func (u userRepository) DeleteUserById(id int) error {
 	DB := u.db.GetDB()
-	// var deleted_at *time.Time
 
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM users WHERE user_id = ?", id).Scan(&count); err != nil {
-		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
-		return "", status, errType, err
+		errorResponse := entity.UnableToRead.Wrap(err, "unable to read COUNT in the query").WithProperty(entity.StatusCode, 500)
+		return errorResponse
 	}
 	if count == 0 {
-		status := http.StatusNotFound
-		errType := errorcode.NotFoundError
 		err := fmt.Errorf("user with user_id '%d' not found", id)
-		return "", status, errType, err
+		errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get user by id").WithProperty(entity.StatusCode, 404)
+		return errorResponse
 	}
 
 	query := `DELETE FROM users WHERE user_id = ?`
 	if _, err := DB.Exec(query, id); err != nil {
-		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
-		return "", status, errType, err
+		errorResponse := entity.UnableToRead.Wrap(err, "failed to delete user by id").WithProperty(entity.StatusCode, 500)
+		return errorResponse
 	}
+
+	return nil
 
 	// if err := DB.QueryRow("SELECT deleted_at FROM users WHERE user_id = ?", id).Scan(&deleted_at); err != nil {
 	// 	errType := errorcode.NotFoundError
@@ -287,9 +281,9 @@ func (u userRepository) DeleteUserById(id int) (string, int, string, error) {
 	// 	return "", http.StatusInternalServerError, errType, err
 	// }
 
-	errType := errorcode.Success
-	resp := fmt.Sprintf("user with user_id '%d' deleted successfully", id)
-	return resp, http.StatusOK, errType, nil
+	// errType := errorcode.Success
+	// resp := fmt.Sprintf("user with user_id '%d' deleted successfully", id)
+	// return resp, http.StatusOK, errType, nil
 	// rowAffected, err := result.RowsAffected()
 	// if err != nil {
 	// 	errType := errorcode.InternalError

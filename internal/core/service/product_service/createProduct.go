@@ -2,7 +2,6 @@ package productservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
@@ -31,9 +30,8 @@ func (p productService) CreateProduct(request request.ProductRequest) response.R
 	id, err := p.productRepo.InsertProduct(product)
 	if err != nil {
 		response := response.Response{
-			Status:       http.StatusConflict,
-			ErrorType:    "DUPLICATE_ENTRY",
-			ErrorMessage: err.Error(),
+			StatusCode: http.StatusConflict,
+			Message:    err.Error(),
 		}
 		return response
 	}
@@ -41,10 +39,9 @@ func (p productService) CreateProduct(request request.ProductRequest) response.R
 	product.ID = *id
 
 	response := response.Response{
-		Data:         product,
-		Status:       http.StatusCreated,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: "Congratulation, product created successfully!",
+		Data:       product,
+		StatusCode: http.StatusCreated,
+		Message:    "Congratulation, product created successfully!",
 	}
 
 	return response

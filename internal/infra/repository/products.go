@@ -3,6 +3,7 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/port/repository"
+	"fmt"
 )
 
 type productsRepository struct {
@@ -37,7 +38,6 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		SELECT 
 		    p.product_item_id, 
 			c.color_name, 
-			s.size_name,
 			p.image_url, 
 			p.price, 
 			p.discount,
@@ -46,8 +46,6 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		    product_item p 
 		LEFT JOIN 
 		    color c ON p.color_id = c.color_id
-		LEFT JOIN
-		    size s ON p.size_id = s.size_id	
 		WHERE 
 		    p.product_id = ?
 		 `
@@ -61,9 +59,35 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		var productItems []utils.ProductVariant
 		for productItemRows.Next() {
 			var productItem utils.ProductVariant
-			if err := productItemRows.Scan(&productItem.ItemID, &productItem.Color, &productItem.Size, &productItem.ImageUrl, &productItem.Price, &productItem.Discount, &productItem.InStock); err != nil {
+			if err := productItemRows.Scan(&productItem.ItemID, &productItem.Color, &productItem.ImageUrl, &productItem.Price, &productItem.Discount, &productItem.InStock); err != nil {
 				return nil, err
 			}
+
+			sizeQuery := `SELECT size_id, size_name, price, discount, qty_in_stock FROM size WHERE product_item_id = ?`
+			sizeRows, err := DB.Query(sizeQuery, productItem.ItemID)
+			if err != nil {
+				return nil, err
+			}
+			defer sizeRows.Close()
+
+			var sizes []utils.ProductSize
+			// var productSizes []string
+			for sizeRows.Next() {
+				var size utils.ProductSize
+
+				if err := sizeRows.Scan(&size.ID, &size.Size, &size.Price, &size.Discount, &size.QtyInStock); err != nil {
+					return nil, err
+				}
+
+				sizes = append(sizes, size)
+				// productSizes = append(productSizes, size.SizeName)
+			}
+
+			if err := sizeRows.Err(); err != nil {
+				return nil, err
+			}
+
+			productItem.Sizes = sizes
 			productItems = append(productItems, productItem)
 		}
 
@@ -150,7 +174,6 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 	SELECT 
 	   p.product_item_id,
 	   c.color_name,
-	   s.size_name,
 	   p.image_url,
 	   p.price,
 	   p.discount,
@@ -159,8 +182,6 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 	  product_item p
 	LEFT JOIN
 	  color c ON p.color_id = c.color_id
-	LEFT JOIN
-	  size s ON p.size_id = s.size_id
 	WHERE
 	  p.product_id = ?    
 	`
@@ -176,10 +197,40 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 	for itemRows.Next() {
 		var item utils.ItemVariant
 
-		if err := itemRows.Scan(&item.ItemID, &item.Color, &item.Size, &item.ImageUrl, &item.Price, &item.Discount, &item.InStock); err != nil {
+		if err := itemRows.Scan(&item.ItemID, &item.Color, &item.ImageUrl, &item.Price, &item.Discount, &item.InStock); err != nil {
 			return utils.SingleProduct{}, err
 		}
+		fmt.Println("item: ", item)
+
+		// items = append(items, item)
+
+		sizeQuery := `SELECT size_id, size_name, price, discount, qty_in_stock FROM size WHERE product_item_id = ?`
+		sizeRows, err := DB.Query(sizeQuery, item.ItemID)
+		if err != nil {
+			return utils.SingleProduct{}, err
+		}
+		defer sizeRows.Close()
+
+		var sizes []utils.ProductSize
+		// var productSizes []string
+		for sizeRows.Next() {
+			var size utils.ProductSize
+
+			if err := sizeRows.Scan(&size.ID, &size.Size, &size.Price, &size.Discount, &size.QtyInStock); err != nil {
+				return utils.SingleProduct{}, err
+			}
+
+			sizes = append(sizes, size)
+			// productSizes = append(productSizes, size.SizeName)
+		}
+
+		if err := sizeRows.Err(); err != nil {
+			return utils.SingleProduct{}, err
+		}
+
+		item.Sizes = sizes
 		items = append(items, item)
+		// singleProduct.Sizes = productSizes
 	}
 
 	if err := itemRows.Err(); err != nil {

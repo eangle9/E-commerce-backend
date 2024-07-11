@@ -2,8 +2,8 @@ package middleware
 
 import (
 	jwttoken "Eccomerce-website/internal/core/common/jwt_token"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
-	"Eccomerce-website/internal/core/model/response"
+	"Eccomerce-website/internal/core/entity"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -14,24 +14,16 @@ func ProtectedMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bearerToken := c.Request.Header.Get("Authorization")
 		if bearerToken == "" {
-			errorResponse := response.Response{
-				Status:       http.StatusUnauthorized,
-				ErrorType:    errorcode.Unauthorized,
-				ErrorMessage: "missing authorization header",
-			}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse)
+			err := errors.New("missing authorization header")
+			errorResponse := entity.InvalidCredentials.Wrap(err, "token is empty in the authorization header").WithProperty(entity.StatusCode, 401)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": errorResponse.Error()})
 			return
 		}
 
 		token := strings.Split(bearerToken, " ")[1]
 		id, role, err := jwttoken.VerifyToken(token)
 		if err != nil {
-			errorResponse := response.Response{
-				Status:       http.StatusUnauthorized,
-				ErrorType:    errorcode.Unauthorized,
-				ErrorMessage: err.Error(),
-			}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
 

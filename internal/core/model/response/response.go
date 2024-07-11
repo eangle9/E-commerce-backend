@@ -3,10 +3,9 @@ package response
 import "github.com/shopspring/decimal"
 
 type Response struct {
-	Data         interface{} `json:"data"`
-	Status       int         `json:"status"`
-	ErrorType    string      `json:"type"`
-	ErrorMessage interface{} `json:"message"`
+	Data       interface{} `json:"data"`
+	StatusCode int         `json:"statusCode"`
+	Message    interface{} `json:"message"`
 }
 
 type CartResponse struct {

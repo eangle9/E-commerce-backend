@@ -3,13 +3,15 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type sizeRepository struct {
@@ -26,17 +28,17 @@ func (s sizeRepository) InsertSize(size dto.Size) (*int, error) {
 	DB := s.db.GetDB()
 
 	var count int
-	if err := DB.QueryRow("SELECT COUNT(*) FROM size WHERE size_name = ?", size.SizeName).Scan(&count); err != nil {
+	if err := DB.QueryRow("SELECT COUNT(*) FROM size WHERE size_name = ? AND product_item_id = ?", size.SizeName, size.ProductItemID).Scan(&count); err != nil {
 		return nil, err
 	}
 
 	if count > 0 {
-		err := fmt.Errorf("size with size_name '%s' already exists", size.SizeName)
+		err := fmt.Errorf("size with size_name '%s' and product_item_id '%d' already exists", size.SizeName, size.ProductItemID)
 		return nil, err
 	}
 
-	query := `INSERT INTO size (size_name) VALUES (?)`
-	result, err := DB.Exec(query, size.SizeName)
+	query := `INSERT INTO size (product_item_id, size_name, price, discount, qty_in_stock) VALUES (?, ?, ?, ?, ?)`
+	result, err := DB.Exec(query, size.ProductItemID, size.SizeName, size.Price, size.Discount, size.QtyInStock)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,7 @@ func (s sizeRepository) ListSizes() ([]utils.Size, error) {
 	var sizes []utils.Size
 	DB := s.db.GetDB()
 
-	query := `SELECT size_id, size_name, created_at, updated_at, deleted_at FROM size WHERE deleted_at IS NULL`
+	query := `SELECT size_id, size_name, price, discount, qty_in_stock, created_at, updated_at, deleted_at FROM size WHERE deleted_at IS NULL`
 
 	rows, err := DB.Query(query)
 	if err != nil {
@@ -67,7 +69,7 @@ func (s sizeRepository) ListSizes() ([]utils.Size, error) {
 	for rows.Next() {
 		var size utils.Size
 
-		if err := rows.Scan(&size.ID, &size.SizeName, &size.CreatedAt, &size.UpdatedAt, &size.DeletedAt); err != nil {
+		if err := rows.Scan(&size.ID, &size.SizeName, &size.Price, &size.Discount, &size.QtyInStock, &size.CreatedAt, &size.UpdatedAt, &size.DeletedAt); err != nil {
 			return nil, err
 		}
 
@@ -86,8 +88,8 @@ func (s sizeRepository) GetSizeById(id int) (utils.Size, error) {
 	var size utils.Size
 	DB := s.db.GetDB()
 
-	query := `SELECT size_id, size_name, created_at, updated_at, deleted_at FROM size WHERE size_id = ? AND deleted_at IS NULL`
-	if err := DB.QueryRow(query, id).Scan(&size.ID, &size.SizeName, &size.CreatedAt, &size.UpdatedAt, &size.DeletedAt); err != nil {
+	query := `SELECT size_id, size_name, price, discount, qty_in_stock, created_at, updated_at, deleted_at FROM size WHERE size_id = ? AND deleted_at IS NULL`
+	if err := DB.QueryRow(query, id).Scan(&size.ID, &size.SizeName, &size.Price, &size.Discount, &size.QtyInStock, &size.CreatedAt, &size.UpdatedAt, &size.DeletedAt); err != nil {
 		err = fmt.Errorf("size with size_id '%d' not found", id)
 		return utils.Size{}, err
 	}
@@ -97,6 +99,7 @@ func (s sizeRepository) GetSizeById(id int) (utils.Size, error) {
 
 func (s sizeRepository) EditSizeById(id int, size utils.UpdateSize) (utils.Size, error) {
 	DB := s.db.GetDB()
+	zeroDecimal := decimal.NewFromInt(0)
 	var updateFields []string
 	var values []interface{}
 
@@ -112,7 +115,22 @@ func (s sizeRepository) EditSizeById(id int, size utils.UpdateSize) (utils.Size,
 
 	if size.SizeName != "" {
 		updateFields = append(updateFields, "size_name = ?")
-		values = append(values, size.SizeName)
+		values = append(values, strings.ToUpper(size.SizeName))
+	}
+
+	if !size.Price.Equal(zeroDecimal) {
+		updateFields = append(updateFields, "price = ?")
+		values = append(values, size.Price)
+	}
+
+	if !size.Discount.Equal(zeroDecimal) {
+		updateFields = append(updateFields, "discount = ?")
+		values = append(values, size.Discount)
+	}
+
+	if size.QtyInStock != 0 {
+		updateFields = append(updateFields, "qty_in_stock = ?")
+		values = append(values, size.QtyInStock)
 	}
 
 	if len(updateFields) == 0 {
@@ -146,13 +164,13 @@ func (s sizeRepository) DeleteSizeById(id int) (string, int, string, error) {
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM size WHERE size_id = ? AND deleted_at IS NULL", id).Scan(&count); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 
 	if count == 0 {
 		status := http.StatusNotFound
-		errType := errorcode.NotFoundError
+		errType := entity.NotFoundError
 		err := fmt.Errorf("size with size_id '%d' not found", id)
 		return "", status, errType, err
 	}
@@ -160,12 +178,12 @@ func (s sizeRepository) DeleteSizeById(id int) (string, int, string, error) {
 	query := `DELETE FROM size WHERE size_id = ? AND deleted_at IS NULL`
 	if _, err := DB.Exec(query, id); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 
 	status := http.StatusOK
-	errType := errorcode.Success
+	errType := entity.Success
 	resp := fmt.Sprintf("size with size_id '%d' deleted successfully!", id)
 
 	return resp, status, errType, nil

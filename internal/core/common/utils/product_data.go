@@ -69,16 +69,18 @@ type ListProduct struct {
 	Name         string           `json:"name"`
 	ProductItems []ProductVariant `json:"product_items"`
 	Reviews      []ProductReview  `json:"reviews"`
+	// Sizes        []ProductSize    `json:"sizes"`
 }
 
 type ProductVariant struct {
-	ItemID   int             `json:"item_id"`
-	Color    *string         `json:"color"`
-	Size     *string         `json:"size"`
+	ItemID int     `json:"item_id"`
+	Color  *string `json:"color"`
+	// Size     *string         `json:"size"`
 	ImageUrl string          `json:"image_url"`
 	Price    decimal.Decimal `json:"price"`
 	Discount decimal.Decimal `json:"discount"`
 	InStock  *int            `json:"in_stock"`
+	Sizes    []ProductSize   `json:"sizes"`
 }
 
 type SingleProduct struct {
@@ -89,16 +91,19 @@ type SingleProduct struct {
 	Description string          `json:"description"`
 	Items       []ItemVariant   `json:"items"`
 	Reviews     []ProductReview `json:"reviews"`
+	// Sizes       []ProductSize   `json:"sizes"`
+	// Sizes       []string        `json:"sizes"`
 }
 
 type ItemVariant struct {
-	ItemID   int             `json:"item_id"`
-	Color    *string         `json:"color"`
-	Size     *string         `json:"size"`
+	ItemID int     `json:"item_id"`
+	Color  *string `json:"color"`
+	// Size     *string         `json:"size"`
 	ImageUrl string          `json:"image_url"`
 	Price    decimal.Decimal `json:"price"`
 	Discount decimal.Decimal `json:"discount"`
 	InStock  *int            `json:"in_stock"`
+	Sizes    []ProductSize   `json:"sizes"`
 }
 
 type ProductReview struct {
@@ -109,6 +114,14 @@ type ProductReview struct {
 	Comment   string    `json:"comment"`
 	CreatedAt time.Time `json:"created_at"`
 	User      Reviewer  `json:"user"`
+}
+
+type ProductSize struct {
+	ID         int             `json:"id"`
+	Size       string          `json:"size"`
+	Price      decimal.Decimal `json:"price"`
+	Discount   decimal.Decimal `json:"discount"`
+	QtyInStock int             `json:"qty_in_stock"`
 }
 
 type Reviewer struct {

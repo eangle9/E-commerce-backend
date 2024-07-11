@@ -1,22 +1,24 @@
 package productitemservice
 
-import "Eccomerce-website/internal/core/model/response"
+import (
+	"Eccomerce-website/internal/core/model/response"
+	"net/http"
+)
 
 func (p productItemService) DeleteProductItem(id int) response.Response {
-	resp, status, errType, err := p.itemRepo.DeleteProductItemById(id)
+	resp, status, _, err := p.itemRepo.DeleteProductItemById(id)
 	if err != nil {
 		response := response.Response{
-			Status:       status,
-			ErrorType:    errType,
-			ErrorMessage: err.Error(),
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
 		}
 		return response
 	}
 
 	response := response.Response{
-		Status:       status,
-		ErrorType:    errType,
-		ErrorMessage: resp,
+		Data:       resp,
+		StatusCode: status,
+		Message:    "you have get all list of colors",
 	}
 
 	return response

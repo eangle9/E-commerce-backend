@@ -3,9 +3,8 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	cloudinaryupload "Eccomerce-website/internal/core/common/utils/cloudinary_upload"
+	"Eccomerce-website/internal/core/entity"
 
-	// "Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
@@ -31,15 +30,23 @@ func (p productItemRepository) InsertProductItem(item request.ProductItemRequest
 	DB := p.db.GetDB()
 	productId := item.ProductID
 	colorId := item.ColorID
-	sizeId := item.SizeID
+	// sizeId := item.SizeID
 	price := item.Price
 	discount := item.Discount
 	qty := item.QtyInStock
 	file := item.File
 
+	var productCount int
+	if err := DB.QueryRow("SELECT COUNT(*) FROM product WHERE product_id = ?", productId).Scan(&productCount); err != nil {
+		return nil, "", err
+	}
+	if productCount == 0 {
+		return nil, "", fmt.Errorf("product_id '%d' does not exist in the product table", productId)
+	}
+
 	var count int
-	if colorId != nil && sizeId != nil {
-		if err := DB.QueryRow("SELECT COUNT(*) FROM product_item WHERE product_id = ? AND color_id = ? AND size_id = ? AND deleted_at IS NULL", productId, colorId, sizeId).Scan(&count); err != nil {
+	if colorId != nil {
+		if err := DB.QueryRow("SELECT COUNT(*) FROM product_item WHERE product_id = ? AND color_id = ? AND deleted_at IS NULL", productId, colorId).Scan(&count); err != nil {
 			return nil, "", err
 		}
 	}
@@ -55,7 +62,7 @@ func (p productItemRepository) InsertProductItem(item request.ProductItemRequest
 	// }
 
 	if count > 0 {
-		err := fmt.Errorf("product_item with product_id '%d', color_id '%v' and size_id '%v' already exists", productId, colorId, sizeId)
+		err := fmt.Errorf("product_item with product_id '%d' and color_id '%v' already exists", productId, colorId)
 		return nil, "", err
 	}
 
@@ -64,8 +71,8 @@ func (p productItemRepository) InsertProductItem(item request.ProductItemRequest
 		return nil, "", err
 	}
 
-	query := `INSERT INTO product_item(product_id, color_id, size_id, image_url, price, discount, qty_in_stock) VALUES(?, ?, ?, ?, ?, ?, ?)`
-	result, err := DB.Exec(query, productId, colorId, sizeId, image_url, price, discount, qty)
+	query := `INSERT INTO product_item(product_id, color_id, image_url, price, discount, qty_in_stock) VALUES(?, ?, ?, ?, ?, ?)`
+	result, err := DB.Exec(query, productId, colorId, image_url, price, discount, qty)
 	if err != nil {
 		return nil, "", err
 	}
@@ -199,12 +206,12 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM product_item WHERE product_item_id = ?", id).Scan(&count); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 	if count == 0 {
 		status := http.StatusNotFound
-		errType := errorcode.NotFoundError
+		errType := entity.NotFoundError
 		err := fmt.Errorf("product item with id '%d' not found", id)
 		return "", status, errType, err
 	}
@@ -212,12 +219,12 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 	query := `DELETE FROM product_item WHERE product_item_id = ?`
 	if _, err := DB.Exec(query, id); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 
 	status := http.StatusOK
-	errType := errorcode.Success
+	errType := entity.Success
 	resp := fmt.Sprintf("product item with id '%d' deleted successfully!", id)
 
 	return resp, status, errType, nil
@@ -225,21 +232,21 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 	// var productID int
 	// if err := DB.QueryRow("SELECT product_id FROM product_item WHERE product_item_id = ?", id).Scan(&productID); err != nil {
 	// 	status := http.StatusInternalServerError
-	// 	errType := errorcode.InternalError
+	// 	errType := entity.InternalError
 	// 	return "", status, errType, err
 	// }
 
 	// var cartID int
 	// if err := DB.QueryRow("SELECT cart_id FROM cart_item WHERE product_item_id = ?", id).Scan(&cartID); err != nil {
 	// 	status := http.StatusInternalServerError
-	// 	errType := errorcode.InternalError
+	// 	errType := entity.InternalError
 	// 	return "", status, errType, err
 	// }
 
 	// var productCount int
 	// if err := DB.QueryRow("SELECT COUNT(*) FROM product_item WHERE product_id = ?", productID).Scan(&productCount); err != nil {
 	// 	status := http.StatusInternalServerError
-	// 	errType := errorcode.InternalError
+	// 	errType := entity.InternalError
 	// 	return "", status, errType, err
 	// }
 
@@ -247,14 +254,14 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 	// 	var pdtCount int
 	// 	if err := DB.QueryRow("SELECT COUNT(*) FROM product WHERE product_id = ?", productID).Scan(&pdtCount); err != nil {
 	// 		status := http.StatusInternalServerError
-	// 		errType := errorcode.InternalError
+	// 		errType := entity.InternalError
 	// 		return "", status, errType, err
 	// 	}
 	// 	if pdtCount > 0 {
 	// 		pdtQuery := `DELETE FROM product WHERE product_id = ?`
 	// 		if _, err := DB.Exec(pdtQuery, productID); err != nil {
 	// 			status := http.StatusInternalServerError
-	// 			errType := errorcode.InternalError
+	// 			errType := entity.InternalError
 	// 			return "", status, errType, err
 	// 		}
 	// 	}
@@ -263,7 +270,7 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 	// var cartCount int
 	// if err := DB.QueryRow("SELECT COUNT(*) FROM cart_item WHERE cart_id = ?", cartID).Scan(&cartCount); err != nil {
 	// 	status := http.StatusInternalServerError
-	// 	errType := errorcode.InternalError
+	// 	errType := entity.InternalError
 	// 	return "", status, errType, err
 	// }
 
@@ -271,14 +278,14 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 	// 	var ctCount int
 	// 	if err := DB.QueryRow("SELECT COUNT(*) FROM shopping_cart WHERE cart_id = ?", cartID).Scan(&ctCount); err != nil {
 	// 		status := http.StatusInternalServerError
-	// 		errType := errorcode.InternalError
+	// 		errType := entity.InternalError
 	// 		return "", status, errType, err
 	// 	}
 	// 	if ctCount > 0 {
 	// 		cartQuery := `DELETE FROM shopping_cart WHERE cart_id = ?`
 	// 		if _, err := DB.Exec(cartQuery, cartID); err != nil {
 	// 			status := http.StatusInternalServerError
-	// 			errType := errorcode.InternalError
+	// 			errType := entity.InternalError
 	// 			return "", status, errType, err
 	// 		}
 	// 	}
@@ -287,7 +294,7 @@ func (p productItemRepository) DeleteProductItemById(id int) (string, int, strin
 	// if cartCount > 0 {
 	// 	if err := UpdateShoppingCart(DB, cartID); err != nil {
 	// 		status := http.StatusInternalServerError
-	// 		errType := errorcode.InternalError
+	// 		errType := entity.InternalError
 	// 		return "", status, errType, err
 	// 	}
 	// }

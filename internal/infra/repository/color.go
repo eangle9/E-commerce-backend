@@ -3,7 +3,6 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
@@ -134,12 +133,12 @@ func (c colorRepository) DeleteColorById(id int) (string, int, string, error) {
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM color WHERE color_id = ?", id).Scan(&count); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := "internal error"
 		return "", status, errType, err
 	}
 	if count == 0 {
 		status := http.StatusNotFound
-		errType := errorcode.NotFoundError
+		errType := "not found error"
 		err := fmt.Errorf("color with id '%d' not found", id)
 		return "", status, errType, err
 	}
@@ -147,12 +146,12 @@ func (c colorRepository) DeleteColorById(id int) (string, int, string, error) {
 	query := `DELETE FROM color WHERE color_id = ?`
 	if _, err := DB.Exec(query, id); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := "internal error"
 		return "", status, errType, err
 	}
 
 	// if err := DB.QueryRow("SELECT deleted_at FROM color WHERE color_id = ?", id).Scan(&deleted_at); err != nil {
-	// 	errType := errorcode.NotFoundError
+	// 	errType := "not found error"
 	// 	status := http.StatusNotFound
 	// 	err := fmt.Errorf("color with color_id '%d' not found", id)
 
@@ -169,13 +168,13 @@ func (c colorRepository) DeleteColorById(id int) (string, int, string, error) {
 
 	// query := `UPDATE color SET deleted_at = ? WHERE color_id = ?`
 	// if _, err := DB.Exec(query, time.Now(), id); err != nil {
-	// 	errType := errorcode.InternalError
+	// 	errType := "internal error"
 	// 	status := http.StatusInternalServerError
 
 	// 	return "", status, errType, err
 	// }
 
-	errType := errorcode.Success
+	errType := "success"
 	status := http.StatusOK
 	resp := fmt.Sprintf("color withe color_id '%d' deleted successfully!", id)
 

@@ -2,20 +2,14 @@ definitions:
   request.CartRequest:
     properties:
       product_item_id:
-        description: UserID        int `json:"user_id" validate:"required"`
         type: integer
       quantity:
         type: integer
-    required:
-    - product_item_id
-    - quantity
     type: object
   request.ColorRequest:
     properties:
       color_name:
         type: string
-    required:
-    - color_name
     type: object
   request.LoginRequest:
     properties:
@@ -23,9 +17,11 @@ definitions:
         type: string
       password:
         type: string
-    required:
-    - email
-    - password
+    type: object
+  request.Phone:
+    properties:
+      number:
+        type: string
     type: object
   request.ProductCategoryRequest:
     properties:
@@ -33,8 +29,6 @@ definitions:
         type: string
       parent_id:
         type: integer
-    required:
-    - name
     type: object
   request.ProductRequest:
     properties:
@@ -46,17 +40,11 @@ definitions:
         type: string
       product_name:
         type: string
-    required:
-    - category_id
-    - description
-    - product_name
     type: object
   request.RefreshRequest:
     properties:
       refresh_token:
         type: string
-    required:
-    - refresh_token
     type: object
   request.ReviewRequest:
     properties:
@@ -68,11 +56,6 @@ definitions:
         type: integer
       user_id:
         type: integer
-    required:
-    - comment
-    - product_id
-    - rating
-    - user_id
     type: object
   request.SignUpRequest:
     properties:
@@ -85,32 +68,46 @@ definitions:
       password:
         type: string
       phoneNumber:
-        type: string
+        $ref: '#/definitions/request.Phone'
       username:
         type: string
-    required:
-    - email
-    - firstName
-    - lastName
-    - password
-    - phoneNumber
-    - username
     type: object
   request.SizeRequest:
     properties:
+      discount:
+        type: number
+      price:
+        type: number
+      product_item_id:
+        type: integer
+      qty_in_stock:
+        type: integer
       size_name:
         type: string
-    required:
-    - size_name
+    type: object
+  request.UpdateUser:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        $ref: '#/definitions/request.Phone'
+      profile_picture:
+        type: string
+      username:
+        type: string
     type: object
   response.Response:
     properties:
       data: {}
       message: {}
-      status:
+      statusCode:
         type: integer
-      type:
-        type: string
     type: object
   utils.UpdateCategory:
     properties:
@@ -135,29 +132,15 @@ definitions:
       product_name:
         type: string
     type: object
-  utils.UpdateProductItem:
-    type: object
   utils.UpdateSize:
     properties:
+      discount:
+        type: number
+      price:
+        type: number
+      qty_in_stock:
+        type: integer
       size_name:
-        type: string
-    type: object
-  utils.UpdateUser:
-    properties:
-      email:
-        type: string
-      first_name:
-        type: string
-      last_name:
-        type: string
-      password:
-        type: string
-      phone_number:
-        type: string
-      profile_picture:
-        description: Address        string `json:"address"`
-        type: string
-      username:
         type: string
     type: object
 host: localhost:9000
@@ -485,10 +468,6 @@ paths:
         in: formData
         name: color_id
         type: integer
-      - description: Size ID
-        in: formData
-        name: size_id
-        type: integer
       - description: Price
         in: formData
         name: price
@@ -567,12 +546,11 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Update product item data
-        in: body
-        name: item
+      - description: Product ID
+        in: formData
+        name: product_id
         required: true
-        schema:
-          $ref: '#/definitions/utils.UpdateProductItem'
+        type: integer
       produces:
       - application/json
       responses:
@@ -1028,7 +1006,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/utils.UpdateUser'
+          $ref: '#/definitions/request.UpdateUser'
       produces:
       - application/json
       responses:

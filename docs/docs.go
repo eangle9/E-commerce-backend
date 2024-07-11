@@ -493,12 +493,6 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
-                        "type": "integer",
-                        "description": "Size ID",
-                        "name": "size_id",
-                        "in": "formData"
-                    },
-                    {
                         "type": "number",
                         "description": "Price",
                         "name": "price",
@@ -619,13 +613,11 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Update product item data",
-                        "name": "item",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/utils.UpdateProductItem"
-                        }
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1330,7 +1322,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/utils.UpdateUser"
+                            "$ref": "#/definitions/request.UpdateUser"
                         }
                     }
                 ],
@@ -1383,13 +1375,8 @@ const docTemplate = `{
     "definitions": {
         "request.CartRequest": {
             "type": "object",
-            "required": [
-                "product_item_id",
-                "quantity"
-            ],
             "properties": {
                 "product_item_id": {
-                    "description": "UserID        int ` + "`" + `json:\"user_id\" validate:\"required\"` + "`" + `",
                     "type": "integer"
                 },
                 "quantity": {
@@ -1399,9 +1386,6 @@ const docTemplate = `{
         },
         "request.ColorRequest": {
             "type": "object",
-            "required": [
-                "color_name"
-            ],
             "properties": {
                 "color_name": {
                     "type": "string"
@@ -1410,10 +1394,6 @@ const docTemplate = `{
         },
         "request.LoginRequest": {
             "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -1423,11 +1403,16 @@ const docTemplate = `{
                 }
             }
         },
+        "request.Phone": {
+            "type": "object",
+            "properties": {
+                "number": {
+                    "type": "string"
+                }
+            }
+        },
         "request.ProductCategoryRequest": {
             "type": "object",
-            "required": [
-                "name"
-            ],
             "properties": {
                 "name": {
                     "type": "string"
@@ -1439,11 +1424,6 @@ const docTemplate = `{
         },
         "request.ProductRequest": {
             "type": "object",
-            "required": [
-                "category_id",
-                "description",
-                "product_name"
-            ],
             "properties": {
                 "brand": {
                     "type": "string"
@@ -1461,9 +1441,6 @@ const docTemplate = `{
         },
         "request.RefreshRequest": {
             "type": "object",
-            "required": [
-                "refresh_token"
-            ],
             "properties": {
                 "refresh_token": {
                     "type": "string"
@@ -1472,12 +1449,6 @@ const docTemplate = `{
         },
         "request.ReviewRequest": {
             "type": "object",
-            "required": [
-                "comment",
-                "product_id",
-                "rating",
-                "user_id"
-            ],
             "properties": {
                 "comment": {
                     "type": "string"
@@ -1495,14 +1466,6 @@ const docTemplate = `{
         },
         "request.SignUpRequest": {
             "type": "object",
-            "required": [
-                "email",
-                "firstName",
-                "lastName",
-                "password",
-                "phoneNumber",
-                "username"
-            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -1517,7 +1480,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phoneNumber": {
-                    "type": "string"
+                    "$ref": "#/definitions/request.Phone"
                 },
                 "username": {
                     "type": "string"
@@ -1526,11 +1489,46 @@ const docTemplate = `{
         },
         "request.SizeRequest": {
             "type": "object",
-            "required": [
-                "size_name"
-            ],
             "properties": {
+                "discount": {
+                    "type": "number"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_item_id": {
+                    "type": "integer"
+                },
+                "qty_in_stock": {
+                    "type": "integer"
+                },
                 "size_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.UpdateUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "$ref": "#/definitions/request.Phone"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1540,11 +1538,8 @@ const docTemplate = `{
             "properties": {
                 "data": {},
                 "message": {},
-                "status": {
+                "statusCode": {
                     "type": "integer"
-                },
-                "type": {
-                    "type": "string"
                 }
             }
         },
@@ -1584,40 +1579,19 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.UpdateProductItem": {
-            "type": "object"
-        },
         "utils.UpdateSize": {
             "type": "object",
             "properties": {
+                "discount": {
+                    "type": "number"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "qty_in_stock": {
+                    "type": "integer"
+                },
                 "size_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "utils.UpdateUser": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "profile_picture": {
-                    "description": "Address        string ` + "`" + `json:\"address\"` + "`" + `",
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }

@@ -2,7 +2,6 @@ package reviewservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
@@ -31,9 +30,8 @@ func (r reviewService) CreateReview(request request.ReviewRequest) response.Resp
 	id, err := r.reviewRepo.InsertReview(review)
 	if err != nil {
 		response := response.Response{
-			Status:       http.StatusConflict,
-			ErrorType:    "DUPLICATE_ENTRY",
-			ErrorMessage: err.Error(),
+			StatusCode: http.StatusConflict,
+			Message:    err.Error(),
 		}
 		return response
 	}
@@ -41,10 +39,9 @@ func (r reviewService) CreateReview(request request.ReviewRequest) response.Resp
 	review.ID = *id
 
 	response := response.Response{
-		Data:         review,
-		Status:       http.StatusCreated,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: "Congratulation, review created successfully",
+		Data:       review,
+		StatusCode: http.StatusCreated,
+		Message:    "Congratulation, review created successfully",
 	}
 
 	return response

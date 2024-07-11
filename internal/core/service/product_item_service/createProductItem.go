@@ -2,11 +2,11 @@ package productitemservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
+	"fmt"
 	"net/http"
 )
 
@@ -21,10 +21,11 @@ func NewProductItemService(itemRepo repository.ProductItemRepository) service.Pr
 }
 
 func (p productItemService) CreateProductItem(request request.ProductItemRequest) response.Response {
+	fmt.Printf("request: %+v", request)
 	productItem := dto.ProductItem{
-		ProductID:  request.ProductID,
-		ColorID:    request.ColorID,
-		SizeID:     request.SizeID,
+		ProductID: request.ProductID,
+		ColorID:   request.ColorID,
+		// SizeID:     request.SizeID,
 		Price:      request.Price,
 		Discount:   request.Discount,
 		QtyInStock: request.QtyInStock,
@@ -33,9 +34,8 @@ func (p productItemService) CreateProductItem(request request.ProductItemRequest
 	id, image_url, err := p.itemRepo.InsertProductItem(request)
 	if err != nil {
 		response := response.Response{
-			Status:       http.StatusConflict,
-			ErrorType:    "DUPLICATE_ENTRY",
-			ErrorMessage: err.Error(),
+			StatusCode: http.StatusConflict,
+			Message:    err.Error(),
 		}
 		return response
 	}
@@ -44,10 +44,9 @@ func (p productItemService) CreateProductItem(request request.ProductItemRequest
 	productItem.ImageUrl = image_url
 
 	response := response.Response{
-		Data:         productItem,
-		Status:       http.StatusCreated,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: "Congratulation, product item created successfully!",
+		Data:       productItem,
+		StatusCode: http.StatusCreated,
+		Message:    "Congratulation, product item created successfully!",
 	}
 
 	return response

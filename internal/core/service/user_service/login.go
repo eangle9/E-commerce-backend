@@ -2,7 +2,7 @@ package service
 
 import (
 	jwttoken "Eccomerce-website/internal/core/common/jwt_token"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"fmt"
@@ -20,28 +20,20 @@ type tokenData struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (u userService) LoginUser(request request.LoginRequest) response.Response {
-	// email := request.Email
-	// password := request.Password
+func (u userService) LoginUser(request request.LoginRequest) (response.Response, error) {
+	if err := request.Validate(); err != nil {
+		errorResponse := entity.ValidationError.Wrap(err, "failed login validation").WithProperty(entity.StatusCode, 400)
+		return response.Response{}, errorResponse
+	}
 
 	user, err := u.userRepo.Authentication(request)
 	if err != nil {
-		errorResponse := response.Response{
-			Status:       http.StatusUnauthorized,
-			ErrorType:    errorcode.Unauthorized,
-			ErrorMessage: err.Error(),
-		}
-		return errorResponse
+		return response.Response{}, err
 	}
 
 	tokenMap, err := jwttoken.GenerateTokenPair(uint(user.ID), user.Role)
 	if err != nil {
-		errorResponse := response.Response{
-			Status:       http.StatusInternalServerError,
-			ErrorType:    errorcode.InternalError,
-			ErrorMessage: "failed to generate token pair",
-		}
-		return errorResponse
+		return response.Response{}, err
 	}
 
 	tokenData := loginData{
@@ -53,12 +45,10 @@ func (u userService) LoginUser(request request.LoginRequest) response.Response {
 		},
 	}
 
-	errorMessage := fmt.Sprintf("Login successful! Wellcome back, %s!", user.Username)
 	response := response.Response{
-		Data:         tokenData,
-		Status:       http.StatusOK,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: errorMessage,
+		Data:       tokenData,
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("Login successful! Wellcome back, %s!", user.Username),
 	}
-	return response
+	return response, nil
 }

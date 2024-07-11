@@ -2,7 +2,6 @@ package productimageservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
@@ -24,9 +23,8 @@ func (p productImageService) CreateProductImage(request request.ProductImageRequ
 	id, imageUrl, err := p.imageRepo.InsertProductImage(request)
 	if err != nil {
 		response := response.Response{
-			Status:       http.StatusInternalServerError,
-			ErrorType:    errorcode.InternalError,
-			ErrorMessage: err.Error(),
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
 		}
 		return response
 	}
@@ -38,10 +36,9 @@ func (p productImageService) CreateProductImage(request request.ProductImageRequ
 	}
 
 	response := response.Response{
-		Data:         productImage,
-		Status:       http.StatusOK,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: "upload successful!",
+		Data:       productImage,
+		StatusCode: http.StatusOK,
+		Message:    "upload successful!",
 	}
 
 	return response

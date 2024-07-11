@@ -3,7 +3,7 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
@@ -156,12 +156,12 @@ func (p productRepository) DeleteProductById(id int) (string, int, string, error
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM product WHERE product_id = ?", id).Scan(&count); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 	if count == 0 {
 		status := http.StatusNotFound
-		errType := errorcode.NotFoundError
+		errType := entity.NotFoundError
 		err := fmt.Errorf("product with product_id '%d' not found", id)
 		return "", status, errType, err
 	}
@@ -169,7 +169,7 @@ func (p productRepository) DeleteProductById(id int) (string, int, string, error
 	query := `DELETE FROM product WHERE product_id = ?`
 	if _, err := DB.Exec(query, id); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 
@@ -197,7 +197,7 @@ func (p productRepository) DeleteProductById(id int) (string, int, string, error
 	// 	return "", status, errType, err
 	// }
 
-	errType := errorcode.Success
+	errType := entity.Success
 	status := http.StatusOK
 	resp := fmt.Sprintf("product with product_id '%d' deleted successfully!", id)
 

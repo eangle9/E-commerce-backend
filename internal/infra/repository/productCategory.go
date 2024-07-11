@@ -3,7 +3,7 @@ package repository
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/dto"
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/port/repository"
 	"errors"
 	"fmt"
@@ -164,12 +164,12 @@ func (p productCategoryRepository) DeleteProductCategoryById(id int) (string, in
 	var count int
 	if err := DB.QueryRow("SELECT COUNT(*) FROM product_category WHERE category_id = ?", id).Scan(&count); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 	if count == 0 {
 		status := http.StatusNotFound
-		errType := errorcode.NotFoundError
+		errType := entity.NotFoundError
 		err := fmt.Errorf("product category with id '%d' not found", id)
 		return "", status, errType, err
 	}
@@ -177,12 +177,12 @@ func (p productCategoryRepository) DeleteProductCategoryById(id int) (string, in
 	query := `DELETE FROM product_category WHERE category_id = ?`
 	if _, err := DB.Exec(query, id); err != nil {
 		status := http.StatusInternalServerError
-		errType := errorcode.InternalError
+		errType := entity.InternalError
 		return "", status, errType, err
 	}
 
 	// if err := DB.QueryRow("SELECT deleted_at FROM product_category WHERE category_id = ?", id).Scan(&deleted_at); err != nil {
-	// 	errType := errorcode.NotFoundError
+	// 	errType := entity.NotFoundError
 	// 	err := fmt.Errorf("product category with id '%d' not found", id)
 	// 	status := http.StatusNotFound
 	// 	return "", status, errType, err
@@ -197,12 +197,12 @@ func (p productCategoryRepository) DeleteProductCategoryById(id int) (string, in
 
 	// query := `UPDATE product_category SET deleted_at = ? WHERE category_id = ?`
 	// if _, err := DB.Exec(query, time.Now(), id); err != nil {
-	// 	errType := errorcode.InternalError
+	// 	errType := entity.InternalError
 	// 	status := http.StatusInternalServerError
 	// 	return "", status, errType, err
 	// }
 
-	errType := errorcode.Success
+	errType := entity.Success
 	resp := fmt.Sprintf("product category with id '%d' deleted successfully", id)
 	status := http.StatusOK
 

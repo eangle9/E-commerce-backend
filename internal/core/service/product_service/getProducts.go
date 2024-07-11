@@ -1,8 +1,8 @@
 package productservice
 
 import (
-	errorcode "Eccomerce-website/internal/core/entity/error_code"
 	"Eccomerce-website/internal/core/model/response"
+	"fmt"
 	"net/http"
 )
 
@@ -10,18 +10,16 @@ func (p productService) GetProducts() response.Response {
 	products, err := p.productRepo.ListProducts()
 	if err != nil {
 		response := response.Response{
-			Status:       http.StatusInternalServerError,
-			ErrorType:    errorcode.InternalError,
-			ErrorMessage: err.Error(),
+			StatusCode: http.StatusNotFound,
+			Message:    err.Error(),
 		}
 		return response
 	}
 
 	response := response.Response{
-		Data:         products,
-		Status:       http.StatusOK,
-		ErrorType:    errorcode.Success,
-		ErrorMessage: "you have get all list of products",
+		Data:       products,
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("you have get product with product_id "),
 	}
 
 	return response
