@@ -4,16 +4,17 @@ import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 )
 
 type UserService interface {
-	SignUp(request request.SignUpRequest) (response.Response, error)
-	LoginUser(request request.LoginRequest) (response.Response, error)
-	GetUsers(request request.PaginationQuery) (response.Response, error)
-	GetUser(id int) (response.Response, error)
-	UpdateUser(id int, user request.UpdateUser) (response.Response, error)
-	DeleteUser(id int) (response.Response, error)
-	RefreshToken(refreshToken request.RefreshRequest) (response.Response, error)
+	SignUp(ctx context.Context, request request.SignUpRequest, requestID string) (response.Response, error)
+	LoginUser(ctx context.Context, request request.LoginRequest, requestID string) (response.Response, error)
+	GetUsers(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetUser(ctx context.Context, id int, requestID string) (response.Response, error)
+	UpdateUser(ctx context.Context, id int, user request.UpdateUser, requestID string) (response.Response, error)
+	DeleteUser(ctx context.Context, id int, requestID string) (response.Response, error)
+	RefreshToken(ctx context.Context, refreshToken request.RefreshRequest, requestID string) (response.Response, error)
 }
 
 type ProductCategoryService interface {

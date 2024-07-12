@@ -6,45 +6,33 @@ import (
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/port/service"
 	"Eccomerce-website/internal/infra/middleware"
+	"errors"
 	"strconv"
+	"time"
 
-	// "Eccomerce-website/internal/infra/middleware"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
-	// "github.com/golodash/galidator"
 	pagination "github.com/webstradev/gin-pagination"
 )
 
-// var (
-// 	g = galidator.New().CustomMessages(galidator.Messages{
-// 		"required": "$field is required",
-// 	})
-// 	customizer1  = g.Validator(request.SignUpRequest{})
-// 	customizer2  = g.Validator(request.LoginRequest{})
-// 	customizer3  = g.Validator(request.RefreshRequest{})
-// 	customizer4  = g.Validator(request.ProductCategoryRequest{})
-// 	customizer5  = g.Validator(request.ColorRequest{})
-// 	customizer6  = g.Validator(request.ProductRequest{})
-// 	customizer8  = g.Validator(request.CartRequest{})
-// 	customizer9  = g.Validator(request.SizeRequest{})
-// 	customizer10 = g.Validator(request.ReviewRequest{})
-// )
-
 type UserController struct {
-	engine      *router.Router
-	userService service.UserService
+	engine        *router.Router
+	userService   service.UserService
+	handlerLogger *zap.Logger
 }
 
-func NewUserController(engine *router.Router, userService service.UserService) *UserController {
+func NewUserController(engine *router.Router, userService service.UserService, handlerLogger *zap.Logger) *UserController {
 	return &UserController{
-		engine:      engine,
-		userService: userService,
+		engine:        engine,
+		userService:   userService,
+		handlerLogger: handlerLogger,
 	}
 }
 
-func (u *UserController) InitRouter() {
+func (u *UserController) InitRouter(middlewareLogger *zap.Logger) {
 	protectedMiddleware := middleware.ProtectedMiddleware
 	pagination.New("page", "page_size", "1", "10", 1, 150)
 	r := u.engine
@@ -52,11 +40,11 @@ func (u *UserController) InitRouter() {
 
 	api.POST("/register", u.registerHandler)
 	api.POST("/login", u.LoginHandler)
-	api.GET("/list", protectedMiddleware(), u.listUserHandler)
-	api.GET("/:id", protectedMiddleware(), u.getUserHandler)
-	api.PUT("/update/:id", protectedMiddleware(), u.updateUserHandler)
-	api.DELETE("/delete/:id", protectedMiddleware(), u.deleteUserHandler)
-	api.POST("/token", protectedMiddleware(), u.refreshTokenHandler)
+	api.GET("/list", protectedMiddleware(middlewareLogger), u.listUserHandler)
+	api.GET("/:id", protectedMiddleware(middlewareLogger), u.getUserHandler)
+	api.PUT("/update/:id", protectedMiddleware(middlewareLogger), u.updateUserHandler)
+	api.DELETE("/delete/:id", protectedMiddleware(middlewareLogger), u.deleteUserHandler)
+	api.POST("/token", protectedMiddleware(middlewareLogger), u.refreshTokenHandler)
 }
 
 // registerHandler  godoc
@@ -70,28 +58,59 @@ func (u *UserController) InitRouter() {
 // @Success		    201		{object}	response.Response
 // @Router			/user/register [post]
 func (u UserController) registerHandler(c *gin.Context) {
-	var signUpRequest request.SignUpRequest
+	ctx := c.Request.Context()
 
-	if err := c.ShouldBindJSON(&signUpRequest); err != nil {
-		errorResponse := entity.BadRequest.Wrap(err, "failed to decode json request body").WithProperty(entity.StatusCode, 400)
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		u.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "registerHandler"),
+			zap.String("context_key", "requestID"),
+			zap.String("clientIP", c.ClientIP()),
+			zap.String("userAgent", c.Request.UserAgent()),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
-	// validate := c.MustGet("validator").(*validator.Validate)
-	// if err := validate.Struct(request); err != nil {
-	// 	errorResponse := response.Response{
-	// 		Status:       http.StatusBadRequest,
-	// 		ErrorType:    errorcode.ValidationError,
-	// 		ErrorMessage: customizer1.DecryptErrors(err),
-	// 	}
-	// 	// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
-	// 	c.Set("error", errorResponse)
-	// 	return
-	// }
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "registerHandler"),
+			zap.String("clientIP", c.ClientIP()),
+			zap.String("userAgent", c.Request.UserAgent()),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-	// signUpRequest := request
-	resp, err := u.userService.SignUp(signUpRequest)
+	var signUpRequest request.SignUpRequest
+	if err := c.ShouldBindJSON(&signUpRequest); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to decode json request body").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("badRequest",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "registerHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	resp, err := u.userService.SignUp(ctx, signUpRequest, requestID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -111,30 +130,60 @@ func (u UserController) registerHandler(c *gin.Context) {
 // @Success		  200		{object}	response.Response
 // @Router		  /user/login [post]
 func (u UserController) LoginHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "LoginHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "LoginHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
 	var request request.LoginRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		errorResponse := entity.BadRequest.Wrap(err, "failed to bind json request body").WithProperty(entity.StatusCode, 400)
+		u.handlerLogger.Error("badRequest",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "LoginHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		c.Error(errorResponse)
 		return
 	}
 
-	// validate := c.MustGet("validator").(*validator.Validate)
-	// if err := validate.Struct(request); err != nil {
-	// 	errorResponse := response.Response{
-	// 		Status:       http.StatusBadRequest,
-	// 		ErrorType:    errorcode.ValidationError,
-	// 		ErrorMessage: customizer2.DecryptErrors(err),
-	// 	}
-	// 	// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
-	// 	c.Set("error", errorResponse)
-	// 	return
-	// }
-
-	resp, err := u.userService.LoginUser(request)
+	resp, err := u.userService.LoginUser(ctx, request, requestID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
+
 	c.JSON(resp.StatusCode, resp)
 }
 
@@ -148,14 +197,55 @@ func (u UserController) LoginHandler(c *gin.Context) {
 // @Success		   200	{object}	response.Response
 // @Router		   /user/list [get]
 func (u UserController) listUserHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listUserHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listUserHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
 	var paginationQuery request.PaginationQuery
 	if err := c.ShouldBindQuery(&paginationQuery); err != nil {
 		errorResponse := entity.BadRequest.Wrap(err, "failed to bind pagination query to struct").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		u.handlerLogger.Error("failed to bind pagination query",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listUserHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
-	resp, err := u.userService.GetUsers(paginationQuery)
+	resp, err := u.userService.GetUsers(ctx, paginationQuery, requestID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -175,15 +265,57 @@ func (u UserController) listUserHandler(c *gin.Context) {
 // @Success		     200	        {object}	response.Response
 // @Router			 /user/{id} [get]
 func (u UserController) getUserHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getUserHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getUserHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
 	idString := c.Param("id")
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		errorResponse := entity.BadRequest.Wrap(err, "invalid id.Please enter a valid integer id").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		u.handlerLogger.Error("failed to convert param id string to int",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getUserHandler"),
+			zap.String("requestID", requestID),
+			zap.String("id", idString),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
-	resp, err := u.userService.GetUser(id)
+	resp, err := u.userService.GetUser(ctx, id, requestID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -206,23 +338,72 @@ func (u UserController) getUserHandler(c *gin.Context) {
 // @Success		       200		{object}	response.Response
 // @Router			   /user/update/{id} [put]
 func (u UserController) updateUserHandler(c *gin.Context) {
-	var user request.UpdateUser
+	ctx := c.Request.Context()
+
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateUserHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateUserHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
 	idString := c.Param("id")
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		errorResponse := entity.BadRequest.Wrap(err, "invalid id.Please enter a valid integer id").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		u.handlerLogger.Error("failed to convert id string to int",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateUserHandler"),
+			zap.String("requestID", requestID),
+			zap.String("id", idString),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
+	var user request.UpdateUser
 	if err := c.ShouldBindJSON(&user); err != nil {
 		errorResponse := entity.BadRequest.Wrap(err, "failed to decode json request body").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		u.handlerLogger.Error("badRequest",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateUserHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
-	resp, err := u.userService.UpdateUser(id, user)
+	resp, err := u.userService.UpdateUser(ctx, id, user, requestID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -242,15 +423,56 @@ func (u UserController) updateUserHandler(c *gin.Context) {
 // @Success	     	  200	{object}	response.Response
 // @Router			  /user/delete/{id} [delete]
 func (u UserController) deleteUserHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteUserHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteUserHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		errorResponse := entity.BadRequest.Wrap(err, "invalid id.Please enter a valid integer id").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		u.handlerLogger.Error("failed to convert id to strin",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteUserHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
-	resp, err := u.userService.DeleteUser(id)
+	resp, err := u.userService.DeleteUser(ctx, id, requestID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -271,27 +493,55 @@ func (u UserController) deleteUserHandler(c *gin.Context) {
 // @Success		        200		{object}	response.Response
 // @Router			    /user/token [post]
 func (u UserController) refreshTokenHandler(c *gin.Context) {
-	var rfToken request.RefreshRequest
+	ctx := c.Request.Context()
 
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "refreshTokenHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		u.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "refreshTokenHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	var rfToken request.RefreshRequest
 	if err := c.ShouldBindJSON(&rfToken); err != nil {
 		errorResponse := entity.BadRequest.Wrap(err, "failed to decode json request body").WithProperty(entity.StatusCode, 400)
+		u.handlerLogger.Error("badRequest",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "refreshTokenHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		c.Error(errorResponse)
 		return
 	}
 
-	// validate := c.MustGet("validator").(*validator.Validate)
-	// if err := validate.Struct(rfToken); err != nil {
-	// 	errorResponse := response.Response{
-	// 		Status:       http.StatusBadRequest,
-	// 		ErrorType:    errorcode.ValidationError,
-	// 		ErrorMessage: customizer3.DecryptErrors(err),
-	// 	}
-	// 	// c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse)
-	// 	c.Set("error", errorResponse)
-	// 	return
-	// }
-
-	resp, err := u.userService.RefreshToken(rfToken)
+	resp, err := u.userService.RefreshToken(ctx, rfToken, requestID)
 	if err != nil {
 		c.Error(err)
 		return

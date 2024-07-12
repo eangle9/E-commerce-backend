@@ -2,12 +2,13 @@ package service
 
 import (
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 	"fmt"
 	"net/http"
 )
 
-func (u userService) GetUser(id int) (response.Response, error) {
-	user, err := u.userRepo.GetUserById(id)
+func (u userService) GetUser(ctx context.Context, id int, requestID string) (response.Response, error) {
+	user, err := u.userRepo.GetUserById(ctx, id, requestID)
 	if err != nil {
 		return response.Response{}, err
 	}

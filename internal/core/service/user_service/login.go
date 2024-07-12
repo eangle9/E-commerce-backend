@@ -5,8 +5,12 @@ import (
 	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 	"fmt"
 	"net/http"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 type loginData struct {
@@ -20,18 +24,28 @@ type tokenData struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (u userService) LoginUser(request request.LoginRequest) (response.Response, error) {
+func (u userService) LoginUser(ctx context.Context, request request.LoginRequest, requestID string) (response.Response, error) {
 	if err := request.Validate(); err != nil {
 		errorResponse := entity.ValidationError.Wrap(err, "failed login validation").WithProperty(entity.StatusCode, 400)
+		u.serviceLogger.Error("validation error",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "serviceLayer"),
+			zap.String("function", "LoginUser"),
+			zap.String("requestID", requestID),
+			zap.String("email", request.Email),
+			zap.String("password_length", fmt.Sprintf("%d", len(request.Password))),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return response.Response{}, errorResponse
 	}
 
-	user, err := u.userRepo.Authentication(request)
+	user, err := u.userRepo.Authentication(ctx, request, requestID)
 	if err != nil {
 		return response.Response{}, err
 	}
 
-	tokenMap, err := jwttoken.GenerateTokenPair(uint(user.ID), user.Role)
+	tokenMap, err := jwttoken.GenerateTokenPair(ctx, uint(user.ID), user.Role, u.serviceLogger, requestID)
 	if err != nil {
 		return response.Response{}, err
 	}

@@ -8,16 +8,22 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
+	"context"
 	"net/http"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 type userService struct {
-	userRepo repository.UserRepository
+	userRepo      repository.UserRepository
+	serviceLogger *zap.Logger
 }
 
-func NewUserService(userRepo repository.UserRepository) service.UserService {
+func NewUserService(userRepo repository.UserRepository, serviceLogger *zap.Logger) service.UserService {
 	return &userService{
-		userRepo: userRepo,
+		userRepo:      userRepo,
+		serviceLogger: serviceLogger,
 	}
 }
 
@@ -25,17 +31,25 @@ type data struct {
 	User dto.User `json:"user"`
 }
 
-func (u userService) SignUp(request request.SignUpRequest) (response.Response, error) {
+func (u userService) SignUp(ctx context.Context, request request.SignUpRequest, requestID string) (response.Response, error) {
 	if err := request.Validate(); err != nil {
 		errorResponse := entity.ValidationError.Wrap(err, "failed register validation").WithProperty(entity.StatusCode, 400)
+		u.serviceLogger.Error("validation error",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "serviceLayer"),
+			zap.String("function", "SignUp"),
+			zap.String("requestID", requestID),
+			zap.Any("requestData", request),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return response.Response{}, errorResponse
 	}
 
 	// hash password
-	hashPassword, err := validationdata.HasPassword(request.Password)
+	hashPassword, err := validationdata.HasPassword(request.Password, u.serviceLogger, requestID)
 	if err != nil {
-		errorResponse := entity.AppInternalError.Wrap(err, "hashingError").WithProperty(entity.StatusCode, 500)
-		return response.Response{}, errorResponse
+		return response.Response{}, err
 	}
 
 	request.Password = hashPassword
@@ -50,7 +64,7 @@ func (u userService) SignUp(request request.SignUpRequest) (response.Response, e
 		EmailVerified: false,
 	}
 
-	id, err := u.userRepo.InsertUser(user)
+	id, err := u.userRepo.InsertUser(ctx, user, requestID)
 	if err != nil {
 		return response.Response{}, err
 	}

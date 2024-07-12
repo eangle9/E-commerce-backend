@@ -2,14 +2,16 @@ package jwttoken
 
 import (
 	"Eccomerce-website/internal/core/entity"
+	"context"
 	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
-func GenerateTokenPair(id uint, role string) (map[string]string, error) {
+func GenerateTokenPair(ctx context.Context, id uint, role string, serviceLogger *zap.Logger, requestID string) (map[string]string, error) {
 	// viper.SetConfigFile("../.env")
 	viper.AddConfigPath("../")
 	viper.SetConfigName(".env")
@@ -19,6 +21,14 @@ func GenerateTokenPair(id uint, role string) (map[string]string, error) {
 	if secretKey == nil {
 		err := errors.New("unable to get jwt secret key")
 		errorResponse := entity.AuthInternalError.Wrap(err, "failed to get jwt secret key in .env file").WithProperty(entity.StatusCode, 500)
+		serviceLogger.Error("failed to secret key in .env file",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "serviceLayer"),
+			zap.String("function", "GenerateTokenPair"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return nil, errorResponse
 	}
 	secret := secretKey.(string)
@@ -33,6 +43,16 @@ func GenerateTokenPair(id uint, role string) (map[string]string, error) {
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		errorResponse := entity.AuthInternalError.Wrap(err, "failed to signed access_token by secret key").WithProperty(entity.StatusCode, 500)
+		serviceLogger.Error("failed to get signed token",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "serviceLayer"),
+			zap.String("function", "GenerateTokenPair"),
+			zap.String("requestID", requestID),
+			zap.Uint("userID", id),
+			zap.String("role", role),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return nil, errorResponse
 	}
 
@@ -46,6 +66,16 @@ func GenerateTokenPair(id uint, role string) (map[string]string, error) {
 	refreshTokenString, err := refreshToken.SignedString([]byte(secret))
 	if err != nil {
 		errorResponse := entity.AuthInternalError.Wrap(err, "failed to signed refresh_token by secret key").WithProperty(entity.StatusCode, 500)
+		serviceLogger.Error("failed to get signed refreshToken",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "serviceLayer"),
+			zap.String("function", "GenerateTokenPair"),
+			zap.String("requestID", requestID),
+			zap.Uint("userID", id),
+			zap.String("role", role),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return nil, errorResponse
 	}
 

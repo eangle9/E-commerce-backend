@@ -5,16 +5,17 @@ import (
 	"Eccomerce-website/internal/core/dto"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 	// dbmodels "Eccomerce-website/internal/infra/db_models"
 )
 
 type UserRepository interface {
-	InsertUser(user dto.User) (int, error)
-	Authentication(request.LoginRequest) (utils.User, error)
-	ListUsers(offset, perPage int) ([]utils.User, error)
-	GetUserById(id int) (utils.User, error)
-	EditUserById(id int, user request.UpdateUser) (utils.User, error)
-	DeleteUserById(id int) error
+	InsertUser(ctx context.Context, user dto.User, requestID string) (int, error)
+	Authentication(ctx context.Context, request request.LoginRequest, requestID string) (utils.User, error)
+	ListUsers(ctx context.Context, offset, perPage int, requestID string) ([]utils.User, error)
+	GetUserById(ctx context.Context, id int, requestID string) (utils.User, error)
+	EditUserById(ctx context.Context, id int, user request.UpdateUser, requestID string) (utils.User, error)
+	DeleteUserById(ctx context.Context, id int, requestID string) error
 }
 
 type ProductCategoryRepository interface {

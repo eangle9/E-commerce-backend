@@ -23,6 +23,7 @@ var (
 	AppInternalError = ApplicationErrorNamespace.NewType("InternalError")
 	ValidationError  = ApplicationErrorNamespace.NewType("ValidationError")
 	BadRequest       = ApplicationErrorNamespace.NewType("BadRequest")
+	TimeoutError     = ApplicationErrorNamespace.NewType("TimeoutError")
 )
 
 var (
@@ -31,7 +32,6 @@ var (
 	UnableToSave         = DatabaseErrorNamespace.NewType("UnableToSave")
 	UnableToFindResource = DatabaseErrorNamespace.NewType("UnableToFindResource")
 	UnableToRead         = DatabaseErrorNamespace.NewType("UableToRead")
-	// DbInternalError      = DatabaseErrorNamespace.NewType("InternalError")
 )
 
 var (

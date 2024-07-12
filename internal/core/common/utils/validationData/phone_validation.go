@@ -14,6 +14,7 @@ var (
 func FormatPhoneNumber(phone string) (string, error) {
 	if isValid := PhoneReg.MatchString(phone); !isValid {
 		err := fmt.Errorf("invalid phone number format.Please enter a valid phone number")
+		// errorResponse := entity.BadRequest.Wrap(err, "incorrect phone number format").WithProperty(entity.StatusCode, 400)
 		return "", err
 	}
 	reg := regexp.MustCompile(`[^\d]`)

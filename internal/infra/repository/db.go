@@ -1,17 +1,22 @@
 package repository
 
 import (
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/infra/config"
 	"database/sql"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 type database struct {
 	DB *sql.DB
+	// dbLogger *zap.Logger
 }
 
-func NewDatabase(conf config.DatabaseConfig) (repository.Database, error) {
-	db, err := newDatabase(conf)
+func NewDatabase(conf config.DatabaseConfig, dbLogger *zap.Logger) (repository.Database, error) {
+	db, err := newDatabase(conf, dbLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -21,12 +26,18 @@ func NewDatabase(conf config.DatabaseConfig) (repository.Database, error) {
 	}, nil
 }
 
-func newDatabase(conf config.DatabaseConfig) (*sql.DB, error) {
-	// dsn := conf.Url
-	// db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+func newDatabase(conf config.DatabaseConfig, dbLogger *zap.Logger) (*sql.DB, error) {
 	db, err := sql.Open(conf.Driver, conf.Url)
 	if err != nil {
-		return nil, err
+		errorResponse := entity.ConnectionError.Wrap(err, "failed db connection").WithProperty(entity.StatusCode, 500)
+		dbLogger.Error("unable to connect database",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "newDatabse"),
+			zap.String("error", errorResponse.Error()),
+			zap.Stack("stacktrace"),
+		)
+		return nil, errorResponse
 	}
 
 	return db, nil

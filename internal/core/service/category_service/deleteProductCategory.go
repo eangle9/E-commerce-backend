@@ -1,6 +1,8 @@
 package categoryservice
 
-import "Eccomerce-website/internal/core/model/response"
+import (
+	"Eccomerce-website/internal/core/model/response"
+)
 
 func (p productCategoryService) DeleteProductCategory(id int) response.Response {
 	resp, status, _, err := p.categoryRepo.DeleteProductCategoryById(id)
