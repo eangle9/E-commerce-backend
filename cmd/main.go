@@ -4,6 +4,7 @@ import (
 	_ "Eccomerce-website/docs"
 	"Eccomerce-website/internal/controller"
 	"Eccomerce-website/internal/core/common/router"
+	"Eccomerce-website/internal/core/common/utils/logger"
 	"Eccomerce-website/internal/core/server"
 	service "Eccomerce-website/internal/core/service/user_service"
 
@@ -37,9 +38,9 @@ import (
 //	@schemes	http
 
 func main() {
-	// cwd, _ := os.Getwd()
-	// fmt.Println("cwd :", cwd)
-	errorMiddleware := middleware.ErrorMiddleware
+	appLogger := logger.InitLogger()
+	defer appLogger.GetLogger().Sync()
+
 	instance := gin.New()
 
 	// cors middleware
@@ -52,16 +53,23 @@ func main() {
 		MaxAge:           12 * 3600, // 12 hours
 	}))
 
+	databaseLogger := appLogger.GetLogger().Named("DatabaseLogger")
+	serviceLogger := appLogger.GetLogger().Named("ServiceLogger")
+	handlerLogger := appLogger.GetLogger().Named("HandlerLogger")
+	middlewareLogger := appLogger.GetLogger().Named("MiddlewareLogger")
+
+	errorMiddleware := middleware.ErrorMiddleware
+	requestIdMiddleware := middleware.RequestIdMiddleware
+	loggerMiddleware := middleware.LoggerMiddleware
+	timeoutMiddleware := middleware.TimeoutMiddleware
+
 	instance.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	// instance.MaxMultipartMemory = 8 << 20 // 8MB maximum
 	instance.Use(gin.Recovery())
 	instance.Use(gin.Logger())
+	instance.Use(requestIdMiddleware())
+	instance.Use(loggerMiddleware(middlewareLogger))
+	instance.Use(timeoutMiddleware(middlewareLogger))
 	instance.Use(errorMiddleware())
-	// v := validator.New()
-	// instance.Use(func(c *gin.Context) {
-	// 	c.Set("validator", v)
-	// 	c.Next()
-	// })
 
 	engine := router.NewRouter(instance)
 
@@ -70,7 +78,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := repository.NewDatabase(*dbConfig)
+	db, err := repository.NewDatabase(*dbConfig, databaseLogger)
 	if err != nil {
 		fmt.Println("error: ", err)
 		return
@@ -84,10 +92,10 @@ func main() {
 	// }
 
 	// user service
-	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo)
-	userController := controller.NewUserController(engine, userService)
-	userController.InitRouter()
+	userRepo := repository.NewUserRepository(db, databaseLogger)
+	userService := service.NewUserService(userRepo, serviceLogger)
+	userController := controller.NewUserController(engine, userService, handlerLogger)
+	userController.InitRouter(middlewareLogger)
 
 	// // product category service
 	// categoryRepo := repository.NewProductCategoryRepository(db)
