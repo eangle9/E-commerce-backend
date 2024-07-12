@@ -12,18 +12,21 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
 type userService struct {
 	userRepo      repository.UserRepository
 	serviceLogger *zap.Logger
+	client        *redis.Client
 }
 
-func NewUserService(userRepo repository.UserRepository, serviceLogger *zap.Logger) service.UserService {
+func NewUserService(userRepo repository.UserRepository, serviceLogger *zap.Logger, client *redis.Client) service.UserService {
 	return &userService{
 		userRepo:      userRepo,
 		serviceLogger: serviceLogger,
+		client:        client,
 	}
 }
 

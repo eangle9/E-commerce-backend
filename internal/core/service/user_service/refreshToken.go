@@ -33,12 +33,12 @@ func (u userService) RefreshToken(ctx context.Context, refreshToken request.Refr
 	}
 
 	rfToken := refreshToken.RefreshToken
-	id, role, err := jwttoken.VerifyToken(ctx, rfToken, u.serviceLogger, requestID)
+	id, role, err := jwttoken.VerifyRefreshToken(ctx, rfToken, u.serviceLogger, requestID, u.client)
 	if err != nil {
 		return response.Response{}, err
 	}
 
-	tokenMap, err := jwttoken.GenerateTokenPair(ctx, id, role, u.serviceLogger, requestID)
+	tokenMap, err := jwttoken.GenerateTokenPair(ctx, id, role, u.serviceLogger, requestID, u.client)
 	if err != nil {
 		return response.Response{}, err
 	}

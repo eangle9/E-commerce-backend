@@ -5,6 +5,7 @@ import (
 	"Eccomerce-website/internal/controller"
 	"Eccomerce-website/internal/core/common/router"
 	"Eccomerce-website/internal/core/common/utils/logger"
+	"Eccomerce-website/internal/core/common/utils/redis"
 	"Eccomerce-website/internal/core/server"
 	service "Eccomerce-website/internal/core/service/user_service"
 
@@ -63,6 +64,10 @@ func main() {
 	loggerMiddleware := middleware.LoggerMiddleware
 	timeoutMiddleware := middleware.TimeoutMiddleware
 
+	redisApp := redis.InitRedis(serviceLogger)
+	client := redisApp.GetRedisClient()
+	defer client.Close()
+
 	instance.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	instance.Use(gin.Recovery())
 	instance.Use(gin.Logger())
@@ -93,7 +98,7 @@ func main() {
 
 	// user service
 	userRepo := repository.NewUserRepository(db, databaseLogger)
-	userService := service.NewUserService(userRepo, serviceLogger)
+	userService := service.NewUserService(userRepo, serviceLogger, client)
 	userController := controller.NewUserController(engine, userService, handlerLogger)
 	userController.InitRouter(middlewareLogger)
 

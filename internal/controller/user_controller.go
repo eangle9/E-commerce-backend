@@ -44,7 +44,7 @@ func (u *UserController) InitRouter(middlewareLogger *zap.Logger) {
 	api.GET("/:id", protectedMiddleware(middlewareLogger), u.getUserHandler)
 	api.PUT("/update/:id", protectedMiddleware(middlewareLogger), u.updateUserHandler)
 	api.DELETE("/delete/:id", protectedMiddleware(middlewareLogger), u.deleteUserHandler)
-	api.POST("/token", protectedMiddleware(middlewareLogger), u.refreshTokenHandler)
+	api.POST("/token", u.refreshTokenHandler)
 }
 
 // registerHandler  godoc

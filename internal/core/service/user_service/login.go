@@ -45,7 +45,7 @@ func (u userService) LoginUser(ctx context.Context, request request.LoginRequest
 		return response.Response{}, err
 	}
 
-	tokenMap, err := jwttoken.GenerateTokenPair(ctx, uint(user.ID), user.Role, u.serviceLogger, requestID)
+	tokenMap, err := jwttoken.GenerateTokenPair(ctx, uint(user.ID), user.Role, u.serviceLogger, requestID, u.client)
 	if err != nil {
 		return response.Response{}, err
 	}

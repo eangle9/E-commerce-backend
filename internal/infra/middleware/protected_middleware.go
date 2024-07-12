@@ -48,7 +48,7 @@ func ProtectedMiddleware(middlewareLogger *zap.Logger) gin.HandlerFunc {
 		bearerToken := c.Request.Header.Get("Authorization")
 		if bearerToken == "" {
 			err := errors.New("missing authorization header")
-			errorResponse := entity.InvalidCredentials.Wrap(err, "token is empty in the authorization header")
+			errorResponse := entity.InvalidCredentials.Wrap(err, "token is empty in the authorization header").WithProperty(entity.StatusCode, 401)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": errorResponse.Error()})
 			middlewareLogger.Error("bearerToken is empty",
 				zap.String("timestamp", time.Now().Format(time.RFC3339)),

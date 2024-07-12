@@ -20,10 +20,11 @@ var (
 )
 
 var (
-	AppInternalError = ApplicationErrorNamespace.NewType("InternalError")
-	ValidationError  = ApplicationErrorNamespace.NewType("ValidationError")
-	BadRequest       = ApplicationErrorNamespace.NewType("BadRequest")
-	TimeoutError     = ApplicationErrorNamespace.NewType("TimeoutError")
+	AppInternalError   = ApplicationErrorNamespace.NewType("InternalError")
+	ValidationError    = ApplicationErrorNamespace.NewType("ValidationError")
+	BadRequest         = ApplicationErrorNamespace.NewType("BadRequest")
+	TimeoutError       = ApplicationErrorNamespace.NewType("TimeoutError")
+	AppConnectionError = ApplicationErrorNamespace.NewType("ConnectionError")
 )
 
 var (
