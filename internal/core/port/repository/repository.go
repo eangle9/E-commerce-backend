@@ -19,19 +19,19 @@ type UserRepository interface {
 }
 
 type ProductCategoryRepository interface {
-	InsertProductCategory(category dto.ProductCategory) (*int, error)
-	ListProductCategory() ([]utils.ProductCategory, error)
-	GetProductCategoryById(id int) (utils.ProductCategory, error)
-	EditProductCategoryById(id int, category utils.UpdateCategory) (utils.ProductCategory, error)
-	DeleteProductCategoryById(id int) (string, int, string, error)
+	InsertProductCategory(ctx context.Context, category dto.ProductCategory, requestID string) (*int, error)
+	ListProductCategory(ctx context.Context, offset, limit int, requestID string) ([]utils.ProductCategory, error)
+	GetProductCategoryById(ctx context.Context, id int, requestID string) (utils.ProductCategory, error)
+	EditProductCategoryById(ctx context.Context, id int, category utils.UpdateCategory, requestID string) (utils.ProductCategory, error)
+	DeleteProductCategoryById(ctx context.Context, id int, requestID string) error
 }
 
 type ColorRepository interface {
-	InsertColor(color dto.Color) (*int, error)
-	ListColors() ([]utils.Color, error)
-	GetColorById(id int) (utils.Color, error)
-	EditColorById(id int, color utils.UpdateColor) (utils.Color, error)
-	DeleteColorById(id int) (string, int, string, error)
+	InsertColor(ctx context.Context, color dto.Color, requestID string) (*int, error)
+	ListColors(ctx context.Context, offset, limit int, requestID string) ([]utils.Color, error)
+	GetColorById(ctx context.Context, id int, requestID string) (utils.Color, error)
+	EditColorById(ctx context.Context, id int, color utils.UpdateColor, requestID string) (utils.Color, error)
+	DeleteColorById(ctx context.Context, id int, requestID string) error
 }
 
 type ProductRepository interface {
@@ -51,7 +51,7 @@ type ProductItemRepository interface {
 }
 
 type ProductImageRepository interface {
-	InsertProductImage(request request.ProductImageRequest) (*int, string, error)
+	InsertProductImage(ctx context.Context, request request.ProductImageRequest, requestID string) (*int, string, error)
 }
 
 type CartRepository interface {

@@ -1,140 +1,181 @@
 package controller
 
-// import (
-// 	"Eccomerce-website/internal/core/common/router"
-// 	errorcode "Eccomerce-website/internal/core/entity/error_code"
-// 	"Eccomerce-website/internal/core/model/request"
-// 	"Eccomerce-website/internal/core/model/response"
-// 	"Eccomerce-website/internal/core/port/service"
-// 	"Eccomerce-website/internal/infra/middleware"
-// 	"net/http"
-// 	"path/filepath"
-// 	"strconv"
+import (
+	"Eccomerce-website/internal/core/common/router"
+	validationdata "Eccomerce-website/internal/core/common/utils/validationData"
+	"Eccomerce-website/internal/core/entity"
+	"Eccomerce-website/internal/core/model/request"
+	"Eccomerce-website/internal/core/port/service"
+	"Eccomerce-website/internal/infra/middleware"
+	"errors"
+	"net/http"
+	"strconv"
+	"time"
 
-// 	"github.com/gin-gonic/gin"
-// )
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
 
-// type productImageController struct {
-// 	engine              *router.Router
-// 	productImageService service.ProductImageService
-// }
+type productImageController struct {
+	engine              *router.Router
+	productImageService service.ProductImageService
+	handlerLogger       *zap.Logger
+}
 
-// func NewProductImageController(engine *router.Router, productImageService service.ProductImageService) *productImageController {
-// 	return &productImageController{
-// 		engine:              engine,
-// 		productImageService: productImageService,
-// 	}
-// }
+func NewProductImageController(engine *router.Router, productImageService service.ProductImageService, handlerLogger *zap.Logger) *productImageController {
+	return &productImageController{
+		engine:              engine,
+		productImageService: productImageService,
+		handlerLogger:       handlerLogger,
+	}
+}
 
-// func (p *productImageController) InitProductImageRouter() {
-// 	protectedMiddleware := middleware.ProtectedMiddleware
-// 	r := p.engine
-// 	api := r.Group("/image")
+func (p *productImageController) InitProductImageRouter(middlewareLogger *zap.Logger) {
+	protectedMiddleware := middleware.ProtectedMiddleware
+	r := p.engine
+	api := r.Group("/image")
 
-// 	api.POST("/upload", protectedMiddleware(), p.uploadProductImageHandler)
-// }
+	api.POST("/upload", protectedMiddleware(middlewareLogger), p.uploadProductImageHandler)
+}
 
-// // uploadProductImageHandler godoc
-// //
-// //	@Summary		Upload image
-// //	@Description	Upload an image for a product in cloudinary
-// //	@Tags			product image
-// //	@ID				upload-product-image
-// //	@Accept			mpfd
-// //	@Produce		json
-// //	@Security		JWT
-// //	@Param			product_item_id	formData	int		true	"Product Item ID"
-// //	@Param			image			formData	file	true	"product image"
-// //	@Success		200				{object}	response.Response
-// //	@Router			/image/upload [post]
-// func (p productImageController) uploadProductImageHandler(c *gin.Context) {
-// 	var request request.ProductImageRequest
+// uploadProductImageHandler godoc
+// @Summary		             Upload image
+// @Description	             Upload an image for a product in cloudinary
+// @Tags			         product image
+// @ID				         upload-product-image
+// @Accept			         mpfd
+// @Produce		             json
+// @Security		         JWT
+// @Param			         product_item_id	formData	int		true	"Product Item ID"
+// @Param			         image			    formData	file	true	"product image"
+// @Success		             200				{object}	response.Response
+// @Router			         /image/upload [post]
+func (p productImageController) uploadProductImageHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	productItemIdStr := c.PostForm("product_item_id")
-// 	if productItemIdStr == "" {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "product_item_id is required",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "uploadProductImageHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	productItemId, err := strconv.Atoi(productItemIdStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid product_item_id.Please enter a valid integer id",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "uploadProductImageHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	request.ProductItemId = productItemId
+	var request request.ProductImageRequest
+	productItemIdStr := c.PostForm("product_item_id")
+	if productItemIdStr == "" {
+		err := errors.New("product_item_id can't be blank")
+		errorResponse := entity.BadRequest.Wrap(err, "product_item_id is required").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("product_item_id is required",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "uploadProductImageHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	file, err := c.FormFile("image")
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "unable to retrieve file from the upload file",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	productItemId, err := strconv.Atoi(productItemIdStr)
+	if err != nil {
+		errorResponse := entity.AppInternalError.Wrap(err, "invalid product_item_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("invalid product_item_id",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "uploadProductImageHandler"),
+			zap.String("requestID", requestID),
+			zap.String("productItemID", productItemIdStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	maxUploadSize := 8 * 1024 * 1024
-// 	fileSize := file.Size
+	request.ProductItemId = productItemId
 
-// 	if fileSize > int64(maxUploadSize) {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusRequestEntityTooLarge,
-// 			ErrorType:    "FILE_TOO_LARGE",
-// 			ErrorMessage: "the uploaded product image is too large.Please upload a size less than 8MB",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	file, err := c.FormFile("image")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			errorResponse := entity.BadRequest.Wrap(err, "no file was uploaded").WithProperty(entity.StatusCode, 400)
+			c.Error(errorResponse)
+			p.handlerLogger.Error("upload file is required",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "uploadProductImageHandler"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+			return
+		} else {
+			errorResponse := entity.AppInternalError.Wrap(err, "unable to retrieve file from the upload file").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			p.handlerLogger.Error("failed to retrieve file from the upload file",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "uploadProductImageHandler"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+			return
+		}
 
-// 	validExt := map[string]bool{
-// 		".jpeg": true,
-// 		".png":  true,
-// 		".jpg":  true,
-// 		".gif":  true,
-// 		".webp": true,
-// 		".svg":  true,
-// 	}
+	}
 
-// 	ext := filepath.Ext(file.Filename)
-// 	if !validExt[ext] {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusUnsupportedMediaType,
-// 			ErrorType:    "INVALID_FILE_EXTENSION",
-// 			ErrorMessage: "invalid file extension",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	if err := validationdata.ImageFileValidation(file, p.handlerLogger, requestID); err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusInternalServerError,
-// 			ErrorType:    errorcode.InternalError,
-// 			ErrorMessage: "failed to save image",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
+		errorResponse := entity.UnableToSaveFile.Wrap(err, "failed to save image file").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("unable to save upload image",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "uploadProductImageHandler"),
+			zap.String("requestID", requestID),
+			zap.Any("file", file),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	request.File = file
+	request.File = file
 
-// 	resp := p.productImageService.CreateProductImage(request)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	resp, err := p.productImageService.CreateProductImage(ctx, request, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
+	c.JSON(resp.StatusCode, resp)
+}

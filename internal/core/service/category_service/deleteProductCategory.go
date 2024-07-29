@@ -2,21 +2,21 @@ package categoryservice
 
 import (
 	"Eccomerce-website/internal/core/model/response"
+	"context"
+	"fmt"
+	"net/http"
 )
 
-func (p productCategoryService) DeleteProductCategory(id int) response.Response {
-	resp, status, _, err := p.categoryRepo.DeleteProductCategoryById(id)
+func (p productCategoryService) DeleteProductCategory(ctx context.Context, id int, requestID string) (response.Response, error) {
+	err := p.categoryRepo.DeleteProductCategoryById(ctx, id, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: status,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
-		StatusCode: status,
-		Message:    resp,
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("category with category_id %d deleted successfully", id),
 	}
-	return response
+
+	return response, nil
 }

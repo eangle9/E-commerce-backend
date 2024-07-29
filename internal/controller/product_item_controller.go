@@ -95,12 +95,19 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 	}
 
 	var request request.ProductItemRequest
-
 	productIdStr := c.PostForm("product_id")
 	if productIdStr == "" {
 		err := errors.New("product_id can't be blank")
 		errorResponse := entity.BadRequest.Wrap(err, "product_id is required").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("product_id is required",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
@@ -108,6 +115,15 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 	if err != nil {
 		errorResponse := entity.AppInternalError.Wrap(err, "invalid product_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("invalid product_id",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.String("productID", productIdStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 	request.ProductID = productId
@@ -118,6 +134,15 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		if err != nil {
 			errorResponse := entity.AppInternalError.Wrap(err, "invalid color_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("invalid color_id",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "createProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.String("colorID", colorIdStr),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 		request.ColorID = &colorId
@@ -128,6 +153,14 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		err := errors.New("price can't be blank")
 		errorResponse := entity.BadRequest.Wrap(err, "price is required").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("price is required",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
@@ -135,6 +168,15 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 	if err != nil {
 		errorResponse := entity.AppInternalError.Wrap(err, "error converting string to decimal").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("invalid price",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.String("price", priceStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 	request.Price = price
@@ -145,6 +187,15 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		if err != nil {
 			errorResponse := entity.AppInternalError.Wrap(err, "error converting string to decimal").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("invalid discount",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "createProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.String("discount", discountStr),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 		request.Discount = discount
@@ -155,6 +206,14 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		err := errors.New("qtyInStock can't be blank")
 		errorResponse := entity.BadRequest.Wrap(err, "qtyInStock is required").WithProperty(entity.StatusCode, 400)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("qtyInStock is required",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
@@ -162,6 +221,15 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 	if err != nil {
 		errorResponse := entity.AppInternalError.Wrap(err, "invalid qty_in_stock.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("invalid qtyInStock",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.String("qtyInStock", qtyInStockStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 	request.QtyInStock = qtyInStock
@@ -171,15 +239,31 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 		if err == http.ErrMissingFile {
 			errorResponse := entity.BadRequest.Wrap(err, "no file was uploaded").WithProperty(entity.StatusCode, 400)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("upload file can't be blank",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "createProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		} else {
-			errorResponse := entity.UnableToRead.Wrap(err, "unable to retrieve file from the upload file").WithProperty(entity.StatusCode, 500)
+			errorResponse := entity.AppInternalError.Wrap(err, "unable to retrieve file from the upload file").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("failed to retrieve file from the upload file",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "createProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 	}
 
-	if err := validationdata.ImageFileValidation(file); err != nil {
+	if err := validationdata.ImageFileValidation(file, p.handlerLogger, requestID); err != nil {
 		c.Error(err)
 		return
 	}
@@ -187,6 +271,15 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 	if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
 		errorResponse := entity.UnableToSaveFile.Wrap(err, "failed to save image file").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("unable to save the upload file",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.Any("file", file),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
@@ -388,6 +481,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 	if err != nil {
 		errorResponse := entity.AppInternalError.Wrap(err, "invalid id.Please enter a valid integer value").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("incorrect product_item_id",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.String("productItemID", idStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
@@ -397,6 +499,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 		if err != nil {
 			errorResponse := entity.AppInternalError.Wrap(err, "invalid product_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("incorrect product_id",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "updateProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.String("productID", productIdStr),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 		request.ProductID = &productId
@@ -408,6 +519,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 		if err != nil {
 			errorResponse := entity.AppInternalError.Wrap(err, "invalid color_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("incorrect color_id",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "updateProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.String("colorID", colorIdStr),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 		request.ColorID = &colorId
@@ -419,6 +539,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 		if err != nil {
 			errorResponse := entity.AppInternalError.Wrap(err, "invalid price.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("incorrect price",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "updateProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.String("price", priceStr),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 
@@ -432,6 +561,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 		if err != nil {
 			errorResponse := entity.AppInternalError.Wrap(err, "invalid discount.Please enter a valid integer value").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("incorrect discount",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "updateProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.String("discount", discountStr),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 
@@ -445,6 +583,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 		if err != nil {
 			errorResponse := entity.AppInternalError.Wrap(err, "invalid qty_in_stock.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("incorrect qtyInStcok",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "updateProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.String("qtyInStcok", qtyInStockStr),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 		request.QtyInStock = &qtyInStock
@@ -454,11 +601,19 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 	if err != nil && err != http.ErrMissingFile {
 		errorResponse := entity.AppInternalError.Wrap(err, "unable to retrieve file from the upload file").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("failed to retrieve file from the upload file",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 
 	if err == nil {
-		if err := validationdata.ImageFileValidation(file); err != nil {
+		if err := validationdata.ImageFileValidation(file, p.handlerLogger, requestID); err != nil {
 			c.Error(err)
 			return
 		}
@@ -466,6 +621,15 @@ func (p productItemController) updateProductItemHandler(c *gin.Context) {
 		if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
 			errorResponse := entity.UnableToSaveFile.Wrap(err, "failed to save upload file").WithProperty(entity.StatusCode, 500)
 			c.Error(errorResponse)
+			p.handlerLogger.Error("unable to save image file",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "handlerLayer"),
+				zap.String("function", "updateProductItemHandler"),
+				zap.String("requestID", requestID),
+				zap.Any("file", file),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
 			return
 		}
 
@@ -530,6 +694,15 @@ func (p productItemController) deleteProductItemHandler(c *gin.Context) {
 	if err != nil {
 		errorResponse := entity.AppInternalError.Wrap(err, "invalid id.Please enter a valid integer value").WithProperty(entity.StatusCode, 500)
 		c.Error(errorResponse)
+		p.handlerLogger.Error("incorrect product_item_id",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.String("productItemID", idStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
 		return
 	}
 

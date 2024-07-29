@@ -6,27 +6,28 @@ import (
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
+	"context"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 type productImageService struct {
-	imageRepo repository.ProductImageRepository
+	imageRepo     repository.ProductImageRepository
+	serviceLogger *zap.Logger
 }
 
-func NewProductImageService(imageRepo repository.ProductImageRepository) service.ProductImageService {
+func NewProductImageService(imageRepo repository.ProductImageRepository, serviceLogger *zap.Logger) service.ProductImageService {
 	return &productImageService{
-		imageRepo: imageRepo,
+		imageRepo:     imageRepo,
+		serviceLogger: serviceLogger,
 	}
 }
 
-func (p productImageService) CreateProductImage(request request.ProductImageRequest) response.Response {
-	id, imageUrl, err := p.imageRepo.InsertProductImage(request)
+func (p productImageService) CreateProductImage(ctx context.Context, request request.ProductImageRequest, requestID string) (response.Response, error) {
+	id, imageUrl, err := p.imageRepo.InsertProductImage(ctx, request, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusInternalServerError,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	productImage := dto.ProductImage{
@@ -41,5 +42,5 @@ func (p productImageService) CreateProductImage(request request.ProductImageRequ
 		Message:    "upload successful!",
 	}
 
-	return response
+	return response, nil
 }

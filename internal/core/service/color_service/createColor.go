@@ -2,35 +2,52 @@ package colorservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
+	"context"
 	"net/http"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 type colorService struct {
-	colorRepo repository.ColorRepository
+	colorRepo     repository.ColorRepository
+	serviceLogger *zap.Logger
 }
 
-func NewColorService(colorRepo repository.ColorRepository) service.ColorService {
+func NewColorService(colorRepo repository.ColorRepository, serviceLogger *zap.Logger) service.ColorService {
 	return &colorService{
-		colorRepo: colorRepo,
+		colorRepo:     colorRepo,
+		serviceLogger: serviceLogger,
 	}
 }
 
-func (c colorService) CreateColor(request request.ColorRequest) response.Response {
+func (c colorService) CreateColor(ctx context.Context, request request.ColorRequest, requestID string) (response.Response, error) {
+	if err := request.Validate(); err != nil {
+		errorResponse := entity.ValidationError.Wrap(err, "create-color validation error").WithProperty(entity.StatusCode, 400)
+		c.serviceLogger.Error("validation error",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "serviceLayer"),
+			zap.String("function", "CreateColor"),
+			zap.String("requestID", requestID),
+			zap.Any("requestData", request),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return response.Response{}, errorResponse
+	}
+
 	color := dto.Color{
 		Name: request.ColorName,
 	}
 
-	id, err := c.colorRepo.InsertColor(color)
+	id, err := c.colorRepo.InsertColor(ctx, color, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusConflict,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	color.ID = *id
@@ -41,5 +58,5 @@ func (c colorService) CreateColor(request request.ColorRequest) response.Respons
 		Message:    "Congratulation, color for product created successfully!",
 	}
 
-	return response
+	return response, nil
 }

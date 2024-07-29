@@ -107,7 +107,7 @@ func (p productItemRepository) InsertProductItem(ctx context.Context, item reque
 		return nil, "", errorResponse
 	}
 
-	image_url, err := cloudinaryupload.UploadToCloudinary(file)
+	image_url, err := cloudinaryupload.UploadToCloudinary(file, p.dbLogger, requestID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -296,7 +296,7 @@ func (p productItemRepository) EditProductItemById(ctx context.Context, id int, 
 	}
 
 	if productItem.File != nil {
-		ImageUrl, err := cloudinaryupload.UploadToCloudinary(productItem.File)
+		ImageUrl, err := cloudinaryupload.UploadToCloudinary(productItem.File, p.dbLogger, requestID)
 		if err != nil {
 			return utils.ProductItem{}, err
 		}

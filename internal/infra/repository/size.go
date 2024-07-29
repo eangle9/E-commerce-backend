@@ -31,20 +31,22 @@ func NewSizeRepository(db repository.Database, dbLogger *zap.Logger) repository.
 func (s sizeRepository) InsertSize(ctx context.Context, size dto.Size, requestID string) (*int, error) {
 	DB := s.db.GetDB()
 
+	query := "SELECT COUNT(*) FROM size WHERE size_name = ? AND product_item_id = ?"
 	var count int
-	if err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM size WHERE size_name = ? AND product_item_id = ?", size.SizeName, size.ProductItemID).Scan(&count); err != nil {
+	if err := DB.QueryRowContext(ctx, query, size.SizeName, size.ProductItemID).Scan(&count); err != nil {
 		errorResponse := entity.UnableToRead.Wrap(err, "unable to read COUNT in the query").WithProperty(entity.StatusCode, 500)
 		s.dbLogger.Error("failed to read 'COUNT' in the query",
 			zap.String("timestamp", time.Now().Format(time.RFC3339)),
 			zap.String("layer", "databaseLayer"),
 			zap.String("function", "InsertSize"),
 			zap.String("requestID", requestID),
-			zap.String("query", "SELECT COUNT(*) FROM size WHERE size_name = ? AND product_item_id = ?"),
+			zap.String("query", query),
 			zap.String("sizeName", size.SizeName),
 			zap.Int("productItemId", size.ProductItemID),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
 		)
+		return nil, errorResponse
 	}
 
 	if count > 0 {
@@ -62,8 +64,8 @@ func (s sizeRepository) InsertSize(ctx context.Context, size dto.Size, requestID
 		return nil, errorResponse
 	}
 
-	query := `INSERT INTO size (product_item_id, size_name, price, discount, qty_in_stock) VALUES (?, ?, ?, ?, ?)`
-	result, err := DB.ExecContext(ctx, query, size.ProductItemID, size.SizeName, size.Price, size.Discount, size.QtyInStock)
+	insertQuery := `INSERT INTO size (product_item_id, size_name, price, discount, qty_in_stock) VALUES (?, ?, ?, ?, ?)`
+	result, err := DB.ExecContext(ctx, insertQuery, size.ProductItemID, size.SizeName, size.Price, size.Discount, size.QtyInStock)
 	if err != nil {
 		errorResponse := entity.UnableToSave.Wrap(err, "failed to insert product size").WithProperty(entity.StatusCode, 500)
 		s.dbLogger.Error("failed to create product size",
@@ -71,7 +73,7 @@ func (s sizeRepository) InsertSize(ctx context.Context, size dto.Size, requestID
 			zap.String("layer", "databaseLayer"),
 			zap.String("function", "InsertSize"),
 			zap.String("requestID", requestID),
-			zap.String("query", "INSERT INTO size (product_item_id, size_name, price, discount, qty_in_stock) VALUES (?, ?, ?, ?, ?)"),
+			zap.String("query", insertQuery),
 			zap.Any("requestData", size),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
@@ -190,15 +192,16 @@ func (s sizeRepository) EditSizeById(ctx context.Context, id int, size request.U
 	var updateFields []string
 	var values []interface{}
 
+	query := "SELECT COUNT(*) FROM size WHERE size_id = ? AND deleted_at IS NULL"
 	var count int
-	if err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM size WHERE size_id = ? AND deleted_at IS NULL", id).Scan(&count); err != nil {
+	if err := DB.QueryRowContext(ctx, query, id).Scan(&count); err != nil {
 		errorResponse := entity.UnableToRead.Wrap(err, "unable to read COUNT in the query").WithProperty(entity.StatusCode, 500)
 		s.dbLogger.Error("failed to read 'COUNT' in the query",
 			zap.String("timestamp", time.Now().Format(time.RFC3339)),
 			zap.String("layer", "databaseLayer"),
 			zap.String("function", "EditSizeById"),
 			zap.String("requestID", requestID),
-			zap.String("query", "SELECT COUNT(*) FROM size WHERE size_id = ? AND deleted_at IS NULL"),
+			zap.String("query", query),
 			zap.Int("sizeID", id),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
@@ -260,17 +263,17 @@ func (s sizeRepository) EditSizeById(ctx context.Context, id int, size request.U
 		values = append(values, time.Now())
 	}
 
-	query := fmt.Sprintf("UPDATE size SET %s WHERE size_id = ? AND deleted_at IS NULL", strings.Join(updateFields, ", "))
+	updateQuery := fmt.Sprintf("UPDATE size SET %s WHERE size_id = ? AND deleted_at IS NULL", strings.Join(updateFields, ", "))
 	values = append(values, id)
 
-	if _, err := DB.ExecContext(ctx, query, values...); err != nil {
+	if _, err := DB.ExecContext(ctx, updateQuery, values...); err != nil {
 		errorResponse := entity.UnableToSave.Wrap(err, "failed to update size data").WithProperty(entity.StatusCode, 500)
 		s.dbLogger.Error("failed to edit size data",
 			zap.String("timestamp", time.Now().Format(time.RFC3339)),
 			zap.String("layer", "databaseLayer"),
 			zap.String("function", "EditSizeById"),
 			zap.String("requestID", requestID),
-			zap.String("query", query),
+			zap.String("query", updateQuery),
 			zap.Any("requestData", size),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),

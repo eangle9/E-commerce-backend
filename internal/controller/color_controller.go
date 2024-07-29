@@ -1,215 +1,396 @@
 package controller
 
-// import (
-// 	"Eccomerce-website/internal/core/common/router"
-// 	"Eccomerce-website/internal/core/common/utils"
-// 	errorcode "Eccomerce-website/internal/core/entity/error_code"
-// 	"Eccomerce-website/internal/core/model/request"
-// 	"Eccomerce-website/internal/core/model/response"
-// 	"Eccomerce-website/internal/core/port/service"
-// 	"Eccomerce-website/internal/infra/middleware"
-// 	"net/http"
-// 	"strconv"
+import (
+	"Eccomerce-website/internal/core/common/router"
+	"Eccomerce-website/internal/core/common/utils"
+	"Eccomerce-website/internal/core/entity"
+	"Eccomerce-website/internal/core/model/request"
+	"Eccomerce-website/internal/core/port/service"
+	"Eccomerce-website/internal/infra/middleware"
+	"errors"
+	"strconv"
+	"time"
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/go-playground/validator/v10"
-// )
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
 
-// type colorController struct {
-// 	engine       *router.Router
-// 	colorService service.ColorService
-// }
+type colorController struct {
+	engine        *router.Router
+	colorService  service.ColorService
+	handlerLogger *zap.Logger
+}
 
-// func NewColorController(engine *router.Router, colorService service.ColorService) *colorController {
-// 	return &colorController{
-// 		engine:       engine,
-// 		colorService: colorService,
-// 	}
-// }
+func NewColorController(engine *router.Router, colorService service.ColorService, handlerLogger *zap.Logger) *colorController {
+	return &colorController{
+		engine:        engine,
+		colorService:  colorService,
+		handlerLogger: handlerLogger,
+	}
+}
 
-// func (color *colorController) InitColorRouter() {
-// 	protectedMiddleware := middleware.ProtectedMiddleware
-// 	r := color.engine
-// 	api := r.Group("/color")
+func (color *colorController) InitColorRouter(middlewareLogger *zap.Logger) {
+	protectedMiddleware := middleware.ProtectedMiddleware
+	r := color.engine
+	api := r.Group("/color")
 
-// 	api.POST("/create", protectedMiddleware(), color.createColorHandler)
-// 	api.GET("/list", protectedMiddleware(), color.listColorHandler)
-// 	api.GET("/:id", protectedMiddleware(), color.getColorHandler)
-// 	api.PUT("/update/:id", protectedMiddleware(), color.updateColorHandler)
-// 	api.DELETE("/delete/:id", protectedMiddleware(), color.deleteColorHandler)
-// }
+	api.POST("/create", protectedMiddleware(middlewareLogger), color.createColorHandler)
+	api.GET("/list", protectedMiddleware(middlewareLogger), color.listColorHandler)
+	api.GET("/:id", protectedMiddleware(middlewareLogger), color.getColorHandler)
+	api.PUT("/update/:id", protectedMiddleware(middlewareLogger), color.updateColorHandler)
+	api.DELETE("/delete/:id", protectedMiddleware(middlewareLogger), color.deleteColorHandler)
+}
 
-// // createColorHandler godoc
-// // @Summary		      Create color
-// // @Description	      Insert a new color
-// // @Tags			  product color
-// // @ID				  create-color
-// // @Accept			  json
-// // @Produce		      json
-// // @Security		  JWT
-// // @Param			  color	body		request.ColorRequest	true	"Color data"
-// // @Success		      201		{object}	response.Response
-// // @Router			  /color/create [post]
-// func (color colorController) createColorHandler(c *gin.Context) {
-// 	var request request.ColorRequest
+// createColorHandler godoc
+// @Summary		      Create color
+// @Description	      Insert a new color
+// @Tags			  product color
+// @ID				  create-color
+// @Accept			  json
+// @Produce		      json
+// @Security		  JWT
+// @Param			  color	body		    request.ColorRequest	true	"Color data"
+// @Success		      201		{object}	response.Response
+// @Router			  /color/create [post]
+func (color colorController) createColorHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	if err := c.ShouldBindJSON(&request); err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "failed to decode json request body",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createColorHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	validate := c.MustGet("validator").(*validator.Validate)
-// 	if err := validate.Struct(request); err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.ValidationError,
-// 			ErrorMessage: customizer5.DecryptErrors(err),
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createColorHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	resp := color.colorService.CreateColor(request)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	var request request.ColorRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to decode json request body").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("badRequest",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createColorHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
+	resp, err := color.colorService.CreateColor(ctx, request, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// // listColorHandler godoc
-// // @Summary		    List color
-// // @Description	    Retrieves a list of colors
-// // @Tags			product color
-// // @ID				list-color
-// // @Produce		    json
-// // @Security		JWT
-// // @Success		    200	{object}	response.Response
-// // @Router			/color/list [get]
-// func (color colorController) listColorHandler(c *gin.Context) {
-// 	resp := color.colorService.GetColors()
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	c.JSON(resp.StatusCode, resp)
+}
 
-// 	c.JSON(resp.Status, resp)
-// }
+// listColorHandler godoc
+// @Summary		    List color
+// @Description	    Retrieves a list of colors
+// @Tags			product color
+// @ID				list-color
+// @Produce		    json
+// @Security		JWT
+// @Success		    200	{object}	response.Response
+// @Router			/color/list [get]
+func (color colorController) listColorHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// // getColorHandler godoc
-// // @Summary		   Get color
-// // @Description	   Get a single color by id
-// // @Tags		   product color
-// // @ID			   get-color-by-id
-// // @Produce		   json
-// // @Security	   JWT
-// // @Param		   id	path		int	true	"Color ID"
-// // @Success		   200	{object}	response.Response
-// // @Router		   /color/{id} [get]
-// func (color colorController) getColorHandler(c *gin.Context) {
-// 	idStr := c.Param("id")
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listColorHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	id, err := strconv.Atoi(idStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid id.Please enter a valid integer id",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listColorHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	resp := color.colorService.GetColor(id)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	var paginationQuery request.PaginationQuery
+	if err := c.ShouldBindQuery(&paginationQuery); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to bind pagination query to struct").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("failed to bind pagination query",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listColorHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
+	resp, err := color.colorService.GetColors(ctx, paginationQuery, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// // updateColorHandler godoc
-// // @Summary		      Update color
-// // @Description	      Update color by id
-// // @Tags			  product color
-// // @ID				  update-color-by-id
-// // @Accept			  json
-// // @Produce		      json
-// // @Security		  JWT
-// // @Param			  id		path		int					true	"Color ID"
-// // @Param			  color	body		utils.UpdateColor	true	"Update color data"
-// // @Success		      200		{object}	response.Response
-// // @Router			  /color/update/{id} [put]
-// func (color colorController) updateColorHandler(c *gin.Context) {
-// 	var request utils.UpdateColor
-// 	idStr := c.Param("id")
+	c.JSON(resp.StatusCode, resp)
+}
 
-// 	if err := c.ShouldBindJSON(&request); err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "failed to decode json request body",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+// getColorHandler godoc
+// @Summary		   Get color
+// @Description	   Get a single color by id
+// @Tags		   product color
+// @ID			   get-color-by-id
+// @Produce		   json
+// @Security	   JWT
+// @Param		   id	path		int	true	"Color ID"
+// @Success		   200	{object}	response.Response
+// @Router		   /color/{id} [get]
+func (color colorController) getColorHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	id, err := strconv.Atoi(idStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid id.Please enter a valid integer id",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getColorHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	resp := color.colorService.UpdateColor(id, request)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getColorHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "invalid id.Please enter a valid integer id").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("invalid color_id",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getColorHandler"),
+			zap.String("requestID", requestID),
+			zap.String("colorID", idStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// // deleteColorHandler godoc
-// // @Summary		      Delete color
-// // @Description	      Delete color by id
-// // @Tags			  product color
-// // @ID				  delete-color-by-id
-// // @Produce		      json
-// // @Security		  JWT
-// // @Param			  id	path		int	true	"Color ID"
-// // @Success		      200	{object}	response.Response
-// // @Router			  /color/delete/{id} [delete]
-// func (color colorController) deleteColorHandler(c *gin.Context) {
-// 	idStr := c.Param("id")
+	resp, err := color.colorService.GetColor(ctx, id, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	id, err := strconv.Atoi(idStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid id.Please enter a valid integer id",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	c.JSON(resp.StatusCode, resp)
+}
 
-// 	resp := color.colorService.DeleteColor(id)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+// updateColorHandler godoc
+// @Summary		      Update color
+// @Description	      Update color by id
+// @Tags			  product color
+// @ID				  update-color-by-id
+// @Accept			  json
+// @Produce		      json
+// @Security		  JWT
+// @Param			  id		path		int					true	"Color ID"
+// @Param			  color	body		utils.UpdateColor	true	"Update color data"
+// @Success		      200		{object}	response.Response
+// @Router			  /color/update/{id} [put]
+func (color colorController) updateColorHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	c.JSON(resp.Status, resp)
-// }
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateColorHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateColorHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	var request utils.UpdateColor
+	if err := c.ShouldBindJSON(&request); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to decode json request body").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("bad request",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateColorHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "invalid id.Please enter a valid integer id").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("invalid color_id",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateColorHandler"),
+			zap.String("requestID", requestID),
+			zap.String("colorID", idStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	resp, err := color.colorService.UpdateColor(ctx, id, request, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(resp.StatusCode, resp)
+}
+
+// deleteColorHandler godoc
+// @Summary		      Delete color
+// @Description	      Delete color by id
+// @Tags			  product color
+// @ID				  delete-color-by-id
+// @Produce		      json
+// @Security		  JWT
+// @Param			  id	path		int	true	"Color ID"
+// @Success		      200	{object}	response.Response
+// @Router			  /color/delete/{id} [delete]
+func (color colorController) deleteColorHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteColorHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		color.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteColorHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "invalid id.Please enter a valid integer id").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		return
+	}
+
+	resp, err := color.colorService.DeleteColor(ctx, id, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(resp.StatusCode, resp)
+}

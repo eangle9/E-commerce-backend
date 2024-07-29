@@ -45,8 +45,16 @@ func (p productItemService) GetProductItems(ctx context.Context, request request
 		return response.Response{}, err
 	}
 
+	data := response.Data{
+		MetaData: response.PaginationQuery{
+			Page:    page,
+			PerPage: perPage,
+		},
+		Data: productItems,
+	}
+
 	response := response.Response{
-		Data:       productItems,
+		Data:       data,
 		StatusCode: http.StatusOK,
 		Message:    fmt.Sprintf("you have get single product item "),
 	}

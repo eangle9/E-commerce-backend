@@ -203,8 +203,8 @@ func (p ProductItemRequest) Validate() error {
 }
 
 type ProductImageRequest struct {
-	ProductItemId int `json:"product_item_id" validate:"required"`
-	File          *multipart.FileHeader
+	ProductItemId int                   `json:"product_item_id"`
+	File          *multipart.FileHeader `json:"file"`
 }
 
 func (p ProductImageRequest) Validate() error {

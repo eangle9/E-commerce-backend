@@ -18,19 +18,19 @@ type UserService interface {
 }
 
 type ProductCategoryService interface {
-	CreateProductCategory(request request.ProductCategoryRequest) response.Response
-	GetProductCategories() response.Response
-	GetProductCategory(id int) response.Response
-	UpdateProductCategory(id int, category utils.UpdateCategory) response.Response
-	DeleteProductCategory(id int) response.Response
+	CreateProductCategory(ctx context.Context, request request.ProductCategoryRequest, requestID string) (response.Response, error)
+	GetProductCategories(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetProductCategory(ctx context.Context, id int, requestID string) (response.Response, error)
+	UpdateProductCategory(ctx context.Context, id int, category utils.UpdateCategory, requestID string) (response.Response, error)
+	DeleteProductCategory(ctx context.Context, id int, requestID string) (response.Response, error)
 }
 
 type ColorService interface {
-	CreateColor(request request.ColorRequest) response.Response
-	GetColors() response.Response
-	GetColor(id int) response.Response
-	UpdateColor(id int, color utils.UpdateColor) response.Response
-	DeleteColor(id int) response.Response
+	CreateColor(ctx context.Context, request request.ColorRequest, requestID string) (response.Response, error)
+	GetColors(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetColor(ctx context.Context, id int, requestID string) (response.Response, error)
+	UpdateColor(ctx context.Context, id int, color utils.UpdateColor, requestID string) (response.Response, error)
+	DeleteColor(ctx context.Context, id int, requestID string) (response.Response, error)
 }
 
 type ProductService interface {
@@ -50,7 +50,7 @@ type ProductItemService interface {
 }
 
 type ProductImageService interface {
-	CreateProductImage(request request.ProductImageRequest) response.Response
+	CreateProductImage(ctx context.Context, request request.ProductImageRequest, requestID string) (response.Response, error)
 }
 
 type CartService interface {

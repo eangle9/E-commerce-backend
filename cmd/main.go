@@ -7,6 +7,9 @@ import (
 	"Eccomerce-website/internal/core/common/utils/logger"
 	"Eccomerce-website/internal/core/common/utils/redis"
 	"Eccomerce-website/internal/core/server"
+	categoryservice "Eccomerce-website/internal/core/service/category_service"
+	colorservice "Eccomerce-website/internal/core/service/color_service"
+	productimageservice "Eccomerce-website/internal/core/service/product_image_service"
 	productitemservice "Eccomerce-website/internal/core/service/product_item_service"
 	productservice "Eccomerce-website/internal/core/service/product_service"
 	productsservice "Eccomerce-website/internal/core/service/products_service"
@@ -107,17 +110,17 @@ func main() {
 	userController := controller.NewUserController(engine, userService, handlerLogger)
 	userController.InitRouter(middlewareLogger)
 
-	// // product category service
-	// categoryRepo := repository.NewProductCategoryRepository(db)
-	// categoryService := categoryservice.NewProductCategoryRepository(categoryRepo)
-	// categoryController := controller.NewCategoryController(engine, categoryService)
-	// categoryController.InitCategoryRouter()
+	// product category service
+	categoryRepo := repository.NewProductCategoryRepository(db, databaseLogger)
+	categoryService := categoryservice.NewProductCategoryRepository(categoryRepo, serviceLogger)
+	categoryController := controller.NewCategoryController(engine, categoryService, handlerLogger)
+	categoryController.InitCategoryRouter(middlewareLogger)
 
-	// // color service
-	// colorRepo := repository.NewColorRepository(db)
-	// colorService := colorservice.NewColorService(colorRepo)
-	// colorController := controller.NewColorController(engine, colorService)
-	// colorController.InitColorRouter()
+	// color service
+	colorRepo := repository.NewColorRepository(db, databaseLogger)
+	colorService := colorservice.NewColorService(colorRepo, serviceLogger)
+	colorController := controller.NewColorController(engine, colorService, handlerLogger)
+	colorController.InitColorRouter(middlewareLogger)
 
 	// product service
 	productRepo := repository.NewProductRepository(db, databaseLogger)
@@ -131,11 +134,11 @@ func main() {
 	productItemController := controller.NewProductItemController(engine, productItemService, handlerLogger)
 	productItemController.InitProductItemRouter(middlewareLogger)
 
-	// // product image service
-	// imageRepo := repository.NewProductImageRepository(db)
-	// productImageService := productimageservice.NewProductImageService(imageRepo)
-	// productImageController := controller.NewProductImageController(engine, productImageService)
-	// productImageController.InitProductImageRouter()
+	// product image service
+	imageRepo := repository.NewProductImageRepository(db, databaseLogger)
+	productImageService := productimageservice.NewProductImageService(imageRepo, serviceLogger)
+	productImageController := controller.NewProductImageController(engine, productImageService, handlerLogger)
+	productImageController.InitProductImageRouter(middlewareLogger)
 
 	// // cart service
 	// cartRepo := repository.NewCartRepository(db)

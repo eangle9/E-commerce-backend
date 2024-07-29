@@ -2,26 +2,22 @@ package categoryservice
 
 import (
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 	"fmt"
 	"net/http"
 )
 
-func (p productCategoryService) GetProductCategory(id int) response.Response {
-	category, err := p.categoryRepo.GetProductCategoryById(id)
+func (p productCategoryService) GetProductCategory(ctx context.Context, id int, requestID string) (response.Response, error) {
+	category, err := p.categoryRepo.GetProductCategoryById(ctx, id, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusNotFound,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
-	errorMessage := fmt.Sprintf("you have get product category with category_id %d", id)
 	response := response.Response{
 		Data:       category,
 		StatusCode: http.StatusOK,
-		Message:    errorMessage,
+		Message:    fmt.Sprintf("you have get product category with category_id %d", id),
 	}
 
-	return response
+	return response, nil
 }
