@@ -2,24 +2,21 @@ package productitemservice
 
 import (
 	"Eccomerce-website/internal/core/model/response"
+	"context"
+	"fmt"
 	"net/http"
 )
 
-func (p productItemService) DeleteProductItem(id int) response.Response {
-	resp, status, _, err := p.itemRepo.DeleteProductItemById(id)
+func (p productItemService) DeleteProductItem(ctx context.Context, id int, requestID string) (response.Response, error) {
+	err := p.itemRepo.DeleteProductItemById(ctx, id, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusInternalServerError,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
-		Data:       resp,
-		StatusCode: status,
-		Message:    "you have get all list of colors",
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("productItem with product_item_id %d deleted successfully", id),
 	}
 
-	return response
+	return response, nil
 }

@@ -2,18 +2,15 @@ package productsservice
 
 import (
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 	"fmt"
 	"net/http"
 )
 
-func (p productsService) GetSingleProduct(id int) response.Response {
-	singleProduct, err := p.productsRepo.GetSingleProductById(id)
+func (p productsService) GetSingleProduct(ctx context.Context, id int, requestID string) (response.Response, error) {
+	singleProduct, err := p.productsRepo.GetSingleProductById(ctx, id, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusNotFound,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
@@ -22,5 +19,5 @@ func (p productsService) GetSingleProduct(id int) response.Response {
 		Message:    fmt.Sprintf("you have get the product with product_id '%d'", id),
 	}
 
-	return response
+	return response, nil
 }

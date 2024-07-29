@@ -187,12 +187,12 @@ func (p ProductRequest) Validate() error {
 }
 
 type ProductItemRequest struct {
-	ProductID  int             `json:"product_id"`
-	ColorID    *int            `json:"color_id"`
-	Price      decimal.Decimal `json:"price"`
-	Discount   decimal.Decimal `json:"discount"`
-	QtyInStock *int            `json:"qty_in_stock"`
-	File       *multipart.FileHeader
+	ProductID  int                   `json:"product_id"`
+	ColorID    *int                  `json:"color_id"`
+	Price      decimal.Decimal       `json:"price"`
+	Discount   decimal.Decimal       `json:"discount"`
+	QtyInStock int                   `json:"qty_in_stock"`
+	File       *multipart.FileHeader `form:"file" binding:"required"`
 }
 
 func (p ProductItemRequest) Validate() error {
@@ -225,6 +225,7 @@ func (c CartRequest) Validate() error {
 	)
 }
 
+// size request
 type SizeRequest struct {
 	ProductItemID int             `json:"product_item_id"`
 	SizeName      string          `json:"size_name"`
@@ -242,6 +243,14 @@ func (s SizeRequest) Validate() error {
 	)
 }
 
+type UpdateSize struct {
+	SizeName   string          `json:"size_name"`
+	Price      decimal.Decimal `json:"price"`
+	Discount   decimal.Decimal `json:"discount"`
+	QtyInStock int             `json:"qty_in_stock"`
+}
+
+// review request
 type ReviewRequest struct {
 	UserID    int    `json:"user_id"`
 	ProductID int    `json:"product_id"`

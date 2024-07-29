@@ -223,7 +223,7 @@ func (u userRepository) GetUserById(ctx context.Context, id int, requestID strin
 			zap.String("function", "GetUserById"),
 			zap.String("requestID", requestID),
 			zap.String("query", "SELECT user_id, username, email, password, first_name,last_name, phone_number, profile_picture, email_verified, role, created_at, updated_at FROM users WHERE user_id = ? AND deleted_at IS NULL"),
-			zap.Int("id", id),
+			zap.Int("userID", id),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
 		)
@@ -237,6 +237,36 @@ func (u userRepository) EditUserById(ctx context.Context, id int, user request.U
 	var updateFields []string
 	var values []interface{}
 	DB := u.db.GetDB()
+
+	var count int
+	if err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE user_id = ?", id).Scan(&count); err != nil {
+		errorResponse := entity.UnableToRead.Wrap(err, "unable to read COUNT in the query").WithProperty(entity.StatusCode, 500)
+		u.dbLogger.Error("failed to read 'COUNT' in the query",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "EditUserById"),
+			zap.String("requestID", requestID),
+			zap.String("query", "SELECT COUNT(*) FROM users WHERE user_id = ?"),
+			zap.Int("userID", id),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return utils.User{}, errorResponse
+	}
+	if count == 0 {
+		err := fmt.Errorf("user with user_id '%d' not found", id)
+		errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get user by id").WithProperty(entity.StatusCode, 404)
+		u.dbLogger.Error("user not found",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "EditUserById"),
+			zap.String("requestID", requestID),
+			zap.Int("userID", id),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return utils.User{}, errorResponse
+	}
 
 	if user.Username != "" {
 		updateFields = append(updateFields, "username = ?")
@@ -270,7 +300,7 @@ func (u userRepository) EditUserById(ctx context.Context, id int, user request.U
 	if len(updateFields) == 0 {
 		err := errors.New("failed to update user:No fields provided for update.Please provide at least one field to update")
 		errorResponse := entity.BadRequest.Wrap(err, "updated fields are required").WithProperty(entity.StatusCode, 400)
-		u.dbLogger.Error("the updata fields are empty",
+		u.dbLogger.Error("the updateUser fields are empty",
 			zap.String("timestamp", time.Now().Format(time.RFC3339)),
 			zap.String("layer", "databaseLayer"),
 			zap.String("function", "EditUserById"),
@@ -296,7 +326,7 @@ func (u userRepository) EditUserById(ctx context.Context, id int, user request.U
 			zap.String("layer", "databaseLayer"),
 			zap.String("function", "EditUserById"),
 			zap.String("requestID", requestID),
-			zap.String("query", "UPDATE users SET %s WHERE user_id = ? AND deleted_at IS NULL"),
+			zap.String("query", "fmt.Sprintf('UPDATE users SET %s WHERE user_id = ? AND deleted_at IS NULL', strings.Join(updateFields, ', '))"),
 			zap.Any("requestData", user),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
@@ -324,7 +354,7 @@ func (u userRepository) DeleteUserById(ctx context.Context, id int, requestID st
 			zap.String("function", "DeleteUserById"),
 			zap.String("requestID", requestID),
 			zap.String("query", "SELECT COUNT(*) FROM users WHERE user_id = ?"),
-			zap.Int("id", id),
+			zap.Int("userID", id),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
 		)
@@ -338,7 +368,7 @@ func (u userRepository) DeleteUserById(ctx context.Context, id int, requestID st
 			zap.String("layer", "databaseLayer"),
 			zap.String("function", "DeleteUserById"),
 			zap.String("requestID", requestID),
-			zap.Int("id", id),
+			zap.Int("userID", id),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
 		)
@@ -354,7 +384,7 @@ func (u userRepository) DeleteUserById(ctx context.Context, id int, requestID st
 			zap.String("function", "DeleteUserById"),
 			zap.String("requestID", requestID),
 			zap.String("query", "DELETE FROM users WHERE user_id = ?"),
-			zap.Int("id", id),
+			zap.Int("userID", id),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
 		)

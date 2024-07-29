@@ -3,18 +3,15 @@ package productitemservice
 import (
 	"Eccomerce-website/internal/core/common/utils"
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 	"fmt"
 	"net/http"
 )
 
-func (p productItemService) UpdateProductItem(id int, item utils.UpdateProductItem) response.Response {
-	productItem, err := p.itemRepo.EditProductItemById(id, item)
+func (p productItemService) UpdateProductItem(ctx context.Context, id int, item utils.UpdateProductItem, requestID string) (response.Response, error) {
+	productItem, err := p.itemRepo.EditProductItemById(ctx, id, item, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
@@ -23,5 +20,5 @@ func (p productItemService) UpdateProductItem(id int, item utils.UpdateProductIt
 		Message:    fmt.Sprintf("you have successfully updated product item with product_item_id '%d'", id),
 	}
 
-	return response
+	return response, nil
 }

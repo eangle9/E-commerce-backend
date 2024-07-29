@@ -7,6 +7,11 @@ import (
 	"Eccomerce-website/internal/core/common/utils/logger"
 	"Eccomerce-website/internal/core/common/utils/redis"
 	"Eccomerce-website/internal/core/server"
+	productitemservice "Eccomerce-website/internal/core/service/product_item_service"
+	productservice "Eccomerce-website/internal/core/service/product_service"
+	productsservice "Eccomerce-website/internal/core/service/products_service"
+	reviewservice "Eccomerce-website/internal/core/service/review_service"
+	sizeservice "Eccomerce-website/internal/core/service/size_service"
 	service "Eccomerce-website/internal/core/service/user_service"
 
 	"Eccomerce-website/internal/infra/config"
@@ -114,17 +119,17 @@ func main() {
 	// colorController := controller.NewColorController(engine, colorService)
 	// colorController.InitColorRouter()
 
-	// // product service
-	// productRepo := repository.NewProductRepository(db)
-	// productService := productservice.NewProductService(productRepo)
-	// productController := controller.NewProductController(engine, productService)
-	// productController.InitProductRouter()
+	// product service
+	productRepo := repository.NewProductRepository(db, databaseLogger)
+	productService := productservice.NewProductService(productRepo, serviceLogger)
+	productController := controller.NewProductController(engine, productService, handlerLogger)
+	productController.InitProductRouter(middlewareLogger)
 
-	// // product item service
-	// productItemRepo := repository.NewProductItemRepository(db)
-	// productItemService := productitemservice.NewProductItemService(productItemRepo)
-	// productItemController := controller.NewProductItemController(engine, productItemService)
-	// productItemController.InitProductItemRouter()
+	// product item service
+	productItemRepo := repository.NewProductItemRepository(db, databaseLogger)
+	productItemService := productitemservice.NewProductItemService(productItemRepo, serviceLogger)
+	productItemController := controller.NewProductItemController(engine, productItemService, handlerLogger)
+	productItemController.InitProductItemRouter(middlewareLogger)
 
 	// // product image service
 	// imageRepo := repository.NewProductImageRepository(db)
@@ -138,23 +143,23 @@ func main() {
 	// cartController := controller.NewCartController(engine, cartService)
 	// cartController.InitCartRouter()
 
-	// // size service
-	// sizeRepo := repository.NewSizeRepository(db)
-	// sizeService := sizeservice.NewSizeService(sizeRepo)
-	// sizeController := controller.NewSizeController(engine, sizeService)
-	// sizeController.InitSizeRouter()
+	// size service
+	sizeRepo := repository.NewSizeRepository(db, databaseLogger)
+	sizeService := sizeservice.NewSizeService(sizeRepo, serviceLogger)
+	sizeController := controller.NewSizeController(engine, sizeService, handlerLogger)
+	sizeController.InitSizeRouter(middlewareLogger)
 
-	// // products service
-	// productsRepo := repository.NewProductsRepository(db)
-	// productsService := productsservice.NewProductsService(productsRepo)
-	// productsController := controller.NewProductsController(engine, productsService)
-	// productsController.InitProductsRouter()
+	// products service
+	productsRepo := repository.NewProductsRepository(db, databaseLogger)
+	productsService := productsservice.NewProductsService(productsRepo, serviceLogger)
+	productsController := controller.NewProductsController(engine, productsService, handlerLogger)
+	productsController.InitProductsRouter()
 
-	// // review service
-	// reviewRepo := repository.NewReviewRepository(db)
-	// reviewService := reviewservice.NewReviewService(reviewRepo)
-	// reviewController := controller.NewReviewController(engine, reviewService)
-	// reviewController.InitReviewRouter()
+	// review service
+	reviewRepo := repository.NewReviewRepository(db, databaseLogger)
+	reviewService := reviewservice.NewReviewService(reviewRepo, serviceLogger)
+	reviewController := controller.NewReviewController(engine, reviewService, handlerLogger)
+	reviewController.InitReviewRouter()
 
 	if err := server.Start(instance, *httpServerConfig); err != nil {
 		log.Fatal(err)

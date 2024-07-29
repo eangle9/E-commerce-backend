@@ -1,21 +1,22 @@
 package sizeservice
 
-import "Eccomerce-website/internal/core/model/response"
+import (
+	"Eccomerce-website/internal/core/model/response"
+	"context"
+	"fmt"
+	"net/http"
+)
 
-func (s sizeService) DeleteSize(id int) response.Response {
-	resp, status, _, err := s.sizeRepo.DeleteSizeById(id)
+func (s sizeService) DeleteSize(ctx context.Context, id int, requestID string) (response.Response, error) {
+	err := s.sizeRepo.DeleteSizeById(ctx, id, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: status,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
-		StatusCode: status,
-		Message:    resp,
+		StatusCode: http.StatusOK,
+		Message:    fmt.Sprintf("size with size_id %d deleted successfully", id),
 	}
 
-	return response
+	return response, nil
 }

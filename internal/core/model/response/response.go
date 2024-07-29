@@ -1,11 +1,23 @@
 package response
 
-import "github.com/shopspring/decimal"
+import (
+	"github.com/shopspring/decimal"
+)
 
 type Response struct {
 	Data       interface{} `json:"data"`
 	StatusCode int         `json:"statusCode"`
 	Message    interface{} `json:"message"`
+}
+
+type Data struct {
+	MetaData PaginationQuery `json:"meta_data"`
+	Data     any             `json:"data"`
+}
+
+type PaginationQuery struct {
+	Page    int `json:"page"`
+	PerPage int `json:"per_page"`
 }
 
 type CartResponse struct {

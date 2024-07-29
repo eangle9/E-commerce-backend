@@ -1,20 +1,17 @@
 package sizeservice
 
 import (
-	"Eccomerce-website/internal/core/common/utils"
+	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
+	"context"
 	"fmt"
 	"net/http"
 )
 
-func (s sizeService) UpdateSize(id int, size utils.UpdateSize) response.Response {
-	updatedSize, err := s.sizeRepo.EditSizeById(id, size)
+func (s sizeService) UpdateSize(ctx context.Context, id int, size request.UpdateSize, requestID string) (response.Response, error) {
+	updatedSize, err := s.sizeRepo.EditSizeById(ctx, id, size, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusInternalServerError,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
@@ -23,5 +20,5 @@ func (s sizeService) UpdateSize(id int, size utils.UpdateSize) response.Response
 		Message:    fmt.Sprintf("you have successfully updated the size with size_id '%d'", id),
 	}
 
-	return response
+	return response, nil
 }

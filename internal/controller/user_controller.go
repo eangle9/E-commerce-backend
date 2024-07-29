@@ -70,8 +70,6 @@ func (u UserController) registerHandler(c *gin.Context) {
 			zap.String("layer", "handlerLayer"),
 			zap.String("function", "registerHandler"),
 			zap.String("context_key", "requestID"),
-			zap.String("clientIP", c.ClientIP()),
-			zap.String("userAgent", c.Request.UserAgent()),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
 		)
@@ -87,8 +85,6 @@ func (u UserController) registerHandler(c *gin.Context) {
 			zap.String("timestamp", time.Now().Format(time.RFC3339)),
 			zap.String("layer", "handlerLayer"),
 			zap.String("function", "registerHandler"),
-			zap.String("clientIP", c.ClientIP()),
-			zap.String("userAgent", c.Request.UserAgent()),
 			zap.Error(errorResponse),
 			zap.Stack("stacktrace"),
 		)

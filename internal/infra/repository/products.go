@@ -2,27 +2,48 @@ package repository
 
 import (
 	"Eccomerce-website/internal/core/common/utils"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/port/repository"
+	"context"
 	"fmt"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 type productsRepository struct {
-	db repository.Database
+	db       repository.Database
+	dbLogger *zap.Logger
 }
 
-func NewProductsRepository(db repository.Database) repository.GetProducts {
+func NewProductsRepository(db repository.Database, dbLogger *zap.Logger) repository.GetProducts {
 	return &productsRepository{
-		db: db,
+		db:       db,
+		dbLogger: dbLogger,
 	}
 }
 
-func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
+func (p productsRepository) ListAllProducts(ctx context.Context, offset, limit int, requestID string) ([]utils.ListProduct, error) {
 	DB := p.db.GetDB()
 	var products []utils.ListProduct
 
-	productRows, err := DB.Query("SELECT product_id, product_name FROM product")
+	query := "SELECT product_id, product_name FROM product ORDER BY product_id LIMIT ? OFFSET ?"
+	productRows, err := DB.QueryContext(ctx, query, limit, offset)
 	if err != nil {
-		return nil, err
+		errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get list of products").WithProperty(entity.StatusCode, 404)
+		p.dbLogger.Error("products not found",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "ListAllProducts"),
+			zap.String("requestID", requestID),
+			zap.String("query", query),
+			zap.Int("limit", limit),
+			zap.Int("offset", offset),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+
+		return nil, errorResponse
 	}
 
 	defer productRows.Close()
@@ -31,7 +52,17 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		var singleProduct utils.ListProduct
 
 		if err := productRows.Scan(&singleProduct.ProductID, &singleProduct.Name); err != nil {
-			return nil, err
+			errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ListProduct data").WithProperty(entity.StatusCode, 500)
+			p.dbLogger.Error("unable to scan list product data",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "ListAllProducts"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+
+			return nil, errorResponse
 		}
 
 		query := `
@@ -49,9 +80,21 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		WHERE 
 		    p.product_id = ?
 		 `
-		productItemRows, err := DB.Query(query, singleProduct.ProductID)
+		productItemRows, err := DB.QueryContext(ctx, query, singleProduct.ProductID)
 		if err != nil {
-			return nil, err
+			errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get list of product items by product_id").WithProperty(entity.StatusCode, 404)
+			p.dbLogger.Error("product items not found",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "ListAllProducts"),
+				zap.String("requestID", requestID),
+				zap.String("query", query),
+				zap.Int("productID", singleProduct.ProductID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+
+			return nil, errorResponse
 		}
 
 		defer productItemRows.Close()
@@ -60,31 +103,70 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		for productItemRows.Next() {
 			var productItem utils.ProductVariant
 			if err := productItemRows.Scan(&productItem.ItemID, &productItem.Color, &productItem.ImageUrl, &productItem.Price, &productItem.Discount, &productItem.InStock); err != nil {
-				return nil, err
+				errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ProductVariant data").WithProperty(entity.StatusCode, 500)
+				p.dbLogger.Error("unable to scan ProductVariant data",
+					zap.String("timestamp", time.Now().Format(time.RFC3339)),
+					zap.String("layer", "databaseLayer"),
+					zap.String("function", "ListAllProducts"),
+					zap.String("requestID", requestID),
+					zap.Error(errorResponse),
+					zap.Stack("stacktrace"),
+				)
+
+				return nil, errorResponse
 			}
 
 			sizeQuery := `SELECT size_id, size_name, price, discount, qty_in_stock FROM size WHERE product_item_id = ?`
-			sizeRows, err := DB.Query(sizeQuery, productItem.ItemID)
+			sizeRows, err := DB.QueryContext(ctx, sizeQuery, productItem.ItemID)
 			if err != nil {
-				return nil, err
+				errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get list of product sizes  by product_item_id").WithProperty(entity.StatusCode, 404)
+				p.dbLogger.Error("product sizes not found",
+					zap.String("timestamp", time.Now().Format(time.RFC3339)),
+					zap.String("layer", "databaseLayer"),
+					zap.String("function", "ListAllProducts"),
+					zap.String("requestID", requestID),
+					zap.String("query", query),
+					zap.Int("productItemID", productItem.ItemID),
+					zap.Error(errorResponse),
+					zap.Stack("stacktrace"),
+				)
+
+				return nil, errorResponse
 			}
 			defer sizeRows.Close()
 
 			var sizes []utils.ProductSize
-			// var productSizes []string
 			for sizeRows.Next() {
 				var size utils.ProductSize
 
 				if err := sizeRows.Scan(&size.ID, &size.Size, &size.Price, &size.Discount, &size.QtyInStock); err != nil {
-					return nil, err
+					errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ProductVariant data").WithProperty(entity.StatusCode, 500)
+					p.dbLogger.Error("unable to scan ProductVariant data",
+						zap.String("timestamp", time.Now().Format(time.RFC3339)),
+						zap.String("layer", "databaseLayer"),
+						zap.String("function", "ListAllProducts"),
+						zap.String("requestID", requestID),
+						zap.Error(errorResponse),
+						zap.Stack("stacktrace"),
+					)
+
+					return nil, errorResponse
 				}
 
 				sizes = append(sizes, size)
-				// productSizes = append(productSizes, size.SizeName)
 			}
 
 			if err := sizeRows.Err(); err != nil {
-				return nil, err
+				errorResponse := entity.UnableToRead.Wrap(err, "db sizeRows error").WithProperty(entity.StatusCode, 500)
+				p.dbLogger.Error("db sizeRows error",
+					zap.String("timestamp", time.Now().Format(time.RFC3339)),
+					zap.String("layer", "databaseLayer"),
+					zap.String("function", "ListAllProducts"),
+					zap.String("requestID", requestID),
+					zap.Error(errorResponse),
+					zap.Stack("stacktrace"),
+				)
+				return nil, errorResponse
 			}
 
 			productItem.Sizes = sizes
@@ -92,7 +174,16 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		}
 
 		if err := productItemRows.Err(); err != nil {
-			return nil, err
+			errorResponse := entity.UnableToRead.Wrap(err, "db productItemRows error").WithProperty(entity.StatusCode, 500)
+			p.dbLogger.Error("db productItemRows error",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "ListAllProducts"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+			return nil, errorResponse
 		}
 
 		singleProduct.ProductItems = productItems
@@ -119,9 +210,21 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
         r.product_id = ?
 `
 
-		reviewRows, err := DB.Query(reviewQuery, singleProduct.ProductID)
+		reviewRows, err := DB.QueryContext(ctx, reviewQuery, singleProduct.ProductID)
 		if err != nil {
-			return nil, err
+			errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get list of product reviews  by product_id").WithProperty(entity.StatusCode, 404)
+			p.dbLogger.Error("product reviews not found",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "ListAllProducts"),
+				zap.String("requestID", requestID),
+				zap.String("query", reviewQuery),
+				zap.Int("productID", singleProduct.ProductID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+
+			return nil, errorResponse
 		}
 
 		defer reviewRows.Close()
@@ -130,13 +233,32 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 		for reviewRows.Next() {
 			var review utils.ProductReview
 			if err := reviewRows.Scan(&review.ReviewID, &review.UserID, &review.ProductID, &review.Rating, &review.Comment, &review.CreatedAt, &review.User.ID, &review.User.Username, &review.User.FirstName, &review.User.LastName, &review.User.Email, &review.User.PhoneNumber); err != nil {
-				return nil, err
+				errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ProductReview data").WithProperty(entity.StatusCode, 500)
+				p.dbLogger.Error("unable to scan ProductReview data",
+					zap.String("timestamp", time.Now().Format(time.RFC3339)),
+					zap.String("layer", "databaseLayer"),
+					zap.String("function", "ListAllProducts"),
+					zap.String("requestID", requestID),
+					zap.Error(errorResponse),
+					zap.Stack("stacktrace"),
+				)
+
+				return nil, errorResponse
 			}
 			reviews = append(reviews, review)
 		}
 
 		if err := reviewRows.Err(); err != nil {
-			return nil, err
+			errorResponse := entity.UnableToRead.Wrap(err, "db reviewRows error").WithProperty(entity.StatusCode, 500)
+			p.dbLogger.Error("db reviewRows error",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "ListAllProducts"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+			return nil, errorResponse
 		}
 
 		singleProduct.Reviews = reviews
@@ -147,7 +269,7 @@ func (p productsRepository) ListAllProducts() ([]utils.ListProduct, error) {
 	return products, nil
 }
 
-func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, error) {
+func (p productsRepository) GetSingleProductById(ctx context.Context, id int, requestID string) (utils.SingleProduct, error) {
 	DB := p.db.GetDB()
 	var singleProduct utils.SingleProduct
 
@@ -166,8 +288,21 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 	  p.product_id = ?    
 	`
 
-	if err := DB.QueryRow(prouductQuery, id).Scan(&singleProduct.ProductID, &singleProduct.Category, &singleProduct.Brand, &singleProduct.Name, &singleProduct.Description); err != nil {
-		return utils.SingleProduct{}, err
+	if err := DB.QueryRowContext(ctx, prouductQuery, id).Scan(&singleProduct.ProductID, &singleProduct.Category, &singleProduct.Brand, &singleProduct.Name, &singleProduct.Description); err != nil {
+		errMessage := fmt.Sprintf("products with product_id '%d' not found", id)
+		errorResponse := entity.UnableToFindResource.Wrap(err, errMessage).WithProperty(entity.StatusCode, 404)
+		p.dbLogger.Error("product not found",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "GetSingleProductById"),
+			zap.String("requestID", requestID),
+			zap.String("query", prouductQuery),
+			zap.Int("productID", id),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+
+		return utils.SingleProduct{}, errorResponse
 	}
 
 	itemQuery := `
@@ -186,9 +321,23 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 	  p.product_id = ?    
 	`
 
-	itemRows, err := DB.Query(itemQuery, id)
+	itemRows, err := DB.QueryContext(ctx, itemQuery, id)
 	if err != nil {
-		return utils.SingleProduct{}, err
+		errMessage := fmt.Sprintf("product items with product_id '%d' not found", id)
+		errorResponse := entity.UnableToFindResource.Wrap(err, errMessage).WithProperty(entity.StatusCode, 404)
+		p.dbLogger.Error("product items not found",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "GetSingleProductById"),
+			zap.String("requestID", requestID),
+			zap.String("query", itemQuery),
+			zap.Int("productID", id),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+
+		return utils.SingleProduct{}, errorResponse
+
 	}
 
 	defer itemRows.Close()
@@ -198,43 +347,86 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 		var item utils.ItemVariant
 
 		if err := itemRows.Scan(&item.ItemID, &item.Color, &item.ImageUrl, &item.Price, &item.Discount, &item.InStock); err != nil {
-			return utils.SingleProduct{}, err
+			errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ItemVariant data").WithProperty(entity.StatusCode, 500)
+			p.dbLogger.Error("unable to scan ItemVariant data",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "GetSingleProductById"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+			return utils.SingleProduct{}, errorResponse
 		}
-		fmt.Println("item: ", item)
-
-		// items = append(items, item)
 
 		sizeQuery := `SELECT size_id, size_name, price, discount, qty_in_stock FROM size WHERE product_item_id = ?`
-		sizeRows, err := DB.Query(sizeQuery, item.ItemID)
+		sizeRows, err := DB.QueryContext(ctx, sizeQuery, item.ItemID)
 		if err != nil {
-			return utils.SingleProduct{}, err
+			errMessage := fmt.Sprintf("product item with product_item_id '%d' not found", item.ItemID)
+			errorResponse := entity.UnableToFindResource.Wrap(err, errMessage).WithProperty(entity.StatusCode, 404)
+			p.dbLogger.Error("product items not found",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "GetSingleProductById"),
+				zap.String("requestID", requestID),
+				zap.String("query", sizeQuery),
+				zap.Int("productItemID", item.ItemID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+
+			return utils.SingleProduct{}, errorResponse
 		}
 		defer sizeRows.Close()
 
 		var sizes []utils.ProductSize
-		// var productSizes []string
 		for sizeRows.Next() {
 			var size utils.ProductSize
 
 			if err := sizeRows.Scan(&size.ID, &size.Size, &size.Price, &size.Discount, &size.QtyInStock); err != nil {
-				return utils.SingleProduct{}, err
+				errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ProductSize data").WithProperty(entity.StatusCode, 500)
+				p.dbLogger.Error("unable to scan ProductSize data",
+					zap.String("timestamp", time.Now().Format(time.RFC3339)),
+					zap.String("layer", "databaseLayer"),
+					zap.String("function", "GetSingleProductById"),
+					zap.String("requestID", requestID),
+					zap.Error(errorResponse),
+					zap.Stack("stacktrace"),
+				)
+				return utils.SingleProduct{}, errorResponse
 			}
 
 			sizes = append(sizes, size)
-			// productSizes = append(productSizes, size.SizeName)
 		}
 
 		if err := sizeRows.Err(); err != nil {
-			return utils.SingleProduct{}, err
+			errorResponse := entity.UnableToRead.Wrap(err, "db sizeRows error").WithProperty(entity.StatusCode, 500)
+			p.dbLogger.Error("db sizeRows error",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "GetSingleProductById"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+			return utils.SingleProduct{}, errorResponse
 		}
 
 		item.Sizes = sizes
 		items = append(items, item)
-		// singleProduct.Sizes = productSizes
 	}
 
 	if err := itemRows.Err(); err != nil {
-		return utils.SingleProduct{}, err
+		errorResponse := entity.UnableToRead.Wrap(err, "db itemRows error").WithProperty(entity.StatusCode, 500)
+		p.dbLogger.Error("db itemRows error",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "GetSingleProductById"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return utils.SingleProduct{}, errorResponse
 	}
 
 	singleProduct.Items = items
@@ -260,9 +452,22 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 	WHERE
 	  r.product_id = ?    
 	`
-	reviewRows, err := DB.Query(reviewQuery, id)
+	reviewRows, err := DB.QueryContext(ctx, reviewQuery, id)
 	if err != nil {
-		return utils.SingleProduct{}, err
+		errMessage := fmt.Sprintf("product review with product_id '%d' not found", id)
+		errorResponse := entity.UnableToFindResource.Wrap(err, errMessage).WithProperty(entity.StatusCode, 404)
+		p.dbLogger.Error("product review not found",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "GetSingleProductById"),
+			zap.String("requestID", requestID),
+			zap.String("query", reviewQuery),
+			zap.Int("productID", id),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+
+		return utils.SingleProduct{}, errorResponse
 	}
 
 	defer reviewRows.Close()
@@ -271,13 +476,31 @@ func (p productsRepository) GetSingleProductById(id int) (utils.SingleProduct, e
 	for reviewRows.Next() {
 		var review utils.ProductReview
 		if err := reviewRows.Scan(&review.ReviewID, &review.UserID, &review.ProductID, &review.Rating, &review.Comment, &review.CreatedAt, &review.User.ID, &review.User.Username, &review.User.FirstName, &review.User.LastName, &review.User.Email, &review.User.PhoneNumber); err != nil {
-			return utils.SingleProduct{}, err
+			errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ProductReview data").WithProperty(entity.StatusCode, 500)
+			p.dbLogger.Error("unable to scan ProductReview data",
+				zap.String("timestamp", time.Now().Format(time.RFC3339)),
+				zap.String("layer", "databaseLayer"),
+				zap.String("function", "GetSingleProductById"),
+				zap.String("requestID", requestID),
+				zap.Error(errorResponse),
+				zap.Stack("stacktrace"),
+			)
+			return utils.SingleProduct{}, errorResponse
 		}
 		reviews = append(reviews, review)
 	}
 
 	if err := reviewRows.Err(); err != nil {
-		return utils.SingleProduct{}, err
+		errorResponse := entity.UnableToRead.Wrap(err, "db reviewRows error").WithProperty(entity.StatusCode, 500)
+		p.dbLogger.Error("db reviewRows error",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "databaseLayer"),
+			zap.String("function", "GetSingleProductById"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return utils.SingleProduct{}, errorResponse
 	}
 
 	singleProduct.Reviews = reviews

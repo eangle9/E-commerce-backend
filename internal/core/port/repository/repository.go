@@ -35,19 +35,19 @@ type ColorRepository interface {
 }
 
 type ProductRepository interface {
-	InsertProduct(product dto.Product) (*int, error)
-	ListProducts() ([]utils.Product, error)
-	GetProductById(id int) (utils.Product, error)
-	EditProductById(id int, product utils.UpdateProduct) (utils.Product, error)
-	DeleteProductById(id int) (string, int, string, error)
+	InsertProduct(ctx context.Context, product dto.Product, requestID string) (*int, error)
+	ListProducts(ctx context.Context, offset, limit int, requestID string) ([]utils.Product, error)
+	GetProductById(ctx context.Context, id int, requestID string) (utils.Product, error)
+	EditProductById(ctx context.Context, id int, product utils.UpdateProduct, requestID string) (utils.Product, error)
+	DeleteProductById(ctx context.Context, id int, requestID string) error
 }
 
 type ProductItemRepository interface {
-	InsertProductItem(item request.ProductItemRequest) (*int, string, error)
-	ListProductItems() ([]utils.ProductItem, error)
-	GetProductItemById(id int) (utils.ProductItem, error)
-	EditProductItemById(id int, productItem utils.UpdateProductItem) (utils.ProductItem, error)
-	DeleteProductItemById(id int) (string, int, string, error)
+	InsertProductItem(ctx context.Context, item request.ProductItemRequest, requestID string) (*int, string, error)
+	ListProductItems(ctx context.Context, offset, limit int, requestID string) ([]utils.ProductItem, error)
+	GetProductItemById(ctx context.Context, id int, requestID string) (utils.ProductItem, error)
+	EditProductItemById(ctx context.Context, id int, productItem utils.UpdateProductItem, requestID string) (utils.ProductItem, error)
+	DeleteProductItemById(ctx context.Context, id int, requestID string) error
 }
 
 type ProductImageRepository interface {
@@ -59,19 +59,19 @@ type CartRepository interface {
 }
 
 type SizeRepository interface {
-	InsertSize(size dto.Size) (*int, error)
-	ListSizes() ([]utils.Size, error)
-	GetSizeById(id int) (utils.Size, error)
-	EditSizeById(id int, size utils.UpdateSize) (utils.Size, error)
-	DeleteSizeById(id int) (string, int, string, error)
+	InsertSize(ctx context.Context, size dto.Size, requestID string) (*int, error)
+	ListSizes(ctx context.Context, offset, limit int, requestID string) ([]utils.Size, error)
+	GetSizeById(ctx context.Context, id int, requestID string) (utils.Size, error)
+	EditSizeById(ctx context.Context, id int, size request.UpdateSize, requestID string) (utils.Size, error)
+	DeleteSizeById(ctx context.Context, id int, requestID string) error
 }
 
 type GetProducts interface {
-	ListAllProducts() ([]utils.ListProduct, error)
-	GetSingleProductById(id int) (utils.SingleProduct, error)
+	ListAllProducts(ctx context.Context, offset, limit int, requestID string) ([]utils.ListProduct, error)
+	GetSingleProductById(ctx context.Context, id int, requestID string) (utils.SingleProduct, error)
 }
 
 type ReviewRepository interface {
-	InsertReview(review dto.Review) (*int, error)
-	ListReviews() ([]utils.Review, error)
+	InsertReview(ctx context.Context, review dto.Review, requestID string) (*int, error)
+	ListReviews(ctx context.Context, offset, limit int, requestID string) ([]utils.Review, error)
 }

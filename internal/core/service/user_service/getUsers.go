@@ -44,8 +44,16 @@ func (u userService) GetUsers(ctx context.Context, request request.PaginationQue
 		return response.Response{}, err
 	}
 
+	data := response.Data{
+		MetaData: response.PaginationQuery{
+			Page:    page,
+			PerPage: perPage,
+		},
+		Data: users,
+	}
+
 	response := response.Response{
-		Data:       users,
+		Data:       data,
 		StatusCode: http.StatusOK,
 		Message:    "you have get list of users successfully!",
 	}

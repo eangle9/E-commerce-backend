@@ -34,19 +34,19 @@ type ColorService interface {
 }
 
 type ProductService interface {
-	CreateProduct(request request.ProductRequest) response.Response
-	GetProducts() response.Response
-	GetProduct(id int) response.Response
-	UpdateProduct(id int, product utils.UpdateProduct) response.Response
-	DeleteProduct(id int) response.Response
+	CreateProduct(ctx context.Context, request request.ProductRequest, requestID string) (response.Response, error)
+	GetProducts(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetProduct(ctx context.Context, id int, requestID string) (response.Response, error)
+	UpdateProduct(ctx context.Context, id int, product utils.UpdateProduct, requestID string) (response.Response, error)
+	DeleteProduct(ctx context.Context, id int, requestID string) (response.Response, error)
 }
 
 type ProductItemService interface {
-	CreateProductItem(request request.ProductItemRequest) response.Response
-	GetProductItems() response.Response
-	GetProductItem(id int) response.Response
-	UpdateProductItem(id int, productItem utils.UpdateProductItem) response.Response
-	DeleteProductItem(id int) response.Response
+	CreateProductItem(ctx context.Context, request request.ProductItemRequest, requestID string) (response.Response, error)
+	GetProductItems(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetProductItem(ctx context.Context, id int, requestID string) (response.Response, error)
+	UpdateProductItem(ctx context.Context, id int, productItem utils.UpdateProductItem, requestID string) (response.Response, error)
+	DeleteProductItem(ctx context.Context, id int, requestID string) (response.Response, error)
 }
 
 type ProductImageService interface {
@@ -58,19 +58,19 @@ type CartService interface {
 }
 
 type SizeService interface {
-	CreateSize(request request.SizeRequest) response.Response
-	GetSizes() response.Response
-	GetSize(id int) response.Response
-	UpdateSize(id int, size utils.UpdateSize) response.Response
-	DeleteSize(id int) response.Response
+	CreateSize(ctx context.Context, request request.SizeRequest, requestID string) (response.Response, error)
+	GetSizes(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetSize(ctx context.Context, id int, requestID string) (response.Response, error)
+	UpdateSize(ctx context.Context, id int, size request.UpdateSize, requestID string) (response.Response, error)
+	DeleteSize(ctx context.Context, id int, requestID string) (response.Response, error)
 }
 
 type GetProductService interface {
-	GetAllProducts() response.Response
-	GetSingleProduct(id int) response.Response
+	GetAllProducts(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetSingleProduct(ctx context.Context, id int, requestID string) (response.Response, error)
 }
 
 type ReviewService interface {
-	CreateReview(request request.ReviewRequest) response.Response
-	GetReviews() response.Response
+	CreateReview(ctx context.Context, request request.ReviewRequest, requestID string) (response.Response, error)
+	GetReviews(ctx context.Context, paginationQuery request.PaginationQuery, requestID string) (response.Response, error)
 }

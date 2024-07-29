@@ -17,6 +17,7 @@ var (
 	ApplicationErrorNamespace    = errorx.NewNamespace("ApplicationError")
 	DatabaseErrorNamespace       = errorx.NewNamespace("DatabaseError")
 	AuthenticationErrorNamespace = errorx.NewNamespace("AuthenticationError")
+	FileErrorNamespace           = errorx.NewNamespace("FileError")
 )
 
 var (
@@ -39,6 +40,12 @@ var (
 	InvalidCredentials = AuthenticationErrorNamespace.NewType("InvalidCredentials")
 	Unauthorized       = AuthenticationErrorNamespace.NewType("Unauthorized")
 	AuthInternalError  = AuthenticationErrorNamespace.NewType("InternalError")
+)
+
+var (
+	FileTooLarge     = FileErrorNamespace.NewType("FileTooLarge")
+	InvalidExtension = FileErrorNamespace.NewType("InvalidFileExtension")
+	UnableToSaveFile = FileErrorNamespace.NewType("UnableToSave")
 )
 
 var (

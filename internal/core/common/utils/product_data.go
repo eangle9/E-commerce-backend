@@ -43,7 +43,6 @@ type ProductItem struct {
 	ID         int             `json:"product_item_id"`
 	ProductID  int             `json:"product_id"`
 	ColorID    *int            `json:"color_id"`
-	SizeID     *int            `json:"size_id"`
 	ImageUrl   string          `json:"image_url"`
 	Price      decimal.Decimal `json:"price"`
 	Discount   decimal.Decimal `json:"discount"`
@@ -54,14 +53,12 @@ type ProductItem struct {
 }
 
 type UpdateProductItem struct {
-	ProductID  *int            `json:"product_id"`
-	ColorID    *int            `json:"color_id"`
-	SizeID     *int            `json:"size_id"`
-	Price      decimal.Decimal `json:"price"`
-	Discount   decimal.Decimal `json:"discount"`
-	QtyInStock *int            `json:"qty_in_stock"`
-	// ImageUrl   *string         `json:"image_url"`
-	File *multipart.FileHeader
+	ProductID  *int                  `json:"product_id"`
+	ColorID    *int                  `json:"color_id"`
+	Price      decimal.Decimal       `json:"price"`
+	Discount   decimal.Decimal       `json:"discount"`
+	QtyInStock *int                  `json:"qty_in_stock"`
+	File       *multipart.FileHeader `form:"file"`
 }
 
 type ListProduct struct {

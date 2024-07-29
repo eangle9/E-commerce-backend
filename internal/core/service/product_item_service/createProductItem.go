@@ -2,42 +2,48 @@ package productitemservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
-	"fmt"
+	"context"
+	"errors"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 type productItemService struct {
-	itemRepo repository.ProductItemRepository
+	itemRepo      repository.ProductItemRepository
+	serviceLogger *zap.Logger
 }
 
-func NewProductItemService(itemRepo repository.ProductItemRepository) service.ProductItemService {
+func NewProductItemService(itemRepo repository.ProductItemRepository, serviceLogger *zap.Logger) service.ProductItemService {
 	return &productItemService{
-		itemRepo: itemRepo,
+		itemRepo:      itemRepo,
+		serviceLogger: serviceLogger,
 	}
 }
 
-func (p productItemService) CreateProductItem(request request.ProductItemRequest) response.Response {
-	fmt.Printf("request: %+v", request)
+func (p productItemService) CreateProductItem(ctx context.Context, request request.ProductItemRequest, requestID string) (response.Response, error) {
+	if request.Discount.LessThan(request.Price) {
+		err := errors.New("discount can't be less than product price")
+		errorResponse := entity.AppInternalError.Wrap(err, "discount must be greater than or equal to price").WithProperty(entity.StatusCode, 500)
+		return response.Response{}, errorResponse
+	}
+
 	productItem := dto.ProductItem{
-		ProductID: request.ProductID,
-		ColorID:   request.ColorID,
-		// SizeID:     request.SizeID,
+		ProductID:  request.ProductID,
+		ColorID:    request.ColorID,
 		Price:      request.Price,
 		Discount:   request.Discount,
 		QtyInStock: request.QtyInStock,
 	}
 
-	id, image_url, err := p.itemRepo.InsertProductItem(request)
+	id, image_url, err := p.itemRepo.InsertProductItem(ctx, request, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusConflict,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	productItem.ID = *id
@@ -49,5 +55,5 @@ func (p productItemService) CreateProductItem(request request.ProductItemRequest
 		Message:    "Congratulation, product item created successfully!",
 	}
 
-	return response
+	return response, nil
 }

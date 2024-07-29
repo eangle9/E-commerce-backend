@@ -1,565 +1,543 @@
 package controller
 
-// import (
-// 	"Eccomerce-website/internal/core/common/router"
-// 	"Eccomerce-website/internal/core/common/utils"
-// 	errorcode "Eccomerce-website/internal/core/entity/error_code"
-// 	"Eccomerce-website/internal/core/model/request"
-// 	"Eccomerce-website/internal/core/model/response"
-// 	"Eccomerce-website/internal/core/port/service"
-// 	"Eccomerce-website/internal/infra/middleware"
-// 	"fmt"
-// 	"net/http"
-// 	"path/filepath"
-// 	"strconv"
+import (
+	"Eccomerce-website/internal/core/common/router"
+	"Eccomerce-website/internal/core/common/utils"
+	validationdata "Eccomerce-website/internal/core/common/utils/validationData"
+	"Eccomerce-website/internal/core/entity"
+	"Eccomerce-website/internal/core/model/request"
+	"Eccomerce-website/internal/core/port/service"
+	"Eccomerce-website/internal/infra/middleware"
+	"errors"
+	"net/http"
+	"strconv"
+	"time"
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/shopspring/decimal"
-// )
+	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
+	"go.uber.org/zap"
+)
 
-// type productItemController struct {
-// 	engine             *router.Router
-// 	productItemService service.ProductItemService
-// }
+type productItemController struct {
+	engine             *router.Router
+	productItemService service.ProductItemService
+	handlerLogger      *zap.Logger
+}
 
-// func NewProductItemController(engine *router.Router, productItemService service.ProductItemService) *productItemController {
-// 	return &productItemController{
-// 		engine:             engine,
-// 		productItemService: productItemService,
-// 	}
-// }
+func NewProductItemController(engine *router.Router, productItemService service.ProductItemService, handlerLogger *zap.Logger) *productItemController {
+	return &productItemController{
+		engine:             engine,
+		productItemService: productItemService,
+		handlerLogger:      handlerLogger,
+	}
+}
 
-// func (p *productItemController) InitProductItemRouter() {
-// 	protectedMiddleware := middleware.ProtectedMiddleware
-// 	r := p.engine
-// 	api := r.Group("/item")
+func (p *productItemController) InitProductItemRouter(middlewareLogger *zap.Logger) {
+	protectedMiddleware := middleware.ProtectedMiddleware
+	r := p.engine
+	api := r.Group("/item")
 
-// 	api.POST("/create", protectedMiddleware(), p.createProductItemHandler)
-// 	api.GET("/list", p.getProductItemsHandler)
-// 	api.GET("/:id", p.getProductItemHandler)
-// 	api.PUT("/update/:id", protectedMiddleware(), p.updateProductItemHandler)
-// 	api.DELETE("/delete/:id", protectedMiddleware(), p.deleteProductItemHandler)
-// }
+	api.POST("/create", protectedMiddleware(middlewareLogger), p.createProductItemHandler)
+	api.GET("/list", p.getProductItemsHandler)
+	api.GET("/:id", p.getProductItemHandler)
+	api.PUT("/update/:id", protectedMiddleware(middlewareLogger), p.updateProductItemHandler)
+	api.DELETE("/delete/:id", protectedMiddleware(middlewareLogger), p.deleteProductItemHandler)
+}
 
-// // createProductItemHandler godoc
-// // @Summary		            Create product item
-// // @Description	            insert a new product item
-// // @Tags			        product item
-// // @ID				        create-product-item
-// // @Accept			        mpfd
-// // @Produce		            json
-// // @Security		        JWT
-// // @Param                   product_id      formData    int     true    "Product ID"
-// // @Param			        color_id		formData	int		false	"Color ID"
-// // @Param			        price			formData	number	true	"Price"
-// // @Param                   discount        formData    number  false   "Discount"
-// // @Param			        qty_in_stock	formData	int		false	"Quantity in stock"
-// // @Param			        image			formData	file	true	"Product Image File"
-// // @Success		            201				{object}	response.Response
-// // @Router			        /item/create [post]
-// func (p productItemController) createProductItemHandler(c *gin.Context) {
-// 	var request request.ProductItemRequest
+// createProductItemHandler godoc
+// @Summary		            Create product item
+// @Description	            insert a new product item
+// @Tags			        product item
+// @ID				        create-product-item
+// @Accept			        mpfd
+// @Produce		            json
+// @Security		        JWT
+// @Param                   product_id      formData    int     true    "Product ID"
+// @Param			        color_id		formData	int		false	"Color ID"
+// @Param			        price			formData	number	true	"Price"
+// @Param                   discount        formData    number  false   "Discount"
+// @Param			        qty_in_stock	formData	int		false	"Quantity in stock"
+// @Param			        file			formData	file	true	"Product Image File"
+// @Success		            201				{object}	response.Response
+// @Router			        /item/create [post]
+func (p productItemController) createProductItemHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	// if err := c.ShouldBind(&request); err != nil {
-// 	// 	errorResponse := response.Response{
-// 	// 		Status:       http.StatusBadRequest,
-// 	// 		ErrorType:    errorcode.InvalidRequest,
-// 	// 		ErrorMessage: "failed to decode json & formData request body",
-// 	// 	}
-// 	// 	c.Set("error", errorResponse)
-// 	// 	return
-// 	// }
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	productIdStr := c.PostForm("product_id")
-// 	if productIdStr == "" {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "product_id is required",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "createProductItemHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	productId, err := strconv.Atoi(productIdStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid product_id.Please enter a valid integer id",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
-// 	request.ProductID = productId
+	var request request.ProductItemRequest
 
-// 	colorIdStr := c.PostForm("color_id")
+	productIdStr := c.PostForm("product_id")
+	if productIdStr == "" {
+		err := errors.New("product_id can't be blank")
+		errorResponse := entity.BadRequest.Wrap(err, "product_id is required").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		return
+	}
 
-// 	if colorIdStr != "" {
-// 		colorId, err := strconv.Atoi(colorIdStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid color_id.Please enter a valid integer id",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
-// 		request.ColorID = &colorId
-// 	}
+	productId, err := strconv.Atoi(productIdStr)
+	if err != nil {
+		errorResponse := entity.AppInternalError.Wrap(err, "invalid product_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		return
+	}
+	request.ProductID = productId
 
-// 	// sizeIdStr := c.PostForm("size_id")
+	colorIdStr := c.PostForm("color_id")
+	if colorIdStr != "" {
+		colorId, err := strconv.Atoi(colorIdStr)
+		if err != nil {
+			errorResponse := entity.AppInternalError.Wrap(err, "invalid color_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
+		request.ColorID = &colorId
+	}
 
-// 	// if sizeIdStr != "" {
-// 	// 	sizeId, err := strconv.Atoi(sizeIdStr)
-// 	// 	if err != nil {
-// 	// 		errorResponse := response.Response{
-// 	// 			Status:       http.StatusBadRequest,
-// 	// 			ErrorType:    errorcode.InvalidRequest,
-// 	// 			ErrorMessage: "invalid size_id.Please enter a valid integer id",
-// 	// 		}
-// 	// 		c.Set("error", errorResponse)
-// 	// 		return
-// 	// 	}
-// 	// 	request.SizeID = &sizeId
-// 	// }
+	priceStr := c.PostForm("price")
+	if priceStr == "" {
+		err := errors.New("price can't be blank")
+		errorResponse := entity.BadRequest.Wrap(err, "price is required").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		return
+	}
 
-// 	priceStr := c.PostForm("price")
-// 	if priceStr == "" {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "price is required",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	price, err := decimal.NewFromString(priceStr)
+	if err != nil {
+		errorResponse := entity.AppInternalError.Wrap(err, "error converting string to decimal").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		return
+	}
+	request.Price = price
 
-// 	price, err := decimal.NewFromString(priceStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: fmt.Errorf("error converting string to decimal: %v", err),
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	discountStr := c.PostForm("discount")
+	if discountStr != "" {
+		discount, err := decimal.NewFromString(discountStr)
+		if err != nil {
+			errorResponse := entity.AppInternalError.Wrap(err, "error converting string to decimal").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
+		request.Discount = discount
+	}
 
-// 	// price := decimal.NewFromInt(int64(priceInt))
-// 	request.Price = price
+	qtyInStockStr := c.PostForm("qty_in_stock")
+	if qtyInStockStr == "" {
+		err := errors.New("qtyInStock can't be blank")
+		errorResponse := entity.BadRequest.Wrap(err, "qtyInStock is required").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		return
+	}
 
-// 	discountStr := c.PostForm("discount")
+	qtyInStock, err := strconv.Atoi(qtyInStockStr)
+	if err != nil {
+		errorResponse := entity.AppInternalError.Wrap(err, "invalid qty_in_stock.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		return
+	}
+	request.QtyInStock = qtyInStock
 
-// 	if discountStr != "" {
-// 		discount, err := decimal.NewFromString(discountStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: fmt.Errorf("error converting string to decimal: %v", err),
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
+	file, err := c.FormFile("file")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			errorResponse := entity.BadRequest.Wrap(err, "no file was uploaded").WithProperty(entity.StatusCode, 400)
+			c.Error(errorResponse)
+			return
+		} else {
+			errorResponse := entity.UnableToRead.Wrap(err, "unable to retrieve file from the upload file").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
+	}
 
-// 		// discount := decimal.NewFromInt(int64(discountInt))
-// 		request.Discount = discount
-// 	}
+	if err := validationdata.ImageFileValidation(file); err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	if request.Discount.LessThan(request.Price) {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "discount can't be less than product price",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
+		errorResponse := entity.UnableToSaveFile.Wrap(err, "failed to save image file").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		return
+	}
 
-// 	qtyInStockStr := c.PostForm("qty_in_stock")
+	request.File = file
 
-// 	if qtyInStockStr != "" {
-// 		qtyInStock, err := strconv.Atoi(qtyInStockStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid qty_in_stock.Please enter a valid integer id",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
-// 		request.QtyInStock = &qtyInStock
-// 	}
+	resp, err := p.productItemService.CreateProductItem(ctx, request, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	file, err := c.FormFile("image")
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "unable to retrieve file from the upload file",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
-// 	// file := request.File
+	c.JSON(resp.StatusCode, resp)
+}
 
-// 	maxUploadSize := 8 * 1024 * 1024
-// 	fileSize := file.Size
+// getProductItemsHandler godoc
+// @Summary		          list product items
+// @Description	          Retrieves a list of product items
+// @Tags			      product item
+// @ID				      list-product-item
+// @Produce		          json
+// @Success		          200	{object}	response.Response
+// @Router			      /item/list [get]
+func (p productItemController) getProductItemsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	if fileSize > int64(maxUploadSize) {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusRequestEntityTooLarge,
-// 			ErrorType:    "FILE_TOO_LARGE",
-// 			ErrorMessage: "the uploaded product image is too large.Please upload a size less than 8MB",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getProductItemsHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	validExt := map[string]bool{
-// 		".jpeg": true,
-// 		".png":  true,
-// 		".jpg":  true,
-// 		".gif":  true,
-// 		".webp": true,
-// 		".svg":  true,
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getProductItemsHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	ext := filepath.Ext(file.Filename)
-// 	if !validExt[ext] {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusUnsupportedMediaType,
-// 			ErrorType:    "INVALID_FILE_EXTENSION",
-// 			ErrorMessage: "invalid file extension",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	var paginationQuery request.PaginationQuery
+	if err := c.ShouldBindQuery(&paginationQuery); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to bind pagination query to struct").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("failed to bind pagination query",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getProductItemsHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusInternalServerError,
-// 			ErrorType:    errorcode.InternalError,
-// 			ErrorMessage: "failed to save image",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	resp, err := p.productItemService.GetProductItems(ctx, paginationQuery, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	request.File = file
+	c.JSON(resp.StatusCode, resp)
+}
 
-// 	// if err := c.ShouldBindJSON(&request); err != nil {
-// 	// 	errorResponse := response.Response{
-// 	// 		Status:       http.StatusBadRequest,
-// 	// 		ErrorType:    errorcode.InvalidRequest,
-// 	// 		ErrorMessage: "failed to decode json request body",
-// 	// 	}
-// 	// 	c.Set("error", errorResponse)
-// 	// 	return
-// 	// }
+// getProductItemHandler godoc
+// @Summary		         Get product item
+// @Description	         Get single product item by id
+// @Tags			     product item
+// @ID				     product-item-by-id
+// @Produce		         json
+// @Param			     id	path		int	true	"Product item id"
+// @Success		         200	        {object}	response.Response
+// @Router		      	 /item/{id} [get]
+func (p productItemController) getProductItemHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	// validate := c.MustGet("validator").(*validator.Validate)
-// 	// if err := validate.Struct(request); err != nil {
-// 	// 	errorResponse := response.Response{
-// 	// 		Status:       http.StatusBadRequest,
-// 	// 		ErrorType:    errorcode.ValidationError,
-// 	// 		ErrorMessage: customizer7.DecryptErrors(err),
-// 	// 	}
-// 	// 	c.Set("error", errorResponse)
-// 	// 	return
-// 	// }
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getProductItemHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	resp := p.productItemService.CreateProductItem(request)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getProductItemHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "invalid product_item_id.Please enter a valid interger value").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("invalid product_item_id",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "getProductItemHandler"),
+			zap.String("requestID", requestID),
+			zap.String("productItemID", idStr),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// // getProductItemsHandler godoc
-// //
-// //	@Summary		list product items
-// //	@Description	Retrieves a list of product items
-// //	@Tags			product item
-// //	@ID				list-product-item
-// //	@Produce		json
-// //	@Success		200	{object}	response.Response
-// //	@Router			/item/list [get]
-// func (p productItemController) getProductItemsHandler(c *gin.Context) {
-// 	resp := p.productItemService.GetProductItems()
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	resp, err := p.productItemService.GetProductItem(ctx, id, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
+	c.JSON(resp.StatusCode, resp)
+}
 
-// // getProductItemHandler godoc
-// //
-// //	@Summary		Get product item
-// //	@Description	Get single product item by id
-// //	@Tags			product item
-// //	@ID				product-item-by-id
-// //	@Produce		json
-// //	@Param			id	path		int	true	"Product item id"
-// //	@Success		200	{object}	response.Response
-// //	@Router			/item/{id} [get]
-// func (p productItemController) getProductItemHandler(c *gin.Context) {
-// 	idStr := c.Param("id")
+// updateProductItemHandler godoc
+// @Summary		            Update product item
+// @Description	            Edit product item by id
+// @Tags			        product item
+// @ID				        update-product-item-by-id
+// @Accept			        json
+// @Produce		            json
+// @Security		        JWT
+// @Param			        id		        path		int		true	"Product item id"
+// @Param			        product_id		formData	int		true	"Product ID"
+// @Success		            200		{object}	response.Response
+// @Router			        /item/update/{id} [put]
+func (p productItemController) updateProductItemHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 	id, err := strconv.Atoi(idStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid id.Please enter a valid integer value",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateProductItemHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	resp := p.productItemService.GetProductItem(id)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "updateProductItemHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
+	var request utils.UpdateProductItem
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := entity.AppInternalError.Wrap(err, "invalid id.Please enter a valid integer value").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		return
+	}
 
-// // updateProductItemHandler godoc
-// // @Summary		            Update product item
-// // @Description	            Edit product item by id
-// // @Tags			        product item
-// // @ID				        update-product-item-by-id
-// // @Accept			        json
-// // @Produce		            json
-// // @Security		        JWT
-// // @Param			        id		        path		int		true	"Product item id"
-// // @Param			        product_id		formData	int		true	"Product ID"
-// // @Success		            200		{object}	response.Response
-// // @Router			        /item/update/{id} [put]
-// func (p productItemController) updateProductItemHandler(c *gin.Context) {
-// 	idStr := c.Param("id")
-// 	var request utils.UpdateProductItem
+	productIdStr := c.PostForm("product_id")
+	if productIdStr != "" {
+		productId, err := strconv.Atoi(productIdStr)
+		if err != nil {
+			errorResponse := entity.AppInternalError.Wrap(err, "invalid product_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
+		request.ProductID = &productId
+	}
 
-// 	// if err := c.ShouldBindJSON(&request); err != nil {
-// 	// 	errorResponse := response.Response{
-// 	// 		Status:       http.StatusBadRequest,
-// 	// 		ErrorType:    errorcode.InvalidRequest,
-// 	// 		ErrorMessage: "failed to decode json request body",
-// 	// 	}
-// 	// 	c.Set("error", errorResponse)
-// 	// 	return
-// 	// }
+	colorIdStr := c.PostForm("color_id")
+	if colorIdStr != "" {
+		colorId, err := strconv.Atoi(colorIdStr)
+		if err != nil {
+			errorResponse := entity.AppInternalError.Wrap(err, "invalid color_id.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
+		request.ColorID = &colorId
+	}
 
-// 	id, err := strconv.Atoi(idStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid id.Please enter a valid integer value",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
+	priceStr := c.PostForm("price")
+	if priceStr != "" {
+		priceInt, err := strconv.Atoi(priceStr)
+		if err != nil {
+			errorResponse := entity.AppInternalError.Wrap(err, "invalid price.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
 
-// 	productIdStr := c.PostForm("product_id")
-// 	if productIdStr != "" {
-// 		productId, err := strconv.Atoi(productIdStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid product_id.Please enter a valid integer id",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
-// 		request.ProductID = &productId
-// 	}
+		price := decimal.NewFromInt(int64(priceInt))
+		request.Price = price
+	}
 
-// 	colorIdStr := c.PostForm("color_id")
-// 	if colorIdStr != "" {
-// 		colorId, err := strconv.Atoi(colorIdStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid color_id.Please enter a valid integer id",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
-// 		request.ColorID = &colorId
-// 	}
+	discountStr := c.PostForm("discount")
+	if discountStr != "" {
+		discountInt, err := strconv.Atoi(discountStr)
+		if err != nil {
+			errorResponse := entity.AppInternalError.Wrap(err, "invalid discount.Please enter a valid integer value").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
 
-// 	sizeIdStr := c.PostForm("size_id")
-// 	if sizeIdStr != "" {
-// 		sizeId, err := strconv.Atoi(sizeIdStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid size_id.Please enter a valid integer id",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
-// 		request.SizeID = &sizeId
-// 	}
+		discount := decimal.NewFromInt(int64(discountInt))
+		request.Discount = discount
+	}
 
-// 	priceStr := c.PostForm("price")
-// 	if priceStr != "" {
-// 		priceInt, err := strconv.Atoi(priceStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid price.Please enter a valid integer id",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
+	qtyInStockStr := c.PostForm("qty_in_stock")
+	if qtyInStockStr != "" {
+		qtyInStock, err := strconv.Atoi(qtyInStockStr)
+		if err != nil {
+			errorResponse := entity.AppInternalError.Wrap(err, "invalid qty_in_stock.Please enter a valid integer id").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
+		request.QtyInStock = &qtyInStock
+	}
 
-// 		price := decimal.NewFromInt(int64(priceInt))
-// 		request.Price = price
-// 	}
+	file, err := c.FormFile("file")
+	if err != nil && err != http.ErrMissingFile {
+		errorResponse := entity.AppInternalError.Wrap(err, "unable to retrieve file from the upload file").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		return
+	}
 
-// 	discountStr := c.PostForm("discount")
-// 	if discountStr != "" {
-// 		discountInt, err := strconv.Atoi(discountStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid discount.Please enter a valid integer value",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
+	if err == nil {
+		if err := validationdata.ImageFileValidation(file); err != nil {
+			c.Error(err)
+			return
+		}
 
-// 		discount := decimal.NewFromInt(int64(discountInt))
-// 		request.Discount = discount
-// 	}
+		if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
+			errorResponse := entity.UnableToSaveFile.Wrap(err, "failed to save upload file").WithProperty(entity.StatusCode, 500)
+			c.Error(errorResponse)
+			return
+		}
 
-// 	qtyInStockStr := c.PostForm("qty_in_stock")
-// 	if qtyInStockStr != "" {
-// 		qtyInStock, err := strconv.Atoi(qtyInStockStr)
-// 		if err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusBadRequest,
-// 				ErrorType:    errorcode.InvalidRequest,
-// 				ErrorMessage: "invalid qty_in_stock.Please enter a valid integer id",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
-// 		request.QtyInStock = &qtyInStock
-// 	}
+		request.File = file
+	}
 
-// 	file, err := c.FormFile("image")
-// 	if err != nil && err != http.ErrMissingFile {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "unable to retrieve file from the upload file",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
-// 	if err == nil && file != nil {
-// 		maxUploadSize := 8 * 1024 * 1024
-// 		fileSize := file.Size
+	resp, err := p.productItemService.UpdateProductItem(ctx, id, request, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// 		if fileSize > int64(maxUploadSize) {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusRequestEntityTooLarge,
-// 				ErrorType:    "FILE_TOO_LARGE",
-// 				ErrorMessage: "the uploaded product image is too large.Please upload a size less than 8MB",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
+	c.JSON(resp.StatusCode, resp)
+}
 
-// 		validExt := map[string]bool{
-// 			".jpeg": true,
-// 			".png":  true,
-// 			".jpg":  true,
-// 			".gif":  true,
-// 			".webp": true,
-// 			".svg":  true,
-// 		}
+// deleteProductItemHandler godoc
+// @Summary		            Delete product item
+// @Description	            Delete product item by id
+// @Tags			        product item
+// @ID				        delete-product-item-by-id
+// @Produce		            json
+// @Security		        JWT
+// @Param			        id	   path		   int	true	"Product item id"
+// @Success		            200	   {object}	   response.Response
+// @Router			        /item/delete/{id} [delete]
+func (p productItemController) deleteProductItemHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 
-// 		ext := filepath.Ext(file.Filename)
-// 		if !validExt[ext] {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusUnsupportedMediaType,
-// 				ErrorType:    "INVALID_FILE_EXTENSION",
-// 				ErrorMessage: "invalid file extension",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
+	reqId, exist := c.Get("requestID")
+	if !exist {
+		err := errors.New("unable to get requestID from the gin context")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to get request id").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestID is not exist in the gin context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteProductItemHandler"),
+			zap.String("context_key", "requestID"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 		if err := c.SaveUploadedFile(file, "./internal/core/common/upload/"+file.Filename); err != nil {
-// 			errorResponse := response.Response{
-// 				Status:       http.StatusInternalServerError,
-// 				ErrorType:    errorcode.InternalError,
-// 				ErrorMessage: "failed to save image",
-// 			}
-// 			c.Set("error", errorResponse)
-// 			return
-// 		}
+	requestID, ok := reqId.(string)
+	if !ok {
+		err := errors.New("unable to convert type any to string")
+		errorResponse := entity.AppInternalError.Wrap(err, "failed to convert requestId type any to string").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("requestId is not exist in the context",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "deleteProductItemHandler"),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
 
-// 		request.File = file
-// 	}
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		errorResponse := entity.AppInternalError.Wrap(err, "invalid id.Please enter a valid integer value").WithProperty(entity.StatusCode, 500)
+		c.Error(errorResponse)
+		return
+	}
 
-// 	resp := p.productItemService.UpdateProductItem(id, request)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
+	resp, err := p.productItemService.DeleteProductItem(ctx, id, requestID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 
-// 	c.JSON(resp.Status, resp)
-// }
-
-// // deleteProductItemHandler godoc
-// //
-// //	@Summary		Delete product item
-// //	@Description	Delete product item by id
-// //	@Tags			product item
-// //	@ID				delete-product-item-by-id
-// //	@Produce		json
-// //	@Security		JWT
-// //	@Param			id	path		int	true	"Product item id"
-// //	@Success		200	{object}	response.Response
-// //	@Router			/item/delete/{id} [delete]
-// func (p productItemController) deleteProductItemHandler(c *gin.Context) {
-// 	idStr := c.Param("id")
-
-// 	id, err := strconv.Atoi(idStr)
-// 	if err != nil {
-// 		errorResponse := response.Response{
-// 			Status:       http.StatusBadRequest,
-// 			ErrorType:    errorcode.InvalidRequest,
-// 			ErrorMessage: "invalid id.Please enter a valid integer value",
-// 		}
-// 		c.Set("error", errorResponse)
-// 		return
-// 	}
-
-// 	resp := p.productItemService.DeleteProductItem(id)
-// 	if resp.ErrorType != errorcode.Success {
-// 		c.Set("error", resp)
-// 		return
-// 	}
-
-// 	c.JSON(resp.Status, resp)
-// }
+	c.JSON(resp.StatusCode, resp)
+}

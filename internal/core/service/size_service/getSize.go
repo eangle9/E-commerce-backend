@@ -2,26 +2,15 @@ package sizeservice
 
 import (
 	"Eccomerce-website/internal/core/model/response"
-	"database/sql"
+	"context"
 	"fmt"
 	"net/http"
 )
 
-func (s sizeService) GetSize(id int) response.Response {
-	size, err := s.sizeRepo.GetSizeById(id)
+func (s sizeService) GetSize(ctx context.Context, id int, requestID string) (response.Response, error) {
+	size, err := s.sizeRepo.GetSizeById(ctx, id, requestID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			response := response.Response{
-				StatusCode: http.StatusNotFound,
-				Message:    err.Error(),
-			}
-			return response
-		}
-		response := response.Response{
-			StatusCode: http.StatusInternalServerError,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	response := response.Response{
@@ -30,5 +19,5 @@ func (s sizeService) GetSize(id int) response.Response {
 		Message:    fmt.Sprintf("you have get size with size_id '%d'", id),
 	}
 
-	return response
+	return response, nil
 }

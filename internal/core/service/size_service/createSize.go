@@ -2,25 +2,46 @@ package sizeservice
 
 import (
 	"Eccomerce-website/internal/core/dto"
+	"Eccomerce-website/internal/core/entity"
 	"Eccomerce-website/internal/core/model/request"
 	"Eccomerce-website/internal/core/model/response"
 	"Eccomerce-website/internal/core/port/repository"
 	"Eccomerce-website/internal/core/port/service"
+	"context"
 	"net/http"
 	"strings"
+	"time"
+
+	"go.uber.org/zap"
 )
 
 type sizeService struct {
-	sizeRepo repository.SizeRepository
+	sizeRepo      repository.SizeRepository
+	serviceLogger *zap.Logger
 }
 
-func NewSizeService(sizeRepo repository.SizeRepository) service.SizeService {
+func NewSizeService(sizeRepo repository.SizeRepository, serviceLogger *zap.Logger) service.SizeService {
 	return &sizeService{
-		sizeRepo: sizeRepo,
+		sizeRepo:      sizeRepo,
+		serviceLogger: serviceLogger,
 	}
 }
 
-func (s sizeService) CreateSize(request request.SizeRequest) response.Response {
+func (s sizeService) CreateSize(ctx context.Context, request request.SizeRequest, requestID string) (response.Response, error) {
+	if err := request.Validate(); err != nil {
+		errorResponse := entity.ValidationError.Wrap(err, "createSize validation error").WithProperty(entity.StatusCode, 400)
+		s.serviceLogger.Error("validation error",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "serviceLayer"),
+			zap.String("function", "CreateSize"),
+			zap.String("requestID", requestID),
+			zap.Any("requestData", request),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return response.Response{}, errorResponse
+	}
+
 	request.SizeName = strings.ToUpper(request.SizeName)
 	size := dto.Size{
 		ProductItemID: request.ProductItemID,
@@ -30,13 +51,9 @@ func (s sizeService) CreateSize(request request.SizeRequest) response.Response {
 		QtyInStock:    request.QtyInStock,
 	}
 
-	id, err := s.sizeRepo.InsertSize(size)
+	id, err := s.sizeRepo.InsertSize(ctx, size, requestID)
 	if err != nil {
-		response := response.Response{
-			StatusCode: http.StatusConflict,
-			Message:    err.Error(),
-		}
-		return response
+		return response.Response{}, err
 	}
 
 	size.ID = *id
@@ -44,8 +61,8 @@ func (s sizeService) CreateSize(request request.SizeRequest) response.Response {
 	response := response.Response{
 		Data:       size,
 		StatusCode: http.StatusCreated,
-		Message:    "Congratulation, size for product created successfully!",
+		Message:    "product size created successfully!",
 	}
 
-	return response
+	return response, nil
 }
