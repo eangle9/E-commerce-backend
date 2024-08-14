@@ -18,46 +18,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/cart/add": {
-            "post": {
-                "security": [
-                    {
-                        "JWT": []
-                    }
-                ],
-                "description": "Add product to shopping cart",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cart"
-                ],
-                "summary": "AddToCart",
-                "operationId": "add-to-cart",
-                "parameters": [
-                    {
-                        "description": "Cart item data",
-                        "name": "cart_item",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.CartRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/category/create": {
             "post": {
                 "security": [
@@ -144,6 +104,20 @@ const docTemplate = `{
                 ],
                 "summary": "List category",
                 "operationId": "list-product-category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -322,6 +296,20 @@ const docTemplate = `{
                 ],
                 "summary": "List color",
                 "operationId": "list-color",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -514,7 +502,7 @@ const docTemplate = `{
                     {
                         "type": "file",
                         "description": "Product Image File",
-                        "name": "image",
+                        "name": "file",
                         "in": "formData",
                         "required": true
                     }
@@ -575,6 +563,20 @@ const docTemplate = `{
                 ],
                 "summary": "list product items",
                 "operationId": "list-product-item",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -616,8 +618,37 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Product ID",
                         "name": "product_id",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Color ID",
+                        "name": "color_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Price",
+                        "name": "price",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Discount",
+                        "name": "discount",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Quantity in stock",
+                        "name": "qty_in_stock",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Product Image File",
+                        "name": "file",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -746,6 +777,20 @@ const docTemplate = `{
                 ],
                 "summary": "List products",
                 "operationId": "list-products",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -844,6 +889,20 @@ const docTemplate = `{
                 ],
                 "summary": "List of products",
                 "operationId": "list_of_products",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -935,6 +994,20 @@ const docTemplate = `{
                 ],
                 "summary": "List review",
                 "operationId": "list-review",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1031,6 +1104,20 @@ const docTemplate = `{
                 ],
                 "summary": "List product sizes",
                 "operationId": "list-product-size",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1074,7 +1161,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/utils.UpdateSize"
+                            "$ref": "#/definitions/request.UpdateSize"
                         }
                     }
                 ],
@@ -1169,6 +1256,20 @@ const docTemplate = `{
                 ],
                 "summary": "List users",
                 "operationId": "list-users",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1373,17 +1474,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "request.CartRequest": {
-            "type": "object",
-            "properties": {
-                "product_item_id": {
-                    "type": "integer"
-                },
-                "quantity": {
-                    "type": "integer"
-                }
-            }
-        },
         "request.ColorRequest": {
             "type": "object",
             "properties": {
@@ -1507,6 +1597,23 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateSize": {
+            "type": "object",
+            "properties": {
+                "discount": {
+                    "type": "number"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "qty_in_stock": {
+                    "type": "integer"
+                },
+                "size_name": {
+                    "type": "string"
+                }
+            }
+        },
         "request.UpdateUser": {
             "type": "object",
             "properties": {
@@ -1523,7 +1630,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
-                    "$ref": "#/definitions/request.Phone"
+                    "type": "string"
                 },
                 "profile_picture": {
                     "type": "string"
@@ -1575,23 +1682,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "product_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "utils.UpdateSize": {
-            "type": "object",
-            "properties": {
-                "discount": {
-                    "type": "number"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "qty_in_stock": {
-                    "type": "integer"
-                },
-                "size_name": {
                     "type": "string"
                 }
             }

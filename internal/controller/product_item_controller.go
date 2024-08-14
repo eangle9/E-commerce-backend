@@ -300,6 +300,8 @@ func (p productItemController) createProductItemHandler(c *gin.Context) {
 // @Tags			      product item
 // @ID				      list-product-item
 // @Produce		          json
+// @Param                 page       query   int   false   "Page number"
+// @Param                 per_page   query   int   false   "Number of items per page"
 // @Success		          200	{object}	response.Response
 // @Router			      /item/list [get]
 func (p productItemController) getProductItemsHandler(c *gin.Context) {
@@ -438,7 +440,12 @@ func (p productItemController) getProductItemHandler(c *gin.Context) {
 // @Produce		            json
 // @Security		        JWT
 // @Param			        id		        path		int		true	"Product item id"
-// @Param			        product_id		formData	int		true	"Product ID"
+// @Param                   product_id      formData    int     false    "Product ID"
+// @Param			        color_id		formData	int		false	"Color ID"
+// @Param			        price			formData	number	false	"Price"
+// @Param                   discount        formData    number  false   "Discount"
+// @Param			        qty_in_stock	formData	int		false	"Quantity in stock"
+// @Param			        file			formData	file	false	"Product Image File"
 // @Success		            200		{object}	response.Response
 // @Router			        /item/update/{id} [put]
 func (p productItemController) updateProductItemHandler(c *gin.Context) {

@@ -117,6 +117,8 @@ func (color colorController) createColorHandler(c *gin.Context) {
 // @ID				list-color
 // @Produce		    json
 // @Security		JWT
+// @Param           page       query   int   false   "Page number"
+// @Param           per_page   query   int   false   "Number of items per page"
 // @Success		    200	{object}	response.Response
 // @Router			/color/list [get]
 func (color colorController) listColorHandler(c *gin.Context) {

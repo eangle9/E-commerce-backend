@@ -3,7 +3,6 @@ package request
 import (
 	validationdata "Eccomerce-website/internal/core/common/utils/validationData"
 	"encoding/json"
-	"errors"
 	"mime/multipart"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -25,10 +24,10 @@ type Phone struct {
 }
 
 func (p *Phone) UnmarshalJSON(data []byte) error {
-	if string(data) == "null" || string(data) == `""` {
-		err := errors.New("phoneNumber is required")
-		return err
-	}
+	// if string(data) == "null" || string(data) == `""` {
+	// 	err := errors.New("phoneNumber is required")
+	// 	return err
+	// }
 
 	var phoneNumber string
 	if err := json.Unmarshal(data, &phoneNumber); err != nil {

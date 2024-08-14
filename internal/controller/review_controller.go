@@ -109,6 +109,8 @@ func (r reviewController) createReviewHandler(c *gin.Context) {
 // @Tags			product review
 // @ID				list-review
 // @Produce		    json
+// @Param           page       query   int   false   "Page number"
+// @Param           per_page   query   int   false   "Number of items per page"
 // @Success		    200	{object}	response.Response
 // @Router			/review/list [get]
 func (r reviewController) listReviewHandler(c *gin.Context) {

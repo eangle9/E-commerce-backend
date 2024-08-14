@@ -34,7 +34,7 @@ func (p productsService) GetAllProducts(ctx context.Context, request request.Pag
 	}
 
 	if perPage == 0 {
-		perPage = 5
+		perPage = 30
 	}
 
 	if err := request.Validate(); err != nil {

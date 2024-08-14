@@ -1,11 +1,4 @@
 definitions:
-  request.CartRequest:
-    properties:
-      product_item_id:
-        type: integer
-      quantity:
-        type: integer
-    type: object
   request.ColorRequest:
     properties:
       color_name:
@@ -85,6 +78,17 @@ definitions:
       size_name:
         type: string
     type: object
+  request.UpdateSize:
+    properties:
+      discount:
+        type: number
+      price:
+        type: number
+      qty_in_stock:
+        type: integer
+      size_name:
+        type: string
+    type: object
   request.UpdateUser:
     properties:
       email:
@@ -96,7 +100,7 @@ definitions:
       password:
         type: string
       phone_number:
-        $ref: '#/definitions/request.Phone'
+        type: string
       profile_picture:
         type: string
       username:
@@ -132,17 +136,6 @@ definitions:
       product_name:
         type: string
     type: object
-  utils.UpdateSize:
-    properties:
-      discount:
-        type: number
-      price:
-        type: number
-      qty_in_stock:
-        type: integer
-      size_name:
-        type: string
-    type: object
 host: localhost:9000
 info:
   contact:
@@ -152,31 +145,6 @@ info:
   title: E-commerce API
   version: "1.0"
 paths:
-  /cart/add:
-    post:
-      consumes:
-      - application/json
-      description: Add product to shopping cart
-      operationId: add-to-cart
-      parameters:
-      - description: Cart item data
-        in: body
-        name: cart_item
-        required: true
-        schema:
-          $ref: '#/definitions/request.CartRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-      security:
-      - JWT: []
-      summary: AddToCart
-      tags:
-      - cart
   /category/{id}:
     get:
       description: Get a single product category by id
@@ -248,6 +216,15 @@ paths:
     get:
       description: Retrieves a list of product category
       operationId: list-product-category
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -361,6 +338,15 @@ paths:
     get:
       description: Retrieves a list of colors
       operationId: list-color
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -483,7 +469,7 @@ paths:
         type: integer
       - description: Product Image File
         in: formData
-        name: image
+        name: file
         required: true
         type: file
       produces:
@@ -524,6 +510,15 @@ paths:
     get:
       description: Retrieves a list of product items
       operationId: list-product-item
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -549,8 +544,27 @@ paths:
       - description: Product ID
         in: formData
         name: product_id
-        required: true
         type: integer
+      - description: Color ID
+        in: formData
+        name: color_id
+        type: integer
+      - description: Price
+        in: formData
+        name: price
+        type: number
+      - description: Discount
+        in: formData
+        name: discount
+        type: number
+      - description: Quantity in stock
+        in: formData
+        name: qty_in_stock
+        type: integer
+      - description: Product Image File
+        in: formData
+        name: file
+        type: file
       produces:
       - application/json
       responses:
@@ -634,6 +648,15 @@ paths:
     get:
       description: Retrieves a list of products
       operationId: list-products
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -698,6 +721,15 @@ paths:
     get:
       description: Retrieves a list of products
       operationId: list_of_products
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -737,6 +769,15 @@ paths:
     get:
       description: Retrieves a list of reviews
       operationId: list-review
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -818,6 +859,15 @@ paths:
     get:
       description: Retrieves a list of product sizes
       operationId: list-product-size
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:
@@ -845,7 +895,7 @@ paths:
         name: size
         required: true
         schema:
-          $ref: '#/definitions/utils.UpdateSize'
+          $ref: '#/definitions/request.UpdateSize'
       produces:
       - application/json
       responses:
@@ -906,6 +956,15 @@ paths:
     get:
       description: Retrieves a list of users. Requires authentication with JWT token.
       operationId: list-users
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: per_page
+        type: integer
       produces:
       - application/json
       responses:

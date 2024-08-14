@@ -109,7 +109,7 @@ func (p productRepository) ListProducts(ctx context.Context, offset, limit int, 
 
 	query := `SELECT product_id, category_id, brand, product_name, description, created_at, updated_at, deleted_at FROM product WHERE deleted_at IS NULL ORDER BY product_id LIMIT ? OFFSET ?`
 
-	rows, err := DB.QueryContext(ctx, query)
+	rows, err := DB.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get list of products").WithProperty(entity.StatusCode, 404)
 		p.dbLogger.Error("products not found",

@@ -116,6 +116,8 @@ func (cat categoryController) createProductCategoryHandler(c *gin.Context) {
 // @Tags			          product category
 // @ID				          list-product-category
 // @Produce		              json
+// @Param                     page       query     int    false   "Page number"
+// @Param                     per_page   query     int    false   "Number of items per page"
 // @Success		              200	{object}	response.Response
 // @Router			          /category/list [get]
 func (cat categoryController) listProductCategoryHandler(c *gin.Context) {

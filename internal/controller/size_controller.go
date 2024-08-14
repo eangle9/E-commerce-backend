@@ -132,6 +132,8 @@ func (s sizeController) createSizeHandler(c *gin.Context) {
 // @Tags		   size
 // @ID			   list-product-size
 // @Produce		   json
+// @Param          page        query   int   false   "Page number"
+// @Param          per_page    query   int   false   "Number of items per page"
 // @Success		   200	{object}	response.Response
 // @Router		   /size/list [get]
 func (s sizeController) listSizeHandler(c *gin.Context) {
@@ -270,7 +272,7 @@ func (s sizeController) getSizeHandler(c *gin.Context) {
 // @Produce		     json
 // @Security		 JWT
 // @Param			 id		     path		int					true	"Size ID"
-// @Param			 size	     body		utils.UpdateSize	true	"Update size data"
+// @Param			 size	     body		request.UpdateSize	true	"Update size data"
 // @Success		     200		{object}	response.Response
 // @Router			 /size/update/{id} [put]
 func (s sizeController) updateSizeHandler(c *gin.Context) {

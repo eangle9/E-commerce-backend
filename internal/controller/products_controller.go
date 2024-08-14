@@ -41,6 +41,8 @@ func (p *productsController) InitProductsRouter() {
 // @Tags			   products
 // @ID				   list_of_products
 // @Produce		       json
+// @Param              page       query   int   false   "Page number"
+// @Param              per_page   query   int   false   "Number of items per page"
 // @Success		       200	{object}	response.Response
 // @Router			   /products/list [get]
 func (p productsController) listProductsHandler(c *gin.Context) {
