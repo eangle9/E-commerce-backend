@@ -66,7 +66,7 @@ type SizeService interface {
 }
 
 type GetProductService interface {
-	GetAllProducts(ctx context.Context, request request.PaginationQuery, requestID string) (response.Response, error)
+	GetAllProducts(ctx context.Context, pagination request.PaginationQuery, search request.SearchQuery, category request.CategoryQuery, sort request.SortQuery, requestID string) (response.Response, error)
 	GetSingleProduct(ctx context.Context, id int, requestID string) (response.Response, error)
 }
 
