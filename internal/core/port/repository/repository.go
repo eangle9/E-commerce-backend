@@ -67,7 +67,7 @@ type SizeRepository interface {
 }
 
 type GetProducts interface {
-	ListAllProducts(ctx context.Context, offset, limit int, requestID string) ([]utils.ListProduct, error)
+	ListAllProducts(ctx context.Context, offset, limit int, filters map[string]string, sort string, requestID string) ([]utils.ListProduct, error)
 	GetSingleProductById(ctx context.Context, id int, requestID string) (utils.SingleProduct, error)
 }
 

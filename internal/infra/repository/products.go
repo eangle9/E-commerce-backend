@@ -23,12 +23,61 @@ func NewProductsRepository(db repository.Database, dbLogger *zap.Logger) reposit
 	}
 }
 
-func (p productsRepository) ListAllProducts(ctx context.Context, offset, limit int, requestID string) ([]utils.ListProduct, error) {
+func (p productsRepository) ListAllProducts(ctx context.Context, offset, limit int, filters map[string]string, sort string, requestID string) ([]utils.ListProduct, error) {
 	DB := p.db.GetDB()
 	var products []utils.ListProduct
+	var args []interface{}
 
-	query := "SELECT product_id, product_name FROM product ORDER BY product_id LIMIT ? OFFSET ?"
-	productRows, err := DB.QueryContext(ctx, query, limit, offset)
+	query := "SELECT product_id, product_name FROM product WHERE 1=1"
+
+	// Search Filtering
+	if name, ok := filters["name"]; ok {
+		if name != "" {
+			query += " AND product_name LIKE ?"
+			args = append(args, "%"+name+"%")
+		}
+	}
+
+	// Category Filtering
+	if category, ok := filters["category"]; ok {
+		if category != "" {
+			var categoryId int
+			categoryQuery := "SELECT category_id FROM product_category WHERE name = ?"
+			if err := DB.QueryRowContext(ctx, categoryQuery, category).Scan(&categoryId); err != nil {
+				errorMessage := fmt.Sprintf("categoryID with category_name '%s' not found", category)
+				errorResponse := entity.UnableToFindResource.Wrap(err, errorMessage).WithProperty(entity.StatusCode, 404)
+				p.dbLogger.Error("categoryID not found",
+					zap.String("timestamp", time.Now().Format(time.RFC3339)),
+					zap.String("layer", "databaseLayer"),
+					zap.String("function", "ListAllProducts"),
+					zap.String("requestID", requestID),
+					zap.String("query", categoryQuery),
+					zap.String("categoryName", category),
+					zap.Error(errorResponse),
+					zap.Stack("stacktrace"),
+				)
+
+				return nil, errorResponse
+			}
+
+			query += " AND category_id = ?"
+			args = append(args, categoryId)
+		}
+	}
+
+	// Sorting
+	if sort != "" {
+		query += " ORDER BY " + sort
+	} else {
+		query += " ORDER BY created_at DESC"
+	}
+
+	// Pagination
+	query += " LIMIT ? OFFSET ?"
+	args = append(args, limit, offset)
+
+	// query := "SELECT product_id, product_name FROM product ORDER BY product_id LIMIT ? OFFSET ?"
+	productRows, err := DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		errorResponse := entity.UnableToFindResource.Wrap(err, "failed to get list of products").WithProperty(entity.StatusCode, 404)
 		p.dbLogger.Error("products not found",

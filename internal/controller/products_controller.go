@@ -94,7 +94,52 @@ func (p productsController) listProductsHandler(c *gin.Context) {
 		return
 	}
 
-	resp, err := p.productsService.GetAllProducts(ctx, paginationQuery, requestID)
+	var searchQuery request.SearchQuery
+	if err := c.ShouldBindQuery(&searchQuery); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to bind search query to struct").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("failed to bind search query",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listProductsHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	var categoryQuery request.CategoryQuery
+	if err := c.ShouldBindQuery(&categoryQuery); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to bind category query to struct").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("failed to bind category query",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listProductsHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	var sortQuery request.SortQuery
+	if err := c.ShouldBindQuery(&sortQuery); err != nil {
+		errorResponse := entity.BadRequest.Wrap(err, "failed to bind sort query to struct").WithProperty(entity.StatusCode, 400)
+		c.Error(errorResponse)
+		p.handlerLogger.Error("failed to bind sort query",
+			zap.String("timestamp", time.Now().Format(time.RFC3339)),
+			zap.String("layer", "handlerLayer"),
+			zap.String("function", "listProductsHandler"),
+			zap.String("requestID", requestID),
+			zap.Error(errorResponse),
+			zap.Stack("stacktrace"),
+		)
+		return
+	}
+
+	resp, err := p.productsService.GetAllProducts(ctx, paginationQuery, searchQuery, categoryQuery, sortQuery, requestID)
 	if err != nil {
 		c.Error(err)
 		return

@@ -88,6 +88,18 @@ func (pq PaginationQuery) Validate() error {
 	)
 }
 
+type SearchQuery struct {
+	Name string `form:"name"`
+}
+
+type CategoryQuery struct {
+	Category string `form:"category"`
+}
+
+type SortQuery struct {
+	Sort string `form:"sort"`
+}
+
 type UpdateUser struct {
 	Username       string `json:"username"`
 	Email          string `json:"email"`
