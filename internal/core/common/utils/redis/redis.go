@@ -18,8 +18,9 @@ type RedisClient struct {
 }
 
 func InitRedis(serviceLogger *zap.Logger) *RedisClient {
+	redisAddr := os.Getenv("REDIS_ADDR")
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     redisAddr,
 		Password: "",
 		DB:       0,
 	})

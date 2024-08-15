@@ -20,7 +20,7 @@ func (p productCategoryService) GetProductCategories(ctx context.Context, reques
 	}
 
 	if perPage == 0 {
-		perPage = 5
+		perPage = 30
 	}
 
 	if err := request.Validate(); err != nil {
