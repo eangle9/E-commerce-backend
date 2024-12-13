@@ -37,4 +37,9 @@ func Initiate() {
 	foundation.InitConfig(configName, "config", log)
 	log.Info("config initialized")
 
+	log.Info("initializing state")
+	state := foundation.InitState(log)
+	log.Info("state initialized")
+	fmt.Printf("state: %v", state)
+
 }
