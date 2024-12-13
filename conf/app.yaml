@@ -7,3 +7,5 @@ database:
 
 http_server:
    port: 9000
+
+API_KEY: CHASECK_TEST-6jPr56w2AFvBgYKl2xrFyFCFIB4rynQR

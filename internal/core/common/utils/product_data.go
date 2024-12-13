@@ -64,6 +64,9 @@ type UpdateProductItem struct {
 type ListProduct struct {
 	ProductID    int              `json:"product_id"`
 	Name         string           `json:"name"`
+	Category     string           `json:"category"`
+	Brand        string           `json:"brand"`
+	Description  string           `json:"description"`
 	ProductItems []ProductVariant `json:"product_items"`
 	Reviews      []ProductReview  `json:"reviews"`
 	// Sizes        []ProductSize    `json:"sizes"`

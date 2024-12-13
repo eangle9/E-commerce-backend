@@ -16,6 +16,7 @@ import (
 	reviewservice "Eccomerce-website/internal/core/service/review_service"
 	sizeservice "Eccomerce-website/internal/core/service/size_service"
 	service "Eccomerce-website/internal/core/service/user_service"
+	"Eccomerce-website/platform/chapa"
 
 	"Eccomerce-website/internal/infra/config"
 	"Eccomerce-website/internal/infra/middleware"
@@ -66,6 +67,7 @@ func main() {
 	serviceLogger := appLogger.GetLogger().Named("ServiceLogger")
 	handlerLogger := appLogger.GetLogger().Named("HandlerLogger")
 	middlewareLogger := appLogger.GetLogger().Named("MiddlewareLogger")
+	platformLogger := appLogger.GetLogger().Named("PlatformLogger")
 
 	errorMiddleware := middleware.ErrorMiddleware
 	requestIdMiddleware := middleware.RequestIdMiddleware
@@ -163,6 +165,12 @@ func main() {
 	reviewService := reviewservice.NewReviewService(reviewRepo, serviceLogger)
 	reviewController := controller.NewReviewController(engine, reviewService, handlerLogger)
 	reviewController.InitReviewRouter()
+
+	// chapa service
+	chapaRepo := repository.NewChapaRepository(db, platformLogger)
+	chapaService := chapa.NewChapa(chapaRepo, serviceLogger)
+	chapaController := controller.NewChapaController(engine, chapaService, handlerLogger)
+	chapaController.InitChapaRouter(middlewareLogger)
 
 	if err := server.Start(instance, *httpServerConfig); err != nil {
 		log.Fatal(err)

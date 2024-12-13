@@ -75,3 +75,5 @@ type ReviewRepository interface {
 	InsertReview(ctx context.Context, review dto.Review, requestID string) (*int, error)
 	ListReviews(ctx context.Context, offset, limit int, requestID string) ([]utils.Review, error)
 }
+
+type ChapaRepository interface{}

@@ -28,12 +28,25 @@ func (p productsRepository) ListAllProducts(ctx context.Context, offset, limit i
 	var products []utils.ListProduct
 	var args []interface{}
 
-	query := "SELECT product_id, product_name FROM product WHERE 1=1"
+	query := `
+	SELECT 
+	    p.product_id, 
+		p.product_name, 
+		c.name,
+		p.brand,
+		p.description
+	FROM 
+	   product p
+	LEFT JOIN
+	   product_category c ON p.category_id = c.category_id   
+     WHERE 
+	   1=1
+	   `
 
 	// Search Filtering
 	if name, ok := filters["name"]; ok {
 		if name != "" {
-			query += " AND product_name LIKE ?"
+			query += " AND p.product_name LIKE ?"
 			args = append(args, "%"+name+"%")
 		}
 	}
@@ -60,7 +73,7 @@ func (p productsRepository) ListAllProducts(ctx context.Context, offset, limit i
 				return nil, errorResponse
 			}
 
-			query += " AND category_id = ?"
+			query += " AND p.category_id = ?"
 			args = append(args, categoryId)
 		}
 	}
@@ -69,7 +82,7 @@ func (p productsRepository) ListAllProducts(ctx context.Context, offset, limit i
 	if sort != "" {
 		query += " ORDER BY " + sort
 	} else {
-		query += " ORDER BY created_at DESC"
+		query += " ORDER BY p.created_at DESC"
 	}
 
 	// Pagination
@@ -100,7 +113,7 @@ func (p productsRepository) ListAllProducts(ctx context.Context, offset, limit i
 	for productRows.Next() {
 		var singleProduct utils.ListProduct
 
-		if err := productRows.Scan(&singleProduct.ProductID, &singleProduct.Name); err != nil {
+		if err := productRows.Scan(&singleProduct.ProductID, &singleProduct.Name, &singleProduct.Category, &singleProduct.Brand, &singleProduct.Description); err != nil {
 			errorResponse := entity.UnableToRead.Wrap(err, "failed to scan ListProduct data").WithProperty(entity.StatusCode, 500)
 			p.dbLogger.Error("unable to scan list product data",
 				zap.String("timestamp", time.Now().Format(time.RFC3339)),
