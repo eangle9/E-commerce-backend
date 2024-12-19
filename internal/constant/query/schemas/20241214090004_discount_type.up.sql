@@ -1,0 +1,1 @@
+CREATE TYPE discount_type AS ENUM ('PERCENT', 'FLAT');

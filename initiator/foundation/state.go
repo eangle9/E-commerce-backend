@@ -1,14 +1,14 @@
 package foundation
 
 import (
-	"Eccomerce-website/internal_app/constant"
-	"Eccomerce-website/internal_app/constant/errors"
-	"Eccomerce-website/internal_app/constant/state"
+	"Eccomerce-website/internal/constant"
+	"Eccomerce-website/internal/constant/errors"
+	"Eccomerce-website/internal/constant/state"
 	"Eccomerce-website/platform/asset"
 	"context"
-	"log"
 	"time"
 
+	"github.com/eangle9/log"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -23,7 +23,7 @@ type State struct {
 	RedisConfig      state.RedisConfig
 }
 
-func InitState(logger *zap.Logger) State {
+func InitState(logger log.Logger) State {
 	authDomains := state.AuthDomains{
 		Merchant: state.Domain{
 			ID:   viper.GetString("service.authorization.domain.merchant"),
@@ -39,7 +39,7 @@ func InitState(logger *zap.Logger) State {
 		},
 	}
 	if err := authDomains.Validate(); err != nil {
-		logger.Fatal("invalid domain input",
+		logger.Fatal(context.Background(), "invalid domain input",
 			zap.Error(err),
 		)
 	}
@@ -52,7 +52,7 @@ func InitState(logger *zap.Logger) State {
 	}
 	if err := httpconfig.Validate(); err != nil {
 		err := errors.ErrInvalidUserInput.Wrap(err, "invalid http configuration")
-		log.Fatal(context.Background(), "all http fields are required", zap.Error(err))
+		logger.Fatal(context.Background(), "all http fields are required", zap.Error(err))
 	}
 
 	tokenConfig := state.TokenKey{
@@ -65,7 +65,7 @@ func InitState(logger *zap.Logger) State {
 	}
 	if err := tokenConfig.Validate(); err != nil {
 		err := errors.ErrInvalidUserInput.Wrap(err, "invalid token config configuration")
-		log.Fatal(context.Background(), "all tokenKey fields are required", zap.Error(err))
+		logger.Fatal(context.Background(), "all tokenKey fields are required", zap.Error(err))
 	}
 
 	coa := state.AccountingParams{
@@ -118,7 +118,7 @@ func InitState(logger *zap.Logger) State {
 		),
 	}
 	if err := coa.Validate(); err != nil {
-		logger.Fatal("missing some account values",
+		logger.Fatal(context.Background(), "missing some account values",
 			zap.Error(err),
 		)
 	}
@@ -130,7 +130,7 @@ func InitState(logger *zap.Logger) State {
 		Admin:     viper.GetString("service.authorization.admin"),
 	}
 	if err := opa.Validate(); err != nil {
-		logger.Fatal("missing some opa configs",
+		logger.Fatal(context.Background(), "missing some opa configs",
 			zap.Error(err),
 		)
 	}

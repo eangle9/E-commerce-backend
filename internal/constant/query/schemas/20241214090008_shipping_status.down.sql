@@ -1,0 +1,1 @@
+DROP TYPE shipping_status;

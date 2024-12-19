@@ -1,0 +1,1 @@
+CREATE TYPE wishlist_visibility AS ENUM ('PRIVATE', 'PUBLIC');

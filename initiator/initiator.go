@@ -2,8 +2,13 @@ package initiator
 
 import (
 	"Eccomerce-website/initiator/foundation"
+	"Eccomerce-website/initiator/platform"
+	"context"
 	"fmt"
 	"os"
+
+	"github.com/eangle9/log"
+	"github.com/spf13/viper"
 )
 
 //	@title			E-commerce API
@@ -17,29 +22,38 @@ import (
 //	@in							header
 //	@name						Authorization
 //  @securityDefinitions.basic  BasicAuth
-//	@host		localhost:9000
-//	@schemes	http
 
 func Initiate() {
 	// Initiate Logger
-	logger := foundation.InitLogger()
-	log := logger.GetLogger()
+	log := log.New(platform.InitLogger(), log.Options{})
+	log.Info(context.Background(), "initialized logger")
 
 	// Initiate Config
-	log.Info("initializing config")
+	log.Info(context.Background(), "initializing config")
 	configName := "config"
 	if name := os.Getenv("CONFIG_NAME"); name != "" {
 		configName = name
-		log.Info(fmt.Sprintf("config name is set to %v", configName))
+		log.Info(context.Background(), fmt.Sprintf("config name is set to %v", configName))
 	} else {
-		log.Info("using default config name 'config'")
+		log.Info(context.Background(), "using default config name 'config'")
 	}
 	foundation.InitConfig(configName, "config", log)
-	log.Info("config initialized")
+	log.Info(context.Background(), "config initialized")
 
-	log.Info("initializing state")
+	log.Info(context.Background(), "initializing state")
 	state := foundation.InitState(log)
-	log.Info("state initialized")
-	fmt.Printf("state: %v", state)
+	log.Info(context.Background(), "state initialized")
 
+	// Initiate Database connection using pgx
+	log.Info(context.Background(), "initializing database")
+	conn := foundation.InitDB(viper.GetString("database.url"), log)
+	log.Info(context.Background(), "database initialized")
+	if viper.GetBool("migration.active") {
+		log.Info(context.Background(), "initializing migration")
+		m := foundation.InitiateMigration(viper.GetString("migration.path"), viper.GetString("database.url"), log)
+		foundation.UpMigration(m, log)
+		log.Info(context.Background(), "migration initialized")
+	}
+	fmt.Printf("state: %v\n", state)
+	fmt.Printf("conn: %v\n", conn)
 }

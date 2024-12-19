@@ -1,0 +1,1 @@
+CREATE TYPE status_bool AS ENUM ('YES', 'NO');

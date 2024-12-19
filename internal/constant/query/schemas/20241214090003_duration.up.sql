@@ -1,0 +1,1 @@
+CREATE TYPE duration AS ENUM ('FOREVER', 'ONCE', 'REPEATING');

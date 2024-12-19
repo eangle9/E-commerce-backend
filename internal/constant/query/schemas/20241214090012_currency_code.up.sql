@@ -1,0 +1,1 @@
+CREATE TYPE currency_code AS ENUM ('ETB', 'USD', 'EUR', 'GBP');

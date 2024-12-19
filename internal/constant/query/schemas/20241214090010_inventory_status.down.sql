@@ -1,0 +1,1 @@
+DROP TYPE inventory_status;

@@ -1,0 +1,1 @@
+DROP TYPE currency_code;
