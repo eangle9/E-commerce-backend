@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"Eccomerce-website/internal/core/port/repository"
+	"Eccomerce-website/internals/core/port/repository"
 	"fmt"
 	"os"
 )
