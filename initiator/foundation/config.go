@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/eangle9/log"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-func InitConfig(name, path string, log log.Logger) {
+func InitConfig(name, path string, log Logger) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
 	viper.SetConfigType("yaml")

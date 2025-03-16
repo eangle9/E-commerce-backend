@@ -4,13 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/eangle9/log"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-func InitDB(url string, log log.Logger) *pgxpool.Pool {
+func InitDB(url string, log Logger) *pgxpool.Pool {
 	config, err := pgxpool.ParseConfig(url)
 	if err != nil {
 		log.Fatal(context.Background(), "Failed to connect to the database", zap.Error(err))

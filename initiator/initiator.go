@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eangle9/log"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 //	@title			E-commerce API
@@ -25,7 +25,7 @@ import (
 
 func Initiate() {
 	// Initiate Logger
-	log := log.New(platform.InitLogger(), log.Options{})
+	log := foundation.New(platform.InitLogger(), foundation.Options{})
 	log.Info(context.Background(), "initialized logger")
 
 	// Initiate Config
@@ -54,6 +54,18 @@ func Initiate() {
 		foundation.UpMigration(m, log)
 		log.Info(context.Background(), "migration initialized")
 	}
+	// Seed tables if they are not seeded. And create a seed record.
+	if viper.GetBool("migration.seed_active") {
+		log.Info(context.Background(), "seeding database")
+		err := foundation.SeedDB(conn)
+		if err != nil {
+			log.Fatal(context.Background(), "failed to seed database", zap.Error(err))
+		}
+	}
+
+	// initialize redis connection
+	redisClient := foundation.InitRedis(log, state.RedisConfig)
 	fmt.Printf("state: %v\n", state)
 	fmt.Printf("conn: %v\n", conn)
+	fmt.Printf("redisClient: %v\n", redisClient)
 }
