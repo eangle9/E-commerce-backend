@@ -12,7 +12,6 @@ require (
 require (
 	github.com/cloudinary/cloudinary-go/v2 v2.7.0
 	github.com/dongri/phonenumber v0.1.12
-	github.com/eangle9/log v0.0.0-00010101000000-000000000000
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -45,6 +44,7 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang-migrate/migrate/v4 v4.18.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -95,4 +95,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/eangle9/log => C:/Users/kebede/OneDrive/Desktop/Golang-projects/eagle_packages/github.com/eangle9/log
+// replace github.com/eangle9/log => C:/Users/kebede/OneDrive/Desktop/Golang-projects/eagle_packages/github.com/eangle9/log
