@@ -7,13 +7,13 @@ rating rating NOT NULL,
 comment STRING,
 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-deleted_at TIMESTAMPTZ DEFAULT NULL
+deleted_at TIMESTAMPTZ NULL
 );
 CREATE INDEX idx_review_product_id ON review(product_id);
 
 ALTER TABLE review
 ADD CONSTRAINT review_product_id_fkey
-FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE;
+FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE;
 ALTER TABLE review
 ADD CONSTRAINT review_user_id_fkey
 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;

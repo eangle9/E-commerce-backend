@@ -9,7 +9,7 @@ total DECIMAL(10, 2) NOT NULL,
 status order_status NOT NULL DEFAULT 'PENDING',
 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-deleted_at TIMESTAMPTZ DEFAULT NULL
+deleted_at TIMESTAMPTZ NULL
 );
 CREATE INDEX idx_order_details_user_id ON order_details(user_id);
 

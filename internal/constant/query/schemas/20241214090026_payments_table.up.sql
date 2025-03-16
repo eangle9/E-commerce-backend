@@ -4,16 +4,19 @@ order_id UUID NOT NULL,
 user_id UUID NOT NULL, 
 payment_method VARCHAR(250) NULL, 
 status payment_status NOT NULL DEFAULT 'PENDING', 
-transaction_id VARCHAR UNIQUE NULL, 
-tx_ref VARCHAR UNIQUE NOT NULL,
-reference VARCHAR UNIQUE NULL,
-type VARCHAR NULL,
+transaction_id VARCHAR NULL, 
+tx_ref VARCHAR NOT NULL,
+reference VARCHAR NULL,
+type VARCHAR(250) NULL,
 total_amount DECIMAL(10, 2) NOT NULL,
 currency_code currency_code NOT NULL DEFAULT 'ETB', 
 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-deleted_at TIMESTAMPTZ DEFAULT NULL
+deleted_at TIMESTAMPTZ NULL
 );
+CREATE UNIQUE INDEX uni_idx_transaction_id ON payments(transaction_id);
+CREATE UNIQUE INDEX uni_idx_reference ON payments(reference);
+CREATE UNIQUE INDEX uni_idx_payments_tx_ref ON payments(tx_ref);
 CREATE INDEX idx_payments_user_id ON payments(user_id);
 CREATE INDEX idx_payments_order_id ON payments(order_id);
 

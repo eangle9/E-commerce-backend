@@ -1,10 +1,12 @@
 CREATE TABLE product_category (
 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-parent_id UUID DEFAULT NULL,
-name STRING NOT NULL,
+parent_id UUID NULL,
+name VARCHAR(100) NOT NULL,
+description STRING NULL,
+image STRING NULL,
 created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-deleted_at TIMESTAMPTZ DEFAULT NULL
+deleted_at TIMESTAMPTZ NULL
 );
 
 ALTER TABLE product_category
